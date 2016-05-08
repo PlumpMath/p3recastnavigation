@@ -1,7 +1,7 @@
 p3recastnavigation
-*******************
+******************
 
-p3recastnavigation is a C++ project which integrates (some functionalities of) 
+p3recastnavigation is project which integrates (some functionality of) 
 Recast & Detour libraries (https://github.com/recastnavigation/recastnavigation) 
 into Panda3d game engine (https://www.panda3d.org) as a contribution module.
 
