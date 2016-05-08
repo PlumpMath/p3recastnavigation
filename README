@@ -3,7 +3,7 @@ p3recastnavigation
 
 p3recastnavigation is project which integrates (some functionality of) 
 Recast & Detour libraries (https://github.com/recastnavigation/recastnavigation) 
-into Panda3d game engine (https://www.panda3d.org) as a contribution module.
+into Panda3d game engine (https://www.panda3d.org) as a extension module.
 
 Recast is state of the art navigation mesh construction toolset for games, while
 Detour is a path-finding and spatial reasoning toolkit. 
