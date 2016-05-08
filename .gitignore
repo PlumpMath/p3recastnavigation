@@ -1,0 +1,10 @@
+*.pyd
+*.pyc
+*.so
+*.pdb
+*.boo
+
+# Various output names
+win_*/
+linux_*/
+source/interrogate*
