@@ -15,4 +15,12 @@ Then executes:
 Note: p3recastnavigation uses a slightly modified version of "Panda 
 Module Builder" by tobspr (https://github.com/tobspr/P3DModuleBuilder)
 as build system, so refer to that for more informations.
-  
+
+To install copy the generated p3recastnavigation module into the folder 
+of your code, and into into your code put imports similar to these:
+
+ import panda3d.core
+ from p3recastnavigation import *
+ ...
+ 
+That's all. 

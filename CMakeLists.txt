@@ -245,9 +245,9 @@ if (MSVC)
 
   # Different optimization settings
   if (OPTIMIZE STREQUAL "1")
-    add_definitions("/MDd /Zi /RTCs /GS")
+    add_definitions("/MDd /Zi /RTCs /GS /DRN_DEBUG")
   elseif(OPTIMIZE STREQUAL "2")
-    add_definitions("/MDd /Zi")
+    add_definitions("/MDd /Zi /DRN_DEBUG")
   elseif(OPTIMIZE STREQUAL "3")
     add_definitions("/MD /Zi /GS- /O2 /Ob2 /Oi /Ot /fp:fast")
   elseif(OPTIMIZE STREQUAL "4")
