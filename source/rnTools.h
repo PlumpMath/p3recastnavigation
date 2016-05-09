@@ -8,13 +8,15 @@
 #ifndef RNTOOLS_H_
 #define RNTOOLS_H_
 
+#ifdef _WIN32
+#include <ciso646>
+#define strtof (float)strtod
+#endif
+
 #include "recastnavigation_includes.h"
 #include "genericAsyncTask.h"
 #include "lpoint3.h"
 
-#ifdef _WIN32
-#include <ciso646>
-#endif
 //
 #ifndef CPPPARSER
 #include "support/NavMeshType.h"
