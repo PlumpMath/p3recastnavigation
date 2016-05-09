@@ -132,45 +132,45 @@ void RNNavMesh::do_initialize()
 	string valueStr;
 	//set RNNavMesh parameters (store internally for future use)
 	//cell size
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("cell_size")).c_str(), nullptr);
 	mNavMeshSettings.set_cellSize(value >= 0.0 ? value : -value);
 	//cell height
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("cell_height")).c_str(), nullptr);
 	mNavMeshSettings.set_cellHeight(value >= 0.0 ? value : -value);
 	//agent height
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("agent_height")).c_str(), nullptr);
 	mNavMeshSettings.set_agentHeight(value >= 0.0 ? value : -value);
 	//agent radius
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("agent_radius")).c_str(), nullptr);
 	mNavMeshSettings.set_agentRadius(value >= 0.0 ? value : -value);
 	//agent max climb
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("agent_max_climb")).c_str(),
 			nullptr);
 	mNavMeshSettings.set_agentMaxClimb(value >= 0.0 ? value : -value);
 	//agent max slope
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("agent_max_slope")).c_str(),
 			nullptr);
 	mNavMeshSettings.set_agentMaxSlope(value >= 0.0 ? value : -value);
 	//region min size
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("region_min_size")).c_str(),
 			nullptr);
 	mNavMeshSettings.set_regionMinSize(value >= 0.0 ? value : -value);
 	//region merge size
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("region_merge_size")).c_str(),
 			nullptr);
@@ -192,30 +192,30 @@ void RNNavMesh::do_initialize()
 		mNavMeshSettings.set_partitionType(rnsup::NAVMESH_PARTITION_WATERSHED);
 	}
 	//edge max len
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("edge_max_len")).c_str(), nullptr);
 	mNavMeshSettings.set_edgeMaxLen(value >= 0.0 ? value : -value);
 	//edge max error
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("edge_max_error")).c_str(),
 			nullptr);
 	mNavMeshSettings.set_edgeMaxError(value >= 0.0 ? value : -value);
 	//verts per poly
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("verts_per_poly")).c_str(),
 			nullptr);
 	mNavMeshSettings.set_vertsPerPoly(value >= 0.0 ? value : -value);
 	//detail sample dist
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("detail_sample_dist")).c_str(),
 			nullptr);
 	mNavMeshSettings.set_detailSampleDist(value >= 0.0 ? value : -value);
 	//detail sample max error
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("detail_sample_max_error")).c_str(),
 			nullptr);
@@ -237,7 +237,7 @@ void RNNavMesh::do_initialize()
 	mNavMeshTileSettings.set_maxPolysPerTile(
 			valueInt >= 0 ? valueInt : -valueInt);
 	//tile size
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("tile_size")).c_str(), nullptr);
 	mNavMeshTileSettings.set_tileSize(value >= 0.0 ? value : -value);
@@ -300,7 +300,7 @@ void RNNavMesh::do_initialize()
 			flagsAreaTable[area] = oredFlags;
 
 			//default cost: 1.0
-			float cost = strtof(areaFlagsCostStr[2].c_str(), nullptr);
+			float cost = STRTOF(areaFlagsCostStr[2].c_str(), nullptr);
 			if (cost <= 0.0)
 			{
 				cost = 1.0;
@@ -377,7 +377,7 @@ void RNNavMesh::do_initialize()
 			LPoint3f point = LPoint3f::zero();
 			for (unsigned int i = 0; (i < 3) and (i < posStr.size()); ++i)
 			{
-				point[i] = strtof(posStr[i].c_str(), nullptr);
+				point[i] = STRTOF(posStr[i].c_str(), nullptr);
 			}
 			//insert the point to the list
 			pointList.add_value(point);
@@ -423,7 +423,7 @@ void RNNavMesh::do_initialize()
 			LPoint3f point = LPoint3f::zero();
 			for (unsigned int i = 0; (i < 3) and (i < posStr.size()); ++i)
 			{
-				point[i] = strtof(posStr[i].c_str(), nullptr);
+				point[i] = STRTOF(posStr[i].c_str(), nullptr);
 			}
 			//insert the point to the pair
 			switch (k)

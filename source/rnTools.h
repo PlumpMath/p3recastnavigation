@@ -10,7 +10,9 @@
 
 #ifdef _WIN32
 #include <ciso646>
-#define strtof (float)strtod
+#define STRTOF (float)strtod
+#else
+#define STRTOF strtof
 #endif
 
 #include "recastnavigation_includes.h"

@@ -129,7 +129,7 @@ void RNCrowdAgent::do_initialize()
 	}
 	for (idx = 0; idx < 3; ++idx)
 	{
-		mMoveTarget[idx] = strtof(paramValuesStr[idx].c_str(), nullptr);
+		mMoveTarget[idx] = STRTOF(paramValuesStr[idx].c_str(), nullptr);
 	}
 	//move velocity
 	param = mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("move_velocity"));
@@ -141,30 +141,30 @@ void RNCrowdAgent::do_initialize()
 	}
 	for (idx = 0; idx < 3; ++idx)
 	{
-		mMoveVelocity[idx] = strtof(paramValuesStr[idx].c_str(), nullptr);
+		mMoveVelocity[idx] = STRTOF(paramValuesStr[idx].c_str(), nullptr);
 	}
 	//
 	float value;
 	int valueInt;
 	//max acceleration
-	value = strtof(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("max_acceleration")).c_str(),
+	value = STRTOF(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("max_acceleration")).c_str(),
 			nullptr);
 	mAgentParams.set_maxAcceleration(value >= 0.0 ? value : -value);
 	//max speed
-	value = strtof(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("max_speed")).c_str(), nullptr);
+	value = STRTOF(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("max_speed")).c_str(), nullptr);
 	mAgentParams.set_maxSpeed(value >= 0.0 ? value : -value);
 	//collision query range
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("collision_query_range")).c_str(),
 			nullptr);
 	mAgentParams.set_collisionQueryRange(value >= 0.0 ? value : -value);
 	//path optimization range
-	value = strtof(
+	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("path_optimization_range")).c_str(),
 			nullptr);
 	mAgentParams.set_pathOptimizationRange(value >= 0.0 ? value : -value);
 	//separation weight
-	value = strtof(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("separation_weight")).c_str(),
+	value = STRTOF(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("separation_weight")).c_str(),
 			nullptr);
 	mAgentParams.set_separationWeight(value >= 0.0 ? value : -value);
 	//update flags
@@ -201,7 +201,7 @@ void RNCrowdAgent::do_initialize()
 				//get name
 				string name = paramValuesStr2[1];
 				//get frequency
-				float frequency = strtof(paramValuesStr2[2].c_str(), nullptr);
+				float frequency = STRTOF(paramValuesStr2[2].c_str(), nullptr);
 				if (frequency <= 0.0)
 				{
 					frequency = 30.0;
