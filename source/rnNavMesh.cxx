@@ -134,46 +134,46 @@ void RNNavMesh::do_initialize()
 	//cell size
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
-					string("cell_size")).c_str(), nullptr);
+					string("cell_size")).c_str(), NULL);
 	mNavMeshSettings.set_cellSize(value >= 0.0 ? value : -value);
 	//cell height
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
-					string("cell_height")).c_str(), nullptr);
+					string("cell_height")).c_str(), NULL);
 	mNavMeshSettings.set_cellHeight(value >= 0.0 ? value : -value);
 	//agent height
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
-					string("agent_height")).c_str(), nullptr);
+					string("agent_height")).c_str(), NULL);
 	mNavMeshSettings.set_agentHeight(value >= 0.0 ? value : -value);
 	//agent radius
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
-					string("agent_radius")).c_str(), nullptr);
+					string("agent_radius")).c_str(), NULL);
 	mNavMeshSettings.set_agentRadius(value >= 0.0 ? value : -value);
 	//agent max climb
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("agent_max_climb")).c_str(),
-			nullptr);
+			NULL);
 	mNavMeshSettings.set_agentMaxClimb(value >= 0.0 ? value : -value);
 	//agent max slope
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("agent_max_slope")).c_str(),
-			nullptr);
+			NULL);
 	mNavMeshSettings.set_agentMaxSlope(value >= 0.0 ? value : -value);
 	//region min size
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("region_min_size")).c_str(),
-			nullptr);
+			NULL);
 	mNavMeshSettings.set_regionMinSize(value >= 0.0 ? value : -value);
 	//region merge size
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("region_merge_size")).c_str(),
-			nullptr);
+			NULL);
 	mNavMeshSettings.set_regionMergeSize(value >= 0.0 ? value : -value);
 	//partition type
 	valueStr = mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
@@ -194,31 +194,31 @@ void RNNavMesh::do_initialize()
 	//edge max len
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
-					string("edge_max_len")).c_str(), nullptr);
+					string("edge_max_len")).c_str(), NULL);
 	mNavMeshSettings.set_edgeMaxLen(value >= 0.0 ? value : -value);
 	//edge max error
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("edge_max_error")).c_str(),
-			nullptr);
+			NULL);
 	mNavMeshSettings.set_edgeMaxError(value >= 0.0 ? value : -value);
 	//verts per poly
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("verts_per_poly")).c_str(),
-			nullptr);
+			NULL);
 	mNavMeshSettings.set_vertsPerPoly(value >= 0.0 ? value : -value);
 	//detail sample dist
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("detail_sample_dist")).c_str(),
-			nullptr);
+			NULL);
 	mNavMeshSettings.set_detailSampleDist(value >= 0.0 ? value : -value);
 	//detail sample max error
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
 					string("detail_sample_max_error")).c_str(),
-			nullptr);
+			NULL);
 	mNavMeshSettings.set_detailSampleMaxError(value >= 0.0 ? value : -value);
 	//build all tiles
 	mNavMeshTileSettings.set_buildAllTiles(
@@ -228,18 +228,18 @@ void RNNavMesh::do_initialize()
 	//max tiles
 	valueInt = strtol(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
-					string("max_tiles")).c_str(), nullptr, 0);
+					string("max_tiles")).c_str(), NULL, 0);
 	mNavMeshTileSettings.set_maxTiles(valueInt >= 0 ? valueInt : -valueInt);
 	//max polys per tile
 	valueInt = strtol(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
-					string("max_polys_per_tile")).c_str(), nullptr, 0);
+					string("max_polys_per_tile")).c_str(), NULL, 0);
 	mNavMeshTileSettings.set_maxPolysPerTile(
 			valueInt >= 0 ? valueInt : -valueInt);
 	//tile size
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::NAVMESH,
-					string("tile_size")).c_str(), nullptr);
+					string("tile_size")).c_str(), NULL);
 	mNavMeshTileSettings.set_tileSize(value >= 0.0 ? value : -value);
 	///
 	//0: get navmesh type
@@ -262,24 +262,26 @@ void RNNavMesh::do_initialize()
 	//area-flags-cost settings
 	plist<string> mAreaFlagsCostParam = mTmpl->get_parameter_values(RNNavMeshManager::NAVMESH,
 			string("area_flags_cost"));
+	plist<string>::iterator iterStr;
 	//get area ability flags and cost (for crowd)
 	rnsup::NavMeshPolyAreaFlags flagsAreaTable;
 	flagsAreaTable.clear();
 	rnsup::NavMeshPolyAreaCost costAreaTable;
 	costAreaTable.clear();
-	for(auto& param: mAreaFlagsCostParam)
+	for (iterStr = mAreaFlagsCostParam.begin();
+			iterStr != mAreaFlagsCostParam.end(); ++iterStr)
 	{
 		//any "area_flags" string is a "compound" one, i.e. could have the form:
 		// "area@flag1|flag2...|flagN@cost"
 		pvector<string> areaFlagsCostStr = parseCompoundString(
-				param, '@');
+				*iterStr, '@');
 		//check only if there is a triple
 		if (areaFlagsCostStr.size() == 3)
 		{
 			//default area: NAVMESH_POLYAREA_GROUND (== 0)
 			int area = (
 					not areaFlagsCostStr[0].empty() ?
-							strtol(areaFlagsCostStr[0].c_str(), nullptr, 0) :
+							strtol(areaFlagsCostStr[0].c_str(), NULL, 0) :
 							rnsup::NAVMESH_POLYAREA_GROUND);
 			//iterate over flags
 			pvector<string> flags = parseCompoundString(
@@ -291,7 +293,7 @@ void RNNavMesh::do_initialize()
 			{
 				int flag = (
 						not (*iterF).empty() ?
-								strtol((*iterF).c_str(), nullptr, 0) :
+								strtol((*iterF).c_str(), NULL, 0) :
 								rnsup::NAVMESH_POLYFLAGS_WALK);
 				//or flag
 				oredFlags |= flag;
@@ -300,7 +302,7 @@ void RNNavMesh::do_initialize()
 			flagsAreaTable[area] = oredFlags;
 
 			//default cost: 1.0
-			float cost = STRTOF(areaFlagsCostStr[2].c_str(), nullptr);
+			float cost = STRTOF(areaFlagsCostStr[2].c_str(), NULL);
 			if (cost <= 0.0)
 			{
 				cost = 1.0;
@@ -310,6 +312,7 @@ void RNNavMesh::do_initialize()
 		}
 	}
 	//get crowd include & exclude flags
+	pvector<string>::const_iterator iterIEFStr;
 	pvector<string> ieFlagsStr;
 	//1:iterate over include flags
 	string mCrowdIncludeFlagsParam = mTmpl->get_parameter_value(
@@ -317,11 +320,12 @@ void RNNavMesh::do_initialize()
 	ieFlagsStr = parseCompoundString(mCrowdIncludeFlagsParam, ':');
 	//default include flag: NAVMESH_POLYFLAGS_WALK (== 0x01)
 	int includeFlags = (ieFlagsStr.empty() ? rnsup::NAVMESH_POLYFLAGS_WALK : 0x0);
-	for (auto& param: ieFlagsStr)
+	for (iterIEFStr = ieFlagsStr.begin(); iterIEFStr != ieFlagsStr.end();
+			++iterIEFStr)
 	{
 		int flag = (
-				not param.empty() ?
-						strtol(param.c_str(), nullptr, 0) :
+				not (*iterIEFStr).empty() ?
+						strtol((*iterIEFStr).c_str(), NULL, 0) :
 						rnsup::NAVMESH_POLYFLAGS_WALK);
 		//or flag
 		includeFlags |= flag;
@@ -332,11 +336,12 @@ void RNNavMesh::do_initialize()
 	ieFlagsStr = parseCompoundString(mCrowdExcludeFlagsParam, ':');
 	//default exclude flag: NAVMESH_POLYFLAGS_DISABLED (== 0x10)
 	int excludeFlags = (ieFlagsStr.empty() ? rnsup::NAVMESH_POLYFLAGS_DISABLED : 0x0);
-	for (auto& param: ieFlagsStr)
+	for (iterIEFStr = ieFlagsStr.begin(); iterIEFStr != ieFlagsStr.end();
+			++iterIEFStr)
 	{
 		int flag = (
-				not param.empty() ?
-						strtol(param.c_str(), nullptr, 0) :
+				not (*iterIEFStr).empty() ?
+						strtol((*iterIEFStr).c_str(), NULL, 0) :
 						rnsup::NAVMESH_POLYFLAGS_DISABLED);
 		//or flag
 		excludeFlags |= flag;
@@ -345,12 +350,13 @@ void RNNavMesh::do_initialize()
 	plist<string> mConvexVolumesParam = mTmpl->get_parameter_values(RNNavMeshManager::NAVMESH,
 			string("convex_volume"));
 	pvector<PointListArea> convexVolumes;
-	for (auto& param: mConvexVolumesParam)
+	for (iterStr = mConvexVolumesParam.begin();
+			iterStr != mConvexVolumesParam.end(); ++iterStr)
 	{
 		//any "convex_volume" string is a "compound" one, i.e. could have the form:
 		// "x1,y1,z1:x2,y2,z2...:xN,yN,zN@area_type"
 		pvector<string> pointsAreaTypeStr = parseCompoundString(
-				param, '@');
+				*iterStr, '@');
 		//check only if there is (at least) a pair
 		if (pointsAreaTypeStr.size() < 2)
 		{
@@ -364,7 +370,7 @@ void RNNavMesh::do_initialize()
 		//
 		int areaType = (
 				not pointsAreaTypeStr[1].empty() ?
-						strtol(pointsAreaTypeStr[1].c_str(), nullptr, 0) :
+						strtol(pointsAreaTypeStr[1].c_str(), NULL, 0) :
 						rnsup::NAVMESH_POLYAREA_GROUND);
 		//iterate over points
 		ValueListLPoint3f pointList;
@@ -377,7 +383,7 @@ void RNNavMesh::do_initialize()
 			LPoint3f point = LPoint3f::zero();
 			for (unsigned int i = 0; (i < 3) and (i < posStr.size()); ++i)
 			{
-				point[i] = STRTOF(posStr[i].c_str(), nullptr);
+				point[i] = STRTOF(posStr[i].c_str(), NULL);
 			}
 			//insert the point to the list
 			pointList.add_value(point);
@@ -389,12 +395,13 @@ void RNNavMesh::do_initialize()
 	plist<string> mOffMeshConnectionsParam = mTmpl->get_parameter_values(
 			RNNavMeshManager::NAVMESH, string("offmesh_connection"));
 	pvector<PointPairBidir> offMeshConnections;
-	for (auto& param: mOffMeshConnectionsParam)
+	for (iterStr = mOffMeshConnectionsParam.begin();
+			iterStr != mOffMeshConnectionsParam.end(); ++iterStr)
 	{
 		//any "offmesh_connection" string is a "compound" one, i.e. has the form:
 		// "xB,yB,zB:xE,yE,zE@bidirectional", with bidirectional=true by default.
 		pvector<string> pointPairBidirStr = parseCompoundString(
-				param, '@');
+				*iterStr, '@');
 		//check only if there is (at least) a pair
 		if (pointPairBidirStr.size() < 2)
 		{
@@ -423,7 +430,7 @@ void RNNavMesh::do_initialize()
 			LPoint3f point = LPoint3f::zero();
 			for (unsigned int i = 0; (i < 3) and (i < posStr.size()); ++i)
 			{
-				point[i] = STRTOF(posStr[i].c_str(), nullptr);
+				point[i] = STRTOF(posStr[i].c_str(), NULL);
 			}
 			//insert the point to the pair
 			switch (k)
@@ -594,20 +601,22 @@ int RNNavMesh::setup()
 					points[iterP]);
 			//insert convex volume point
 			rnsup::LVecBase3fToRecast(refPos, recastPos);
-			mNavMeshType->getTool()->handleClick(nullptr, recastPos, false);
+			mNavMeshType->getTool()->handleClick(NULL, recastPos, false);
 		}
 		//re-insert the last point (to close convex volume)
-		mNavMeshType->getTool()->handleClick(nullptr, recastPos, false);
+		mNavMeshType->getTool()->handleClick(NULL, recastPos, false);
 	}
-	mNavMeshType->setTool(nullptr);
+	mNavMeshType->setTool(NULL);
 
 	//set recast off mesh connections
 	rnsup::OffMeshConnectionTool* omcTool = new rnsup::OffMeshConnectionTool();
 	mNavMeshType->setTool(omcTool);
-	for (auto& poinPairBidir: mOffMeshConnections)
+	pvector<PointPairBidir>::iterator iterPPB;
+	for (iterPPB = mOffMeshConnections.begin();
+			iterPPB != mOffMeshConnections.end(); ++iterPPB)
 	{
-		ValueListLPoint3f pointPair = poinPairBidir.first();
-		bool bidir = poinPairBidir.second();
+		ValueListLPoint3f pointPair = iterPPB->first();
+		bool bidir = iterPPB->second();
 
 		//1: set recast connection bidir
 		omcTool->setBidir(bidir);
@@ -620,13 +629,13 @@ int RNNavMesh::setup()
 		//compute and insert first recast point
 		refPos = mReferenceNP.get_relative_point(mOwnerObject, pointPair[0]);
 		rnsup::LVecBase3fToRecast(refPos, recastPos);
-		mNavMeshType->getTool()->handleClick(nullptr, recastPos, false);
+		mNavMeshType->getTool()->handleClick(NULL, recastPos, false);
 		//compute and insert second recast point
 		refPos = mReferenceNP.get_relative_point(mOwnerObject, pointPair[1]);
 		rnsup::LVecBase3fToRecast(refPos, recastPos);
-		mNavMeshType->getTool()->handleClick(nullptr, recastPos, false);
+		mNavMeshType->getTool()->handleClick(NULL, recastPos, false);
 	}
-	mNavMeshType->setTool(nullptr);
+	mNavMeshType->setTool(NULL);
 
 	//build navigation mesh actually
 	do_build_navMesh();
@@ -638,9 +647,11 @@ int RNNavMesh::setup()
 	//set recast areas' costs
 	dtQueryFilter* filter =
 			crowdTool->getState()->getCrowd()->getEditableFilter(0);
-	for (auto& areaCost: mPolyAreaCost)
+	rnsup::NavMeshPolyAreaCost::const_iterator iterAC;
+	for (iterAC = mPolyAreaCost.begin(); iterAC != mPolyAreaCost.end();
+			++iterAC)
 	{
-		filter->setAreaCost(areaCost.first, areaCost.second);
+		filter->setAreaCost((*iterAC).first, (*iterAC).second);
 	}
 
 	//set recast crowd include & exclude flags
@@ -760,9 +771,9 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 			LPoint3f refPos = mReferenceNP.get_relative_point(mOwnerObject,
 					points[iterP]);
 			rnsup::LVecBase3fToRecast(refPos, recastPos);
-			navMeshType->getTool()->handleClick(nullptr, recastPos, false);
+			navMeshType->getTool()->handleClick(NULL, recastPos, false);
 		}
-		navMeshType->getTool()->handleClick(nullptr, recastPos, false);
+		navMeshType->getTool()->handleClick(NULL, recastPos, false);
 		//check if convex volume has been actually added
 		if (navMeshType->getInputGeom()->getConvexVolumeCount() == 0)
 		{
@@ -772,7 +783,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 		LPoint3f insidePos = mReferenceNP.get_relative_point(mOwnerObject,
 				insidePoint);
 		rnsup::LVecBase3fToRecast(insidePos, recastPos);
-		navMeshType->getTool()->handleClick(nullptr, recastPos, true);
+		navMeshType->getTool()->handleClick(NULL, recastPos, true);
 		//check if the convex volume has been removed
 		if (navMeshType->getInputGeom()->getConvexVolumeCount() == 0)
 		{
@@ -787,7 +798,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 		navMeshType->getInputGeom()->deleteConvexVolume(0);
 	}
 	//delete fake objects
-	navMeshType->setTool(nullptr);
+	navMeshType->setTool(NULL);
 	delete navMeshType;
 	delete geom;
 	//return oldIndex or -1
@@ -840,11 +851,11 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 		LPoint3f refPos;
 		refPos = mReferenceNP.get_relative_point(mOwnerObject, pointPair[0]);
 		rnsup::LVecBase3fToRecast(refPos, recastPos);
-		navMeshType->getTool()->handleClick(nullptr, recastPos, false);
+		navMeshType->getTool()->handleClick(NULL, recastPos, false);
 		refPos = mReferenceNP.get_relative_point(mOwnerObject,
 				pointPair[1]);
 		rnsup::LVecBase3fToRecast(refPos, recastPos);
-		navMeshType->getTool()->handleClick(nullptr, recastPos, false);
+		navMeshType->getTool()->handleClick(NULL, recastPos, false);
 		//check if off mesh connection has been actually added
 		if (navMeshType->getInputGeom()->getOffMeshConnectionCount() == 0)
 		{
@@ -854,7 +865,7 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 		LPoint3f beginOrEndPos = mReferenceNP.get_relative_point(mOwnerObject,
 				beginOrEndPoint);
 		rnsup::LVecBase3fToRecast(beginOrEndPos, recastPos);
-		navMeshType->getTool()->handleClick(nullptr, recastPos, true);
+		navMeshType->getTool()->handleClick(NULL, recastPos, true);
 		//check if the off mesh connection has been removed
 		if (navMeshType->getInputGeom()->getOffMeshConnectionCount() == 0)
 		{
@@ -869,7 +880,7 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 		navMeshType->getInputGeom()->deleteOffMeshConnection(0);
 	}
 	//delete fake objects
-	navMeshType->setTool(nullptr);
+	navMeshType->setTool(NULL);
 	delete navMeshType;
 	delete geom;
 	//return oldIndex or -1
@@ -931,20 +942,20 @@ int RNNavMesh::cleanup()
 	if (mNavMeshType)
 	{
 		//reset NavMeshTypeTool
-		mNavMeshType->setTool(nullptr);
+		mNavMeshType->setTool(NULL);
 	}
 
 	//delete old navigation mesh type
 	delete mNavMeshType;
-	mNavMeshType = nullptr;
+	mNavMeshType = NULL;
 
 	//delete old model mesh
 	delete mGeom;
-	mGeom = nullptr;
+	mGeom = NULL;
 
 	//delete build context
 	delete mCtx;
-	mCtx = nullptr;
+	mCtx = NULL;
 
 	//reset owner object
 	mOwnerObject.clear();
@@ -1240,12 +1251,13 @@ NodePath RNNavMesh::get_obstacle_by_ref(int ref)
 	NodePath obstacleNP;
 	nassertr_always((mNavMeshTypeEnum == OBSTACLE) and (ref > 0), obstacleNP);
 
-	for (auto& obstacle : mObstacles)
+	pvector<Obstacle>::iterator iter;
+	for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
 	{
-		if (obstacle.first() == ref)
+		if ((*iter).first() == ref)
 		{
 			// break: obstacleNP by ref is present
-			obstacleNP = obstacle.second();
+			obstacleNP = (*iter).second();
 			break;
 		}
 	}
@@ -1434,7 +1446,7 @@ void RNNavMesh::do_remove_crowd_agent_from_update_list(PT(RNCrowdAgent)crowdAgen
 	{
 		//RNCrowdAgent needs to be removed
 		mCrowdAgents.erase(iterCA);
-		//set RNCrowdAgent RNNavMesh reference to nullptr
+		//set RNCrowdAgent RNNavMesh reference to NULL
 		crowdAgent->mNavMesh.clear();
 	}
 }
@@ -1493,7 +1505,7 @@ const RNCrowdAgentParams& params)
 dtTileCache* RNNavMesh::get_recast_tile_cache()
 {
 	// go on if nav mesh has been already setup and is of type OBSTACLE
-	nassertr_always(mNavMeshType and (mNavMeshTypeEnum == OBSTACLE), nullptr)
+	nassertr_always(mNavMeshType and (mNavMeshTypeEnum == OBSTACLE), NULL)
 
 	return static_cast<rnsup::NavMeshType_Obstacle*>(mNavMeshType)->getTileCache();
 }
@@ -1591,7 +1603,7 @@ bool RNNavMesh::do_load_model_mesh(NodePath model)
 	if ((not mGeom) or (not mGeom->loadMesh(mCtx, string(), model, mReferenceNP)))
 	{
 		delete mGeom;
-		mGeom = nullptr;
+		mGeom = NULL;
 #ifdef RN_DEBUG
 		mCtx->dumpLog("Geom load log %s:", mMeshName.c_str());
 #endif //RN_DEBUG
@@ -1638,15 +1650,16 @@ void RNNavMesh::update(float dt)
 	mNavMeshType->handleUpdate(dt);
 
 	//post-update all agent positions
-	for (auto& crowdAgent: mCrowdAgents)
+	pvector<PT(RNCrowdAgent)>::iterator iter;
+	for (iter = mCrowdAgents.begin(); iter != mCrowdAgents.end(); ++iter)
 	{
-		int agentIdx = crowdAgent->mAgentIdx;
+		int agentIdx = (*iter)->mAgentIdx;
 		//give RNCrowdAgent a chance to update its pos/vel
 		LPoint3f agentPos = rnsup::RecastToLVecBase3f(
 				crowd->getAgent(agentIdx)->npos);
 		LVector3f agentDir = rnsup::RecastToLVecBase3f(
 				crowd->getAgent(agentIdx)->vel);
-		crowdAgent->do_update_pos_dir(dt, agentPos, agentDir);
+		(*iter)->do_update_pos_dir(dt, agentPos, agentDir);
 	}
 	//
 #ifdef RN_DEBUG
@@ -1712,12 +1725,12 @@ void RNNavMesh::disable_debug_drawing()
 	if (mDD)
 	{
 		delete mDD;
-		mDD = nullptr;
+		mDD = NULL;
 	}
 	if (mDDM)
 	{
 		delete mDDM;
-		mDDM = nullptr;
+		mDDM = NULL;
 	}
 #endif //RN_DEBUG
 }
@@ -1803,18 +1816,25 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 
 	///Area types with ability flags settings (see support/NavMeshType.h).
 	dg.add_uint32(mPolyAreaFlags.size());
-	for(auto& polyAreaFlags: mPolyAreaFlags)
 	{
-		dg.add_int32(polyAreaFlags.first);
-		dg.add_int32(polyAreaFlags.second);
+		rnsup::NavMeshPolyAreaFlags::iterator iter;
+		for (iter = mPolyAreaFlags.begin(); iter != mPolyAreaFlags.end();
+				++iter)
+		{
+			dg.add_int32((*iter).first);
+			dg.add_int32((*iter).second);
+		}
 	}
 
 	///Area types with cost settings (see support/NavMeshType.h).
 	dg.add_uint32(mPolyAreaCost.size());
-	for(auto& polyAreaCost: mPolyAreaCost)
 	{
-		dg.add_int32(polyAreaCost.first);
-		dg.add_stdfloat(polyAreaCost.second);
+		rnsup::NavMeshPolyAreaCost::iterator iter;
+		for (iter = mPolyAreaCost.begin(); iter != mPolyAreaCost.end(); ++iter)
+		{
+			dg.add_int32((*iter).first);
+			dg.add_stdfloat((*iter).second);
+		}
 	}
 
 	///Crowd include & exclude flags settings (see library/DetourNavMeshQuery.h).
@@ -1823,29 +1843,37 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 
 	///Convex volumes (see support/ConvexVolumeTool.h).
 	dg.add_uint32(mConvexVolumes.size());
-	for(auto& convexVolume: mConvexVolumes)
 	{
-		//save this PointListArea
-		ValueListLPoint3f pointList = convexVolume.first();
-		dg.add_uint32(pointList.size());
-		for (int i = 0; i != pointList.size(); ++i)
+		pvector<PointListArea>::iterator iter;
+		for (iter = mConvexVolumes.begin(); iter != mConvexVolumes.end();
+				++iter)
 		{
-			pointList[i].write_datagram(dg);
+			//save this PointListArea
+			ValueListLPoint3f pointList = (*iter).first();
+			dg.add_uint32(pointList.size());
+			for (int i = 0; i != pointList.size(); ++i)
+			{
+				pointList[i].write_datagram(dg);
+			}
+			int area = (*iter).second();
+			dg.add_int32(area);
 		}
-		int area = convexVolume.second();
-		dg.add_int32(area);
 	}
 
 	///Off mesh connections (see support/OffMeshConnectionTool.h).
 	dg.add_uint32(mOffMeshConnections.size());
-	for(auto& pointPairBidir: mOffMeshConnections)
 	{
-		//save this point pair
-		ValueListLPoint3f pointPair = pointPairBidir.first();
-		pointPair[0].write_datagram(dg);
-		pointPair[1].write_datagram(dg);
-		bool bidir = pointPairBidir.second();
-		dg.add_bool(bidir);
+		pvector<PointPairBidir>::iterator iter;
+		for (iter = mOffMeshConnections.begin();
+				iter != mOffMeshConnections.end(); ++iter)
+		{
+			//save this point pair
+			ValueListLPoint3f pointPair = (*iter).first();
+			pointPair[0].write_datagram(dg);
+			pointPair[1].write_datagram(dg);
+			bool bidir = (*iter).second();
+			dg.add_bool(bidir);
+		}
 	}
 
 	/// Pointers
@@ -1854,18 +1882,24 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 
 	///Crowd agents.
 	dg.add_uint32(mCrowdAgents.size());
-	for (auto& agent: mCrowdAgents)
 	{
-		manager->write_pointer(dg, agent);
+		pvector<PT(RNCrowdAgent)>::iterator iter;
+		for (iter = mCrowdAgents.begin(); iter != mCrowdAgents.end(); ++iter)
+		{
+			manager->write_pointer(dg, (*iter));
+		}
 	}
 
 	/// Obstacles table.
 	dg.add_uint32(mObstacles.size());
-	for (auto& obstacle: mObstacles)
 	{
-		//obstacle ref will be recomputed in setup: so not saved
-		PT(PandaNode)pandaNode = obstacle.second().node();
-		manager->write_pointer(dg, pandaNode);
+		pvector<Obstacle>::iterator iter;
+		for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
+		{
+			//obstacle ref will be recomputed in setup: so not saved
+			PT(PandaNode)pandaNode = (*iter).second().node();
+			manager->write_pointer(dg, pandaNode);
+		}
 	}
 }
 
@@ -1883,20 +1917,26 @@ int RNNavMesh::complete_pointers(TypedWritable **p_list, BamReader *manager)
 	mOwnerObject = NodePath::any_path(ownerObjectPandaNode);
 
 	///Crowd agents.
-	for (auto& crowdAgent: mCrowdAgents)
 	{
-		crowdAgent = DCAST(RNCrowdAgent, p_list[pi++]);
+		pvector<PT(RNCrowdAgent)>::iterator iter;
+		for (iter = mCrowdAgents.begin(); iter != mCrowdAgents.end(); ++iter)
+		{
+			(*iter) = DCAST(RNCrowdAgent, p_list[pi++]);
+		}
 	}
 
 	/// Obstacles list.
-	for (auto& obstacle: mObstacles)
 	{
-		PT(PandaNode)realPandaNode = DCAST(PandaNode, p_list[pi++]);
-		obstacle = Obstacle(-1, NodePath::any_path(realPandaNode));
+		pvector<Obstacle>::iterator iter;
+		for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
+		{
+			PT(PandaNode)realPandaNode = DCAST(PandaNode, p_list[pi++]);
+			(*iter) = Obstacle(-1, NodePath::any_path(realPandaNode));
+		}
 	}
 
 	//reset mNavMeshType: a setup will be needed any way
-	mNavMeshType = nullptr;
+	mNavMeshType = NULL;
 
 	return pi;
 }
@@ -1909,7 +1949,7 @@ int RNNavMesh::complete_pointers(TypedWritable **p_list, BamReader *manager)
 TypedWritable *RNNavMesh::make_from_bam(const FactoryParams &params)
 {
 	// go on only if RNNavMeshManager exists
-	nassertr_always(RNNavMeshManager::get_global_ptr(), nullptr)
+	nassertr_always(RNNavMeshManager::get_global_ptr(), NULL)
 
 	// create a RNNavMesh with default parameters' values: they'll be restored later
 	RNNavMeshManager::get_global_ptr()->set_parameters_defaults(
@@ -2012,18 +2052,22 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	//resize mCrowdAgents: will be restored in complete_pointers()
 	size = scan.get_uint32();
 	mCrowdAgents.resize(size);
-	for (auto& agent: mCrowdAgents)
 	{
-		manager->read_pointer(scan);
+		for (unsigned int i = 0; i < mCrowdAgents.size(); ++i)
+		{
+			manager->read_pointer(scan);
+		}
 	}
 
 	/// Obstacles list.
 	//resize mObstacles: will be restored in complete_pointers()
 	size = scan.get_uint32();
 	mObstacles.resize(size);
-	for (auto& obstacle: mObstacles)
 	{
-		manager->read_pointer(scan);
+		for (unsigned int i = 0; i < mObstacles.size(); ++i)
+		{
+			manager->read_pointer(scan);
+		}
 	}
 }
 

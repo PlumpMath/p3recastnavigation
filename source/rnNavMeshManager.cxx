@@ -18,8 +18,8 @@
  */
 RNNavMeshManager::RNNavMeshManager(const NodePath& root,
 		const CollideMask& mask) :
-		mRoot(root), mMask(mask), mCollisionHandler(nullptr), mPickerRay(nullptr), mCTrav(
-		nullptr)
+		mRoot(root), mMask(mask), mCollisionHandler(NULL), mPickerRay(NULL), mCTrav(
+		NULL)
 {
 	PRINT_DEBUG(
 			"RNNavMeshManager::RNNavMeshManager: creating the singleton manager.");
@@ -520,7 +520,8 @@ bool RNNavMeshManager::write_to_bam_file(const string& fileName)
 	BamFile outBamFile;
 	if (outBamFile.open_write(Filename(fileName)))
 	{
-		cout << "Current system Bam version: " << outBamFile.get_current_major_ver() << "."
+		cout << "Current system Bam version: "
+				<< outBamFile.get_current_major_ver() << "."
 				<< outBamFile.get_current_minor_ver() << endl;
 		BamWriter* manager = outBamFile.get_writer();
 		DatagramSink* dgSink = manager->get_target();
@@ -531,17 +532,19 @@ bool RNNavMeshManager::write_to_bam_file(const string& fileName)
 		dg.add_uint32(navMeshNum);
 		dgSink->put_datagram(dg);
 		//for each nav mesh do:
-		for (auto& navMesh : mNavMeshes)
+		NavMeshList::iterator iter;
+		for (iter = mNavMeshes.begin(); iter != mNavMeshes.end(); ++iter)
 		{
 			//current underlying NavMeshType: used as flag for setup()
 			dg.clear();
-			&navMesh->get_nav_mesh_type() != nullptr ? dg.add_bool(true) : dg.add_bool(false);
+			&(*iter)->get_nav_mesh_type() != NULL ?
+					dg.add_bool(true) : dg.add_bool(false);
 			dgSink->put_datagram(dg);
 			//write the the nav mesh
-			if (not outBamFile.write_object(navMesh))
+			if (not outBamFile.write_object((*iter)))
 			{
 				errorReport += string("Error writing ")
-						+ string(navMesh->get_name()) + string("\n");
+						+ string((*iter)->get_name()) + string("\n");
 			}
 		}
 		// close the file

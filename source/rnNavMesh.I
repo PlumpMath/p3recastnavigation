@@ -128,7 +128,7 @@ INLINE RNNavMeshTileSettings RNNavMesh::get_nav_mesh_tile_settings() const
  */
 INLINE PT(RNCrowdAgent) RNNavMesh::get_crowd_agent(int index) const
 {
-	nassertr_always((index >= 0) and (index < (int)mCrowdAgents.size()), nullptr)
+	nassertr_always((index >= 0) and (index < (int)mCrowdAgents.size()), NULL)
 
 	return mCrowdAgents[index];
 }
@@ -164,10 +164,10 @@ inline void RNNavMesh::do_reset()
 {
 	//
 	mOwnerObject.clear();
-	mNavMeshType = nullptr;
+	mNavMeshType = NULL;
 	mNavMeshTypeEnum = SOLO;
-	mGeom = nullptr;
-	mCtx = nullptr;
+	mGeom = NULL;
+	mCtx = NULL;
 	mMeshName.clear();
 	mReferenceNP.clear();
 	mNavMeshSettings = RNNavMeshSettings();
@@ -182,8 +182,8 @@ inline void RNNavMesh::do_reset()
 #ifdef RN_DEBUG
 	mDebugNodePath.clear();
 	mDebugCamera.clear();
-	mDD = nullptr;
-	mDDM = nullptr;
+	mDD = NULL;
+	mDDM = NULL;
 	mEnableDrawUpdate = false;
 #endif //RN_DEBUG
 }
@@ -201,7 +201,7 @@ inline rnsup::InputGeom* RNNavMesh::get_recast_input_geom() const
  */
 inline dtNavMesh* RNNavMesh::get_recast_nav_mesh() const
 {
-	return (mNavMeshType ? mNavMeshType->getNavMesh() : nullptr);
+	return (mNavMeshType ? mNavMeshType->getNavMesh() : NULL);
 }
 
 /**
@@ -209,7 +209,7 @@ inline dtNavMesh* RNNavMesh::get_recast_nav_mesh() const
  */
 inline dtNavMeshQuery* RNNavMesh::get_recast_nav_mesh_query() const
 {
-	return (mNavMeshType ? mNavMeshType->getNavMeshQuery() : nullptr);
+	return (mNavMeshType ? mNavMeshType->getNavMeshQuery() : NULL);
 }
 
 /**
@@ -217,7 +217,7 @@ inline dtNavMeshQuery* RNNavMesh::get_recast_nav_mesh_query() const
  */
 inline dtCrowd* RNNavMesh::get_recast_crowd() const
 {
-	return (mNavMeshType ? mNavMeshType->getCrowd() : nullptr);
+	return (mNavMeshType ? mNavMeshType->getCrowd() : NULL);
 }
 
 /**

@@ -193,14 +193,14 @@ class ThrowEventData
 		{
 			mFrequency <= FLT_MIN ?
 					mPeriod = FLT_MAX : mPeriod = 1.0 / mFrequency;
-			mEventData = nullptr;
+			mEventData = NULL;
 		}
 		Frequency& operator =(float value)
 		{
 			value >= 0 ? mFrequency = value : mFrequency = -value;
 			mFrequency <= FLT_MIN ?
 					mPeriod = FLT_MAX : mPeriod = 1.0 / mFrequency;
-			if (mEventData != nullptr)
+			if (mEventData != NULL)
 			{
 				mEventData->mPeriod = mPeriod;
 			}

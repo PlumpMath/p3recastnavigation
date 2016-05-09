@@ -28,7 +28,7 @@ pvector<string> parseCompoundString(
 	{
 		string substring("");
 		pch = strchr(start, separator);
-		if (pch != nullptr)
+		if (pch != NULL)
 		{
 			//insert the substring
 			substring.append(start, pch - start);
@@ -65,7 +65,7 @@ string eraseCharacter(const string& source, int character)
 	//erase
 	char* pch;
 	pch = strchr(dest, character);
-	while (pch != nullptr)
+	while (pch != NULL)
 	{
 		len -= pch - start;
 		memmove(pch, pch + 1, len - 1);
@@ -87,7 +87,7 @@ string replaceCharacter(const string& source, int character,
 	//replace hyphens
 	char* pch;
 	pch = strchr(dest, character);
-	while (pch != nullptr)
+	while (pch != NULL)
 	{
 		*pch = replacement;
 		pch = strchr(pch + 1, character);

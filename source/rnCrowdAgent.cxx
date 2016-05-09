@@ -129,7 +129,7 @@ void RNCrowdAgent::do_initialize()
 	}
 	for (idx = 0; idx < 3; ++idx)
 	{
-		mMoveTarget[idx] = STRTOF(paramValuesStr[idx].c_str(), nullptr);
+		mMoveTarget[idx] = STRTOF(paramValuesStr[idx].c_str(), NULL);
 	}
 	//move velocity
 	param = mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("move_velocity"));
@@ -141,40 +141,40 @@ void RNCrowdAgent::do_initialize()
 	}
 	for (idx = 0; idx < 3; ++idx)
 	{
-		mMoveVelocity[idx] = STRTOF(paramValuesStr[idx].c_str(), nullptr);
+		mMoveVelocity[idx] = STRTOF(paramValuesStr[idx].c_str(), NULL);
 	}
 	//
 	float value;
 	int valueInt;
 	//max acceleration
 	value = STRTOF(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("max_acceleration")).c_str(),
-			nullptr);
+			NULL);
 	mAgentParams.set_maxAcceleration(value >= 0.0 ? value : -value);
 	//max speed
-	value = STRTOF(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("max_speed")).c_str(), nullptr);
+	value = STRTOF(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("max_speed")).c_str(), NULL);
 	mAgentParams.set_maxSpeed(value >= 0.0 ? value : -value);
 	//collision query range
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("collision_query_range")).c_str(),
-			nullptr);
+			NULL);
 	mAgentParams.set_collisionQueryRange(value >= 0.0 ? value : -value);
 	//path optimization range
 	value = STRTOF(
 			mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("path_optimization_range")).c_str(),
-			nullptr);
+			NULL);
 	mAgentParams.set_pathOptimizationRange(value >= 0.0 ? value : -value);
 	//separation weight
 	value = STRTOF(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("separation_weight")).c_str(),
-			nullptr);
+			NULL);
 	mAgentParams.set_separationWeight(value >= 0.0 ? value : -value);
 	//update flags
 	valueInt = strtol(mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("update_flags")).c_str(),
-			nullptr, 0);
+			NULL, 0);
 	mAgentParams.set_updateFlags(valueInt >= 0.0 ? valueInt : -valueInt);
 	//obstacle avoidance type
 	valueInt = strtol(
 			mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("obstacle_avoidance_type")).c_str(),
-			nullptr, 0);
+			NULL, 0);
 	mAgentParams.set_obstacleAvoidanceType(valueInt >= 0.0 ? valueInt : -valueInt);
 	//thrown events
 	string thrownEventsParam = mTmpl->get_parameter_value(RNNavMeshManager::CROWDAGENT, string("thrown_events"));
@@ -201,7 +201,7 @@ void RNCrowdAgent::do_initialize()
 				//get name
 				string name = paramValuesStr2[1];
 				//get frequency
-				float frequency = STRTOF(paramValuesStr2[2].c_str(), nullptr);
+				float frequency = STRTOF(paramValuesStr2[2].c_str(), NULL);
 				if (frequency <= 0.0)
 				{
 					frequency = 30.0;
@@ -255,7 +255,7 @@ void RNCrowdAgent::do_initialize()
 	thisNP.set_collide_mask(~mTmpl->get_collide_mask() &
 			thisNP.get_collide_mask());
 	//3: add to RNNavMesh update if requested
-	PT(RNNavMesh) navMesh = nullptr;
+	PT(RNNavMesh) navMesh = NULL;
 	for (int index = 0;
 			index < RNNavMeshManager::get_global_ptr()->get_num_nav_meshes();
 			++index)
@@ -486,8 +486,8 @@ int RNCrowdAgent::complete_pointers(TypedWritable **p_list, BamReader *manager)
  */
 TypedWritable *RNCrowdAgent::make_from_bam(const FactoryParams &params)
 {
-	// return nullptr if RNNavMeshManager if doesn't exist
-	nassertr_always(RNNavMeshManager::get_global_ptr(), nullptr)
+	// return NULL if RNNavMeshManager if doesn't exist
+	nassertr_always(RNNavMeshManager::get_global_ptr(), NULL)
 
 	// create a RNCrowdAgent with default parameters' values: they'll be restored later
 	RNNavMeshManager::get_global_ptr()->set_parameters_defaults(

@@ -34,7 +34,7 @@ INLINE ValueList<Type>::ValueList(const ValueList &copy) :
 template<typename Type>
 INLINE ValueList<Type>::ValueList(ValueList&& copy)
 {
-	_values = std::move(copy._values);
+	_values = copy._values;
 }
 
 /**
@@ -69,7 +69,7 @@ INLINE void ValueList<Type>::operator =(const ValueList &copy)
 template<typename Type>
 INLINE void ValueList<Type>::operator =(ValueList&& copy)
 {
-	_values = std::move(copy._values);
+	_values = copy._values;
 }
 
 /**
