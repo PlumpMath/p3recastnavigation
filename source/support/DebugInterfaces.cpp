@@ -586,7 +586,7 @@ void DebugDrawMeshDrawer::end()
 	//end current MeshDrawer
 	m_generators[m_meshDrawerIdx]->end();
 	//increase MeshDrawer index only if multiple mesh
-	if (not m_singleMesh)
+	if (! m_singleMesh)
 	{
 		++m_meshDrawerIdx;
 	}

@@ -193,7 +193,7 @@ struct MeshProcess : public dtTileCacheMeshProcess
 				polyAreas[i] = NAVMESH_POLYAREA_GROUND;
 
 			//set polyFlags for polyAreas only if m_flagsAreaTable not empty
-			if (not (*m_flagsAreaTable).empty())
+			if (! (*m_flagsAreaTable).empty())
 			{ 
 				// get flags from a table indexed by areas
 				polyFlags[i] = (*m_flagsAreaTable)[polyAreas[i]];

@@ -285,7 +285,7 @@ bool rcMeshLoaderObj::load(NodePath model, NodePath referenceNP)
 	NodePathCollection modelRootCollection = model.find_all_matches(
 			"**/+ModelRoot");
 	//add model if not there
-	if (not modelRootCollection.has_path(model))
+	if (! modelRootCollection.has_path(model))
 	{
 		NodePathCollection tmpColl = std::move(modelRootCollection);
 		modelRootCollection.clear();

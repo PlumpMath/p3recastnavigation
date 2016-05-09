@@ -1236,7 +1236,7 @@ unsigned char* NavMeshType_Tile::buildTileMesh(const int tx, const int ty, const
 				m_pmesh->areas[i] = NAVMESH_POLYAREA_GROUND;
 			
 			//set polyFlags for polyAreas only if m_flagsAreaTable not empty
-			if (not m_flagsAreaTable.empty())
+			if (! m_flagsAreaTable.empty())
 			{ 
 				// get flags from a table indexed by areas
 				m_pmesh->flags[i] = m_flagsAreaTable[m_pmesh->areas[i]];

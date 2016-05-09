@@ -147,11 +147,11 @@ bool InputGeom::loadMesh(rcContext* ctx, const std::string& filepath,
 	}
 	//
 	bool loadResult = true;
-	if(not filepath.empty())
+	if(! filepath.empty())
 	{ 
 		loadResult = m_mesh->load(filepath, scale, translation);
 	}
-	else if (not model.is_empty())
+	else if (! model.is_empty())
 	{ 
 		loadResult = m_mesh->load(model, referenceNP);
 	}
