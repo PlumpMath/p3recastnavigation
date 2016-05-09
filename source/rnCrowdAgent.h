@@ -86,11 +86,11 @@ PUBLISHED:
 	enum RNUpdateFlags
 	{
 #ifndef CPPPARSER
-		ANTICIPATE_TURNS = UpdateFlags::DT_CROWD_ANTICIPATE_TURNS,
-		OBSTACLE_AVOIDANCE = UpdateFlags::DT_CROWD_OBSTACLE_AVOIDANCE,
-		SEPARATION = UpdateFlags::DT_CROWD_SEPARATION,
-		OPTIMIZE_VIS = UpdateFlags::DT_CROWD_OPTIMIZE_VIS, ///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
-		OPTIMIZE_TOPO = UpdateFlags::DT_CROWD_OPTIMIZE_TOPO, ///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
+		ANTICIPATE_TURNS = DT_CROWD_ANTICIPATE_TURNS,
+		OBSTACLE_AVOIDANCE = DT_CROWD_OBSTACLE_AVOIDANCE,
+		SEPARATION = DT_CROWD_SEPARATION,
+		OPTIMIZE_VIS = DT_CROWD_OPTIMIZE_VIS, ///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
+		OPTIMIZE_TOPO = DT_CROWD_OPTIMIZE_TOPO, ///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
 #else
 		ANTICIPATE_TURNS,OBSTACLE_AVOIDANCE,SEPARATION,
 		OPTIMIZE_VIS,OPTIMIZE_TOPO,
@@ -103,9 +103,9 @@ PUBLISHED:
 	enum RNCrowdAgentState
 	{
 #ifndef CPPPARSER
-		STATE_INVALID = CrowdAgentState::DT_CROWDAGENT_STATE_INVALID,	///< The agent is not in a valid state.
-		STATE_WALKING = CrowdAgentState::DT_CROWDAGENT_STATE_WALKING,	///< The agent is traversing a normal navigation mesh polygon.
-		STATE_OFFMESH = CrowdAgentState::DT_CROWDAGENT_STATE_OFFMESH,	///< The agent is traversing an off-mesh connection.
+		STATE_INVALID = DT_CROWDAGENT_STATE_INVALID,	///< The agent is not in a valid state.
+		STATE_WALKING = DT_CROWDAGENT_STATE_WALKING,	///< The agent is traversing a normal navigation mesh polygon.
+		STATE_OFFMESH = DT_CROWDAGENT_STATE_OFFMESH,	///< The agent is traversing an off-mesh connection.
 #else
 		STATE_INVALID,STATE_WALKING,STATE_OFFMESH,
 #endif //CPPPARSER

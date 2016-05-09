@@ -79,10 +79,10 @@ PUBLISHED:
 	enum RNNavMeshTypeEnum
 	{
 #ifndef CPPPARSER
-		SOLO = rnsup::NavMeshTypeEnum::SOLO,
-		TILE = rnsup::NavMeshTypeEnum::TILE,
-		OBSTACLE = rnsup::NavMeshTypeEnum::OBSTACLE,
-		NavMeshType_NONE = rnsup::NavMeshTypeEnum::NavMeshType_NONE
+		SOLO = rnsup::SOLO,
+		TILE = rnsup::TILE,
+		OBSTACLE = rnsup::OBSTACLE,
+		NavMeshType_NONE = rnsup::NavMeshType_NONE
 #else
 		SOLO,TILE,OBSTACLE,NavMeshType_NONE
 #endif //CPPPARSER
@@ -93,12 +93,12 @@ PUBLISHED:
 	enum RNNavMeshPolyAreasEnum
 	{
 #ifndef CPPPARSER
-		POLYAREA_GROUND = rnsup::NavMeshPolyAreasEnum::NAVMESH_POLYAREA_GROUND,
-		POLYAREA_WATER = rnsup::NavMeshPolyAreasEnum::NAVMESH_POLYAREA_WATER,
-		POLYAREA_ROAD = rnsup::NavMeshPolyAreasEnum::NAVMESH_POLYAREA_ROAD,
-		POLYAREA_DOOR = rnsup::NavMeshPolyAreasEnum::NAVMESH_POLYAREA_DOOR,
-		POLYAREA_GRASS = rnsup::NavMeshPolyAreasEnum::NAVMESH_POLYAREA_GRASS,
-		POLYAREA_JUMP = rnsup::NavMeshPolyAreasEnum::NAVMESH_POLYAREA_JUMP, ///used by off mesh connections too: DON'T REDEFINE
+		POLYAREA_GROUND = rnsup::NAVMESH_POLYAREA_GROUND,
+		POLYAREA_WATER = rnsup::NAVMESH_POLYAREA_WATER,
+		POLYAREA_ROAD = rnsup::NAVMESH_POLYAREA_ROAD,
+		POLYAREA_DOOR = rnsup::NAVMESH_POLYAREA_DOOR,
+		POLYAREA_GRASS = rnsup::NAVMESH_POLYAREA_GRASS,
+		POLYAREA_JUMP = rnsup::NAVMESH_POLYAREA_JUMP, ///used by off mesh connections too: DON'T REDEFINE
 #else
 		POLYAREA_GROUND,POLYAREA_WATER,POLYAREA_ROAD,
 		POLYAREA_DOOR,POLYAREA_GRASS,POLYAREA_JUMP,
@@ -110,12 +110,12 @@ PUBLISHED:
 	enum RNNavMeshPolyFlagsEnum
 	{
 #ifndef CPPPARSER
-		POLYFLAGS_WALK		= rnsup::NavMeshPolyFlagsEnum::NAVMESH_POLYFLAGS_WALK, // Ability to walk (ground, grass, road)
-		POLYFLAGS_SWIM		= rnsup::NavMeshPolyFlagsEnum::NAVMESH_POLYFLAGS_SWIM, // Ability to swim (water).
-		POLYFLAGS_DOOR		= rnsup::NavMeshPolyFlagsEnum::NAVMESH_POLYFLAGS_DOOR, // Ability to move through doors.
-		POLYFLAGS_JUMP		= rnsup::NavMeshPolyFlagsEnum::NAVMESH_POLYFLAGS_JUMP, /// Ability to jump. Used by off mesh connections too: DON'T REDEFINE
-		POLYFLAGS_DISABLED	= rnsup::NavMeshPolyFlagsEnum::NAVMESH_POLYFLAGS_DISABLED, // Disabled polygon
-		POLYFLAGS_ALL		= rnsup::NavMeshPolyFlagsEnum::NAVMESH_POLYFLAGS_ALL // All abilities.
+		POLYFLAGS_WALK		= rnsup::NAVMESH_POLYFLAGS_WALK, // Ability to walk (ground, grass, road)
+		POLYFLAGS_SWIM		= rnsup::NAVMESH_POLYFLAGS_SWIM, // Ability to swim (water).
+		POLYFLAGS_DOOR		= rnsup::NAVMESH_POLYFLAGS_DOOR, // Ability to move through doors.
+		POLYFLAGS_JUMP		= rnsup::NAVMESH_POLYFLAGS_JUMP, /// Ability to jump. Used by off mesh connections too: DON'T REDEFINE
+		POLYFLAGS_DISABLED	= rnsup::NAVMESH_POLYFLAGS_DISABLED, // Disabled polygon
+		POLYFLAGS_ALL		= rnsup::NAVMESH_POLYFLAGS_ALL // All abilities.
 #else
 		POLYFLAGS_WALK,POLYFLAGS_SWIM,POLYFLAGS_DOOR,
 		POLYFLAGS_JUMP,POLYFLAGS_DISABLED,POLYFLAGS_ALL
@@ -127,9 +127,9 @@ PUBLISHED:
 	enum RNNavMeshPartitionType
 	{
 #ifndef CPPPARSER
-		PARTITION_WATERSHED = rnsup::NavMeshPartitionType::NAVMESH_PARTITION_WATERSHED,
-		PARTITION_MONOTONE = rnsup::NavMeshPartitionType::NAVMESH_PARTITION_MONOTONE,
-		PARTITION_LAYERS = rnsup::NavMeshPartitionType::NAVMESH_PARTITION_LAYERS,
+		PARTITION_WATERSHED = rnsup::NAVMESH_PARTITION_WATERSHED,
+		PARTITION_MONOTONE = rnsup::NAVMESH_PARTITION_MONOTONE,
+		PARTITION_LAYERS = rnsup::NAVMESH_PARTITION_LAYERS,
 #else
 		PARTITION_WATERSHED,PARTITION_MONOTONE,PARTITION_LAYERS,
 #endif //CPPPARSER

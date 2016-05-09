@@ -11,6 +11,10 @@
 #include "recastnavigation_includes.h"
 #include "genericAsyncTask.h"
 #include "lpoint3.h"
+
+#ifdef _WIN32
+#include <ciso646>
+#endif
 //
 #ifndef CPPPARSER
 #include "support/NavMeshType.h"
@@ -454,7 +458,7 @@ private:
 #ifndef CPPPARSER
 extern template class ValueList<string>;
 extern template class ValueList<LPoint3f>;
-extern template class Pair<bool,float>;
+extern template struct Pair<bool,float>;
 #endif //CPPPARSER
 
 typedef ValueList<string> ValueListString;

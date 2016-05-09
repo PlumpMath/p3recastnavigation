@@ -248,4 +248,4 @@ void RNCrowdAgentParams::read_datagram(DatagramIterator &scan)
 
 template class ValueList<string>;
 template class ValueList<LPoint3f>;
-template class Pair<bool,float>;
+template struct Pair<bool,float>;
