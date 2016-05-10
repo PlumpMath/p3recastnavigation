@@ -914,6 +914,7 @@ void RNNavMesh::do_finalize()
 
 /**
  * Cleans up the RNNavMesh.
+ * \note crowd agents, and obstacles are detached after this call.
  */
 int RNNavMesh::cleanup()
 {
@@ -959,8 +960,7 @@ int RNNavMesh::cleanup()
 
 	//reset owner object
 	mOwnerObject.clear();
-	//reset reference node path
-	mReferenceNP.clear();
+
 	//reset name
 	set_name("RNNavMesh");
 

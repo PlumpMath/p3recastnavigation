@@ -416,6 +416,19 @@ void toggleSetupCleanup(const Event* e, void* data)
 		framework.get_task_mgr().remove(updateTask);
 		// false: cleanup
 		navMesh->cleanup();
+		// now crowd agents and obstacles are detached:
+		// prevent to make them disappear from the scene
+		for (int i = 0; i < navMesh->get_num_crowd_agents(); ++i)
+		{
+			NodePath::any_path(navMesh->get_crowd_agent(i)).reparent_to(
+					window->get_render());
+		}
+		for (int i = 0; i < navMesh->get_num_obstacles(); ++i)
+		{
+			int ref = navMesh->get_obstacle(i);
+			navMesh->get_obstacle_by_ref(ref).reparent_to(
+					window->get_render());
+		}
 	}
 	*setupCleanupFlag = not *setupCleanupFlag;
 }

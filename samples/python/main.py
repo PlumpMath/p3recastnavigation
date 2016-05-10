@@ -215,6 +215,13 @@ def toggleSetupCleanup():
         app.taskMgr.remove("updateNavMesh")
         # false: cleanup
         navMesh.cleanup()
+        # now crowd agents and obstacles are detached:
+        # prevent to make them disappear from the scene
+        for agent in navMesh:
+            NodePath.any_path(agent).reparent_to(app.render)
+        for i in range(navMesh.get_num_obstacles()):
+            ref = navMesh.get_obstacle(i)
+            navMesh.get_obstacle_by_ref(ref).reparent_to(app.render)
     setupCleanupFlag = not setupCleanupFlag
 
 # handle crowd agent's events
