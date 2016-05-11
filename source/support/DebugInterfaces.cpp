@@ -546,9 +546,10 @@ void DebugDrawMeshDrawer::clear()
 	m_meshDrawersSize = 0;
 	m_prim = static_cast<duDebugDrawPrimitives>(DU_NULL_PRIM);
 	//clear internal storage
-	for (unsigned int i; i < m_generators.size(); ++i)
+	std::vector<MeshDrawer*>::iterator iter;
+	for (iter = m_generators.begin(); iter != m_generators.end(); ++iter)
 	{
-		delete m_generators[i];
+		delete (*iter);
 	}
 	m_generators.clear();
 }
