@@ -281,36 +281,28 @@ bool rcMeshLoaderObj::load(NodePath model, NodePath referenceNP)
 	//reset max index
 	m_currentMaxIndex = 0;
 	//all transform are applied wrt reference node
-	//get all ModelRoots for the hierarchy below model
-	NodePathCollection modelRootCollection = model.find_all_matches(
-			"**/+ModelRoot");
-	//add model if not there
-	if (! modelRootCollection.has_path(model))
+	//get current model transform
+	m_currentTranformMat = model.get_transform(referenceNP)->get_mat();
+	///Elaborate
+	//Walk through all the model's GeomNodes
+	NodePathCollection geomNodeCollection;
+	// check if model is GeomNode itself (i.e. when procedurally generated)
+	if (model.node()->is_of_type(GeomNode::get_class_type()))
 	{
-		NodePathCollection tmpColl = modelRootCollection;
-		modelRootCollection.clear();
-		modelRootCollection.add_path(model);
-		modelRootCollection += tmpColl;
+		geomNodeCollection.add_path(model);
 	}
-	//iterate over ModelRoots
-	for (int i = 0; i < modelRootCollection.size(); i++)
+	else
 	{
-		//get current ModelRoot node path
-		NodePath currentModelRoot = modelRootCollection[i];
-		//get current ModelRoot transform
-		m_currentTranformMat =
-				currentModelRoot.get_transform(referenceNP)->get_mat();
-		///Elaborate
-		//Walk through all the currNP's GeomNodes
-		NodePathCollection geomNodeCollection =
-				currentModelRoot.find_all_matches("**/+GeomNode");
-		int numPaths = geomNodeCollection.get_num_paths();
-		PRINT_DEBUG("\tGeomNodes number: " << numPaths);
-		for (int i = 0; i < numPaths; i++)
-		{
-			PT(GeomNode)geomNode = DCAST(GeomNode,geomNodeCollection.get_path(i).node());
-			processGeomNode(geomNode);
-		}
+		//get all GeomNodes for the hierarchy below model
+		geomNodeCollection = model.find_all_matches("**/+GeomNode");
+	}
+	//
+	int numPaths = geomNodeCollection.get_num_paths();
+	PRINT_DEBUG("\tGeomNodes number: " << numPaths);
+	for (int i = 0; i < numPaths; i++)
+	{
+		PT(GeomNode)geomNode = DCAST(GeomNode,geomNodeCollection.get_path(i).node());
+		processGeomNode(geomNode);
 	}
 
 	// Calculate normals.
