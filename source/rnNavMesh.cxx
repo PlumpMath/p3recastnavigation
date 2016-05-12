@@ -1771,8 +1771,8 @@ int RNNavMesh::toggle_debug_drawing(bool enable)
 		}
 	}
 	//
-	return RN_SUCCESS;
 #endif //RN_DEBUG
+	return RN_SUCCESS;
 }
 
 
