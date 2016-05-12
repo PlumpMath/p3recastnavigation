@@ -36,7 +36,7 @@ bamFileName = "nav_mesh.boo"
 # # functions' declarations and definitions
 # load all scene stuff
 def loadAllScene():
-    global navMesh, crowdAgent, sceneNP, agentNP
+    global app, navMesh, crowdAgent, sceneNP, agentNP
     navMesMgr = RNNavMeshManager.get_global_ptr()
     # get a sceneNP as owner model
     getOwnerModel()
