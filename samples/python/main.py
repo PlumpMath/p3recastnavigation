@@ -35,14 +35,20 @@ obstacleFile = "plants2.egg"
 # bame file
 bamFileName = "nav_mesh.boo"
 
-boxBulletObstacleNP = None
+boxProxyBulletObstacleNP = None
 boxBulletNP = None
 boxBulletObstacleAdded = False
+def hitBulletOstacle():
+    global boxBulletNP 
+    ix = random.uniform(0.0, 0.4) - 0.2 
+    iy = random.uniform(0.0, 0.4) - 0.2
+    boxBulletNP.node().set_active(True)
+    boxBulletNP.node().apply_central_impulse(LVector3f(ix, iy, 5.0))
 
 # # functions' declarations and definitions
 # load all scene stuff
 def loadAllScene():
-    global app, navMesh, crowdAgent, sceneNP, agentNP, bulletWorld, boxBulletObstacleNP, boxBulletNP
+    global app, navMesh, crowdAgent, sceneNP, agentNP, bulletWorld, boxProxyBulletObstacleNP, boxBulletNP
     navMesMgr = RNNavMeshManager.get_global_ptr()
     # get a sceneNP as owner model
     getOwnerModel()
@@ -82,22 +88,27 @@ def loadAllScene():
     node.add_shape(shape)
     # reparent to render and attach to bullet bulletWorld
     boxBulletNP = app.render.attach_new_node(node)
-    boxBulletNP.set_pos(8, 0, 20)
+    boxBulletNP.set_pos(-13.8, -10.1, 5.0)
     bulletWorld.attach_rigid_body(node)
     # attach a model
-    boxBulletObstacleNP = loader.load_model('models/box.egg')
-    boxBulletObstacleNP.flatten_light()
-    boxBulletObstacleNP.set_pos(-0.5, -0.5, -0.5)
-    boxBulletObstacleNP.reparent_to(boxBulletNP)
+    model = loader.load_model('models/box.egg')
+    model.flatten_light()
+    model.set_pos(-0.5, -0.5, -0.5)
+    model.reparent_to(boxBulletNP)
+    boxProxyBulletObstacleNP = NodePath("proxy obstacle")
+    model.instance_to(boxProxyBulletObstacleNP)
+    boxProxyBulletObstacleNP.reparent_to(navMeshNP)
+    boxProxyBulletObstacleNP.hide()
+
     # bullet debug
-    debugNode = BulletDebugNode('Debug')
-    debugNode.show_wireframe(True)
-    debugNode.show_constraints(True)
-    debugNode.show_bounding_boxes(False)
-    debugNode.show_normals(False)
-    debugNP = render.attach_new_node(debugNode)
-    debugNP.show()
-    bulletWorld.set_debug_node(debugNP.node())
+#     debugNode = BulletDebugNode('Debug')
+#     debugNode.show_wireframe(True)
+#     debugNode.show_constraints(True)
+#     debugNode.show_bounding_boxes(False)
+#     debugNode.show_normals(False)
+#     debugNP = render.attach_new_node(debugNode)
+#     debugNP.show()
+#     bulletWorld.set_debug_node(debugNP.node())
 
     # reparent navMeshNP to a Bullet reference node 
     navMeshNP.reparent_to(sceneBulletNP)
@@ -376,7 +387,7 @@ def handleObstacles(data):
 
 # custom path finding update task to correct panda's Z to stay on floor
 def updateNavMesh(navMesh, task):
-    global crowdAgent, bulletWorld, boxBulletObstacleNP, boxBulletObstacleAdded, boxBulletNP
+    global crowdAgent, bulletWorld, boxProxyBulletObstacleNP, boxBulletObstacleAdded, boxBulletNP
     # call update for navMesh
     dt = ClockObject.get_global_clock().get_dt()
     navMesh.update(dt)
@@ -401,15 +412,15 @@ def updateNavMesh(navMesh, task):
                 agentAnimCtls[i][1].stop()
     #
     bulletWorld.doPhysics(dt)
-    if (not boxBulletNP.node().is_active()) and (not boxBulletObstacleAdded):
-        navMesh.add_obstacle(boxBulletObstacleNP)
+    if (not boxBulletObstacleAdded) and (not boxBulletNP.node().is_active()):
+        pos = NodePath.any_path(navMesh).get_relative_point(boxBulletNP, LVecBase3f(0.0, 0.0, -0.5))
+        boxProxyBulletObstacleNP.set_pos(pos)
+        navMesh.add_obstacle(boxProxyBulletObstacleNP)
         boxBulletObstacleAdded = True
-        # boxBulletObstacleNP is reparented to navMesh
-    elif boxBulletNP.node().is_active() and boxBulletObstacleAdded:
-        navMesh.remove_obstacle(boxBulletObstacleNP)
+    elif boxBulletObstacleAdded and boxBulletNP.node().is_active():
+        navMesh.remove_obstacle(boxProxyBulletObstacleNP)
         boxBulletObstacleAdded = False
-        # reparent boxBulletObstacleNP to boxBulletNP
-        boxBulletObstacleNP.reparent_to(boxBulletNP)
+
     #
     return task.cont
 
@@ -513,7 +524,10 @@ if __name__ == '__main__':
 
     # handle obstacle removal
     app.accept("shift-o", handleObstacles, [False]);
-    
+ 
+    # handle hit bullet proxy obstacle
+    app.accept("b", hitBulletOstacle)
+   
     # write to bam file on exit
     app.win.set_close_request_event("close_request_event")
     app.accept("close_request_event", writeToBamFileAndExit, [bamFileName])
