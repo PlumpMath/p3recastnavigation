@@ -40,8 +40,8 @@ boxBulletNP = None
 boxBulletObstacleAdded = False
 def hitBulletOstacle():
     global boxBulletNP 
-    ix = random.uniform(0.0, 0.4) - 0.2 
-    iy = random.uniform(0.0, 0.4) - 0.2
+    ix = random.uniform(0.0, 1.2) - 0.6 
+    iy = random.uniform(0.0, 1.2) - 0.6
     boxBulletNP.node().set_active(True)
     boxBulletNP.node().apply_central_impulse(LVector3f(ix, iy, 5.0))
 
@@ -413,7 +413,7 @@ def updateNavMesh(navMesh, task):
     #
     bulletWorld.doPhysics(dt)
     if (not boxBulletObstacleAdded) and (not boxBulletNP.node().is_active()):
-        pos = NodePath.any_path(navMesh).get_relative_point(boxBulletNP, LVecBase3f(0.0, 0.0, -0.5))
+        pos = boxBulletNP.get_pos(NodePath.any_path(navMesh)) + LVecBase3f(0.0, 0.0, -0.5)
         boxProxyBulletObstacleNP.set_pos(pos)
         navMesh.add_obstacle(boxProxyBulletObstacleNP)
         boxBulletObstacleAdded = True
