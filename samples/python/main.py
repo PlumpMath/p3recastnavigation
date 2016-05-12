@@ -8,9 +8,11 @@ from direct.showbase.ShowBase import ShowBase
 from direct.actor.Actor import Actor
 from panda3d.core import load_prc_file_data, NodePath, ClockObject, \
                 BitMask32, LVector3f, LVecBase3f, LPoint3f, \
-                AnimControlCollection, auto_bind, TextNode
+                AnimControlCollection, auto_bind, TextNode, TransformState
 from p3recastnavigation import RNNavMeshManager, RNCrowdAgent, \
                 ValueListString
+from panda3d.bullet import *
+
 import random, sys
 
 dataDir = "../data"
@@ -33,10 +35,14 @@ obstacleFile = "plants2.egg"
 # bame file
 bamFileName = "nav_mesh.boo"
 
+boxBulletObstacleNP = None
+boxBulletNP = None
+boxBulletObstacleAdded = False
+
 # # functions' declarations and definitions
 # load all scene stuff
 def loadAllScene():
-    global navMesh, crowdAgent, sceneNP, agentNP
+    global app, navMesh, crowdAgent, sceneNP, agentNP, bulletWorld, boxBulletObstacleNP, boxBulletNP
     navMesMgr = RNNavMeshManager.get_global_ptr()
     # get a sceneNP as owner model
     getOwnerModel()
@@ -51,9 +57,51 @@ def loadAllScene():
     # setup the nav mesh with scene as its owner object
     navMesh.setup()
     
-    # reparent navMeshNP to a reference NodePath
-    navMeshNP.reparent_to(app.render)
-    
+    # BULLET
+    # create trimesh shape and add to a rigid body
+    geomNodes = sceneNP.find_all_matches("**/+GeomNode")
+    triMesh = BulletTriangleMesh()
+    for i in range(geomNodes.get_num_paths()):
+        geomNode = geomNodes.get_path(i).node()
+        ts = geomNode.get_transform().compose(
+            TransformState.make_scale(sceneNP.get_net_transform().get_scale()))
+        geoms = geomNode.get_geoms()
+        for geom in geoms:
+            triMesh.add_geom(geom, True, ts)
+    shape = BulletTriangleMeshShape(triMesh, False)
+    node = BulletRigidBodyNode('sceneNP')
+    node.add_shape(shape)
+    # reparent to render and attach to bullet bulletWorld
+    sceneBulletNP = app.render.attach_new_node(node)
+    bulletWorld.attach_rigid_body(node)
+    # Box obstacle
+    shape = BulletBoxShape(LVector3f(0.5, 0.5, 0.5))
+    node = BulletRigidBodyNode('Box')
+    node.set_mass(1.0)
+    node.set_deactivation_enabled(True)
+    node.add_shape(shape)
+    # reparent to render and attach to bullet bulletWorld
+    boxBulletNP = app.render.attach_new_node(node)
+    boxBulletNP.set_pos(8, 0, 20)
+    bulletWorld.attach_rigid_body(node)
+    # attach a model
+    boxBulletObstacleNP = loader.load_model('models/box.egg')
+    boxBulletObstacleNP.flatten_light()
+    boxBulletObstacleNP.set_pos(-0.5, -0.5, -0.5)
+    boxBulletObstacleNP.reparent_to(boxBulletNP)
+    # bullet debug
+    debugNode = BulletDebugNode('Debug')
+    debugNode.show_wireframe(True)
+    debugNode.show_constraints(True)
+    debugNode.show_bounding_boxes(False)
+    debugNode.show_normals(False)
+    debugNP = render.attach_new_node(debugNode)
+    debugNP.show()
+    bulletWorld.set_debug_node(debugNP.node())
+
+    # reparent navMeshNP to a Bullet reference node 
+    navMeshNP.reparent_to(sceneBulletNP)
+        
     # get agentNP[] (and agentAnimNP[]) as models for crowd agents
     getAgentModelAnims()
     
@@ -328,7 +376,7 @@ def handleObstacles(data):
 
 # custom path finding update task to correct panda's Z to stay on floor
 def updateNavMesh(navMesh, task):
-    global crowdAgent
+    global crowdAgent, bulletWorld, boxBulletObstacleNP, boxBulletObstacleAdded, boxBulletNP
     # call update for navMesh
     dt = ClockObject.get_global_clock().get_dt()
     navMesh.update(dt)
@@ -351,6 +399,17 @@ def updateNavMesh(navMesh, task):
                 # stop any animation
                 agentAnimCtls[i][0].stop()
                 agentAnimCtls[i][1].stop()
+    #
+    bulletWorld.doPhysics(dt)
+    if (not boxBulletNP.node().is_active()) and (not boxBulletObstacleAdded):
+        navMesh.add_obstacle(boxBulletObstacleNP)
+        boxBulletObstacleAdded = True
+        # boxBulletObstacleNP is reparented to navMesh
+    elif boxBulletNP.node().is_active() and boxBulletObstacleAdded:
+        navMesh.remove_obstacle(boxBulletObstacleNP)
+        boxBulletObstacleAdded = False
+        # reparent boxBulletObstacleNP to boxBulletNP
+        boxBulletObstacleNP.reparent_to(boxBulletNP)
     #
     return task.cont
 
@@ -408,6 +467,10 @@ if __name__ == '__main__':
     # set creation parameters as strings before nav meshes/crowd agent creation
     print("\n" + "Current creation parameters:")
     setParametersBeforeCreation()
+
+    # setup bullet bulletWorld
+    bulletWorld = BulletWorld()
+    bulletWorld.setGravity(LVector3f(0, 0, -9.81))
 
     # load or restore all scene stuff: if passed an argument
     # try to read it from bam file
