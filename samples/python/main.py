@@ -173,6 +173,9 @@ def setParametersBeforeCreation():
             "true")
     navMesMgr.set_parameter_value(RNNavMeshManager.NAVMESH, "agent_max_climb",
             "2.5")
+    navMesMgr.set_parameter_value(RNNavMeshManager.NAVMESH, "agent_radius",
+            "1.0");
+
     valueList = ValueListString()
     # set some off mesh connections: "area_type@flag1[:flag2...:flagN]@cost"
     valueList.add_value("31.6,24.5,-2.0:20.2,9.4,-2.4@true")
