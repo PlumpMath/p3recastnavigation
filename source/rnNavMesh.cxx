@@ -1487,12 +1487,8 @@ const RNCrowdAgentParams& params)
 	{
 		//second parameter should be the parameter to update
 		dtCrowdAgentParams ap = params;
-		//all crowd agent have the same dimensions: those
-		//registered into the current mNavMeshType
-		ap.radius = mNavMeshType->getNavMeshSettings().m_agentRadius;
-		ap.height = mNavMeshType->getNavMeshSettings().m_agentHeight;
 		static_cast<rnsup::CrowdTool*>(mNavMeshType->getTool())->
-		getState()->getCrowd()->updateAgentParameters(crowdAgent->mAgentIdx, &ap);
+				getState()->getCrowd()->updateAgentParameters(crowdAgent->mAgentIdx, &ap);
 	}
 	crowdAgent->mAgentParams = params;
 	//
