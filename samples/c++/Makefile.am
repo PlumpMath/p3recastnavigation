@@ -15,7 +15,7 @@ AM_LDFLAGS = -L/usr/lib/x86_64-linux-gnu/panda3d
 LDADD = -lp3framework -lpanda -lpandaexpress -lp3dtool -lp3dtoolconfig \
 		-lp3pystub -lXxf86dga -lpython2.7 -lpandaphysics -lpthread
 
-noinst_PROGRAMS = sample
+noinst_PROGRAMS = main test
 
 BUILT_SOURCES = main.h
 
@@ -26,10 +26,7 @@ main.h: $(srcdir)/main.h.in Makefile
 	
 EXTRA_DIST = main.h.in
 
-sample_SOURCES = \
-	main.cpp
-	
-nodist_sample_SOURCES = \
+common_sources = \
 	$(srcdir)/../../source/rnCrowdAgent.cxx \
 	$(srcdir)/../../source/rnNavMesh.cxx \
 	$(srcdir)/../../source/rnNavMeshManager.cxx \
@@ -75,5 +72,17 @@ nodist_sample_SOURCES = \
 	$(srcdir)/../../source/support/NavMeshType_Tile.cpp \
 	$(srcdir)/../../source/support/OffMeshConnectionTool.cpp \
 	$(srcdir)/../../source/support/PerfTimer.cpp
+
+#main
+main_SOURCES = \
+	main.cpp
+
+nodist_main_SOURCES = $(common_sources)
+
+#test
+test_SOURCES = \
+	test.cpp
+
+nodist_test_SOURCES = $(common_sources)
 
 CLEANFILES = main.h

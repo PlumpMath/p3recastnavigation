@@ -1375,8 +1375,8 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent)
 
 		//update dtCrowdAgentParams
 		dtCrowdAgentParams ap = crowdAgent->mAgentParams;
-		ap.radius = mNavMeshType->getNavMeshSettings().m_agentRadius;
-		ap.height = mNavMeshType->getNavMeshSettings().m_agentHeight;
+		ap.radius = modelRadius;
+		ap.height = modelDims.get_z();
 
 		//set height correction
 		crowdAgent->mHeigthCorrection = LVector3f(0.0, 0.0, modelDims.get_z());
@@ -1487,12 +1487,8 @@ const RNCrowdAgentParams& params)
 	{
 		//second parameter should be the parameter to update
 		dtCrowdAgentParams ap = params;
-		//all crowd agent have the same dimensions: those
-		//registered into the current mNavMeshType
-		ap.radius = mNavMeshType->getNavMeshSettings().m_agentRadius;
-		ap.height = mNavMeshType->getNavMeshSettings().m_agentHeight;
 		static_cast<rnsup::CrowdTool*>(mNavMeshType->getTool())->
-		getState()->getCrowd()->updateAgentParameters(crowdAgent->mAgentIdx, &ap);
+				getState()->getCrowd()->updateAgentParameters(crowdAgent->mAgentIdx, &ap);
 	}
 	crowdAgent->mAgentParams = params;
 	//

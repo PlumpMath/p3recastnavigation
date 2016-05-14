@@ -364,6 +364,8 @@ void setParametersBeforeCreation()
 			"true");
 	navMesMgr->set_parameter_value(RNNavMeshManager::NAVMESH, "agent_max_climb",
 			"2.5");
+	navMesMgr->set_parameter_value(RNNavMeshManager::NAVMESH, "agent_radius",
+			"1.0");
 
 	ValueListString valueList;
 	// set some off mesh connections: "area_type@flag1[:flag2...:flagN]@cost"
