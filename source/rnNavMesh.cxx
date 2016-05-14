@@ -1375,8 +1375,8 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent)
 
 		//update dtCrowdAgentParams
 		dtCrowdAgentParams ap = crowdAgent->mAgentParams;
-		ap.radius = mNavMeshType->getNavMeshSettings().m_agentRadius;
-		ap.height = mNavMeshType->getNavMeshSettings().m_agentHeight;
+		ap.radius = modelRadius;
+		ap.height = modelDims.get_z();
 
 		//set height correction
 		crowdAgent->mHeigthCorrection = LVector3f(0.0, 0.0, modelDims.get_z());

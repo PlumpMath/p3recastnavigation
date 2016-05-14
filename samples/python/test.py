@@ -7,12 +7,24 @@ Created on Mar 24, 2016
 # from direct.actor.Actor import Actor
 import panda3d.core
 from p3recastnavigation import RNNavMeshManager
-from panda3d.core import load_prc_file_data, NodePath, ClockObject, \
-                BitMask32, LVector3f, LVecBase3f, LPoint3f, \
-                AnimControlCollection, auto_bind, TextNode
+from panda3d.core import load_prc_file_data, LPoint3f
 from direct.showbase.ShowBase import ShowBase
 
 dataDir = "../data"
+
+crowdAgent = None
+halfVel = True
+
+def changeSpeed():
+    global crowdAgent, halfVel
+    ap = crowdAgent.get_params()
+    vel = ap.get_maxSpeed()
+    if halfVel:
+        ap.set_maxSpeed(vel / 2.0)
+    else:
+        ap.set_maxSpeed(vel * 2.0)
+    crowdAgent.set_params(ap)
+    halfVel = not halfVel
 
 if __name__ == '__main__':
     # Load your application's configuration
@@ -70,6 +82,9 @@ if __name__ == '__main__':
     
     print("set crowd agent move target on scene surface")
     crowdAgent.set_move_target(LPoint3f(-20.5, 5.2, -2.36))
+    
+    # handle change speed
+    app.accept("s", changeSpeed)
 
     # place camera
     trackball = app.trackball.node()
