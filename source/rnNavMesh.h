@@ -16,6 +16,7 @@
 #include "support/CrowdTool.h"
 #include "support/NavMeshType_Tile.h"
 #include "support/NavMeshType_Obstacle.h"
+#include "support/NavMeshTesterTool.h"
 #include "library/DetourTileCache.h"
 #endif //CPPPARSER
 
@@ -287,6 +288,9 @@ private:
 	int do_set_crowd_agent_velocity(PT(RNCrowdAgent)crowdAgent,
 			const LVector3f& moveVelocity);
 	///@}
+
+	///Tester tool.
+	rnsup::NavMeshTesterTool mTesterTool;
 
 	void do_reset();
 	void do_initialize();

@@ -660,6 +660,10 @@ int RNNavMesh::setup()
 	crowdTool->getState()->getCrowd()->getEditableFilter(0)->setExcludeFlags(
 			mCrowdExcludeFlags);
 
+	//initialize the tester tool
+	mTesterTool.init(mNavMeshType,
+			crowdTool->getState()->getCrowd()->getEditableFilter(0));
+
 	//<this code is executed only when in manual setup:
 	//add to recast previously added CrowdAgents.
 	//mCrowdAgents could be modified during iteration so use this pattern:
