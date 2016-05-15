@@ -53,9 +53,9 @@ PUBLISHED:
 		CROWDAGENT
 	};
 
-	ValueListString get_parameter_name_list(RNType type);
-	void set_parameter_values(RNType type, const string& paramName, const ValueListString& paramValues);
-	ValueListString get_parameter_values(RNType type, const string& paramName);
+	ValueList<string> get_parameter_name_list(RNType type);
+	void set_parameter_values(RNType type, const string& paramName, const ValueList<string>& paramValues);
+	ValueList<string> get_parameter_values(RNType type, const string& paramName);
 	void set_parameter_value(RNType type, const string& paramName, const string& value);
 	string get_parameter_value(RNType type, const string& paramName);
 	void set_parameters_defaults(RNType type);
@@ -70,7 +70,7 @@ PUBLISHED:
 	//Utilities
 	float get_bounding_dimensions(NodePath modelNP, LVecBase3f& modelDims,
 			LVector3f& modelDeltaCenter);
-	PairBoolFloat get_collision_height(const LPoint3f& origin,
+	Pair<bool,float> get_collision_height(const LPoint3f& origin,
 			const NodePath& space = NodePath());
 	INLINE CollideMask get_collide_mask();
 	INLINE NodePath get_collision_root();

@@ -10,7 +10,7 @@ from panda3d.core import load_prc_file_data, NodePath, ClockObject, \
                 BitMask32, LVector3f, LVecBase3f, LPoint3f, \
                 AnimControlCollection, auto_bind, TextNode
 from p3recastnavigation import RNNavMeshManager, RNCrowdAgent, \
-                ValueListString
+                ValueList_string
 import random, sys
 
 dataDir = "../data"
@@ -176,7 +176,7 @@ def setParametersBeforeCreation():
     navMesMgr.set_parameter_value(RNNavMeshManager.NAVMESH, "agent_radius",
             "1.0");
 
-    valueList = ValueListString()
+    valueList = ValueList_string()
     # set some off mesh connections: "area_type@flag1[:flag2...:flagN]@cost"
     valueList.add_value("31.6,24.5,-2.0:20.2,9.4,-2.4@true")
     valueList.add_value("21.1,-4.5,-2.4:32.3,-3.0,-1.5@true")

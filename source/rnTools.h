@@ -75,6 +75,10 @@ PUBLISHED:
 			mPair(first, second)
 	{
 	}
+	bool operator== (const Pair &other) const
+	{
+		return mPair == other.mPair;
+	}
 	INLINE void set_first(const T1& first)
 	{
 		mPair.first = first;
@@ -427,6 +431,7 @@ PUBLISHED:
 
 	INLINE void operator =(const ValueList &copy);
 	INLINE void operator =(ValueList&& copy);
+	INLINE bool operator== (const ValueList &other) const;
 	INLINE void add_value(const Type& value);
 	bool remove_value(const Type& value);
 	bool has_value(const Type& value) const;
@@ -464,9 +469,5 @@ extern template class ValueList<string>;
 extern template class ValueList<LPoint3f>;
 extern template struct Pair<bool,float>;
 #endif //CPPPARSER
-
-typedef ValueList<string> ValueListString;
-typedef ValueList<LPoint3f> ValueListLPoint3f;
-typedef Pair<bool,float> PairBoolFloat;
 
 #endif /* RNTOOLS_H_ */

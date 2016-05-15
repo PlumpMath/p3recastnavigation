@@ -373,7 +373,7 @@ void RNNavMesh::do_initialize()
 						strtol(pointsAreaTypeStr[1].c_str(), NULL, 0) :
 						rnsup::NAVMESH_POLYAREA_GROUND);
 		//iterate over points
-		ValueListLPoint3f pointList;
+		ValueList<LPoint3f> pointList;
 		pvector<string> pointsStr = parseCompoundString(
 				pointsAreaTypeStr[0], ':');
 		pvector<string>::const_iterator iterP;
@@ -417,7 +417,7 @@ void RNNavMesh::do_initialize()
 						false : true);
 		//iterate over the first 2 points
 		//each point defaults to LPoint3f::zero()
-		ValueListLPoint3f pointPair;
+		ValueList<LPoint3f> pointPair;
 		pvector<string> pointsStr = parseCompoundString(
 				pointPairBidirStr[0], ':');
 		pvector<string>::const_iterator iterPStr;
@@ -575,7 +575,7 @@ int RNNavMesh::setup()
 	for (iterPLA = mConvexVolumes.begin(); iterPLA != mConvexVolumes.end();
 			++iterPLA)
 	{
-		ValueListLPoint3f points = iterPLA->first();
+		ValueList<LPoint3f> points = iterPLA->first();
 		//check if there are at least 3 points for
 		//complete a convex volume
 		if (points.size() < 3)
@@ -615,7 +615,7 @@ int RNNavMesh::setup()
 	for (iterPPB = mOffMeshConnections.begin();
 			iterPPB != mOffMeshConnections.end(); ++iterPPB)
 	{
-		ValueListLPoint3f pointPair = iterPPB->first();
+		ValueList<LPoint3f> pointPair = iterPPB->first();
 		bool bidir = iterPPB->second();
 
 		//1: set recast connection bidir
@@ -732,7 +732,7 @@ bool RNNavMesh::do_build_navMesh()
  * Can be set only before RNNavMesh is setup.
  * Returns the convex volume's index, or a negative number on error.
  */
-int RNNavMesh::add_convex_volume(const ValueListLPoint3f& points,
+int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
 		RNNavMeshPolyAreasEnum area)
 {
 	// go on if nav mesh has not been already setup
@@ -769,7 +769,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 	for(cvI = mConvexVolumes.begin(); cvI != mConvexVolumes.end(); ++cvI)
 	{
 		//try to add this convex volume (the NavMeshType has none)
-		ValueListLPoint3f points = cvI->first();
+		ValueList<LPoint3f> points = cvI->first();
 		cvTool->setAreaType(cvI->second());
 		float recastPos[3];
 		for (int iterP = 0; iterP != points.size(); ++iterP)
@@ -817,7 +817,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
  * \note pointPair[0] = begin point, pointPair[1] = end point
  * Returns the off mesh connection's index, or a negative number on error.
  */
-int RNNavMesh::add_off_mesh_connection(const ValueListLPoint3f& points, bool bidirectional)
+int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points, bool bidirectional)
 {
 	// go on if nav mesh has not been already setup
 	nassertr_always((not mNavMeshType) and (points.size() >= 2), -1)
@@ -853,7 +853,7 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 			++omcI)
 	{
 		//try to add this off mesh connection (the NavMeshType has none)
-		ValueListLPoint3f pointPair = omcI->first();
+		ValueList<LPoint3f> pointPair = omcI->first();
 		omcTool->setBidir(omcI->second());
 		float recastPos[3];
 		LPoint3f refPos;
@@ -1683,13 +1683,13 @@ void RNNavMesh::update(float dt)
  * Finds a path from the start point to the end point.
  * Returns a list of points, empty on error.
  */
-ValueListLPoint3f RNNavMesh::get_path_find_follow(const LPoint3f& startPos,
+ValueList<LPoint3f> RNNavMesh::get_path_find_follow(const LPoint3f& startPos,
 		const LPoint3f& endPos)
 {
 	// go on if nav mesh has been already setup
-	nassertr_always(mNavMeshType, ValueListLPoint3f())
+	nassertr_always(mNavMeshType, ValueList<LPoint3f>())
 
-	ValueListLPoint3f pointList;
+	ValueList<LPoint3f> pointList;
 	//set the extremes
 	float recastStart[3], recastEnd[3];
 	rnsup::LVecBase3fToRecast(startPos, recastStart);
@@ -1723,31 +1723,36 @@ ValueListLPoint3f RNNavMesh::get_path_find_follow(const LPoint3f& startPos,
  * Finds a straight path from the start point to the end point.
  * Returns a list of points, empty on error.
  */
-ValueListLPoint3f RNNavMesh::get_path_find_straight(const LPoint3f& startPos,
-		const LPoint3f& endPos, RNStraightPathOptions crossingOptions)
+RNNavMesh::PointFlagList RNNavMesh::get_path_find_straight(
+		const LPoint3f& startPos, const LPoint3f& endPos,
+		RNStraightPathOptions crossingOptions)
 {
 	// go on if nav mesh has been already setup
-	nassertr_always(mNavMeshType, ValueListLPoint3f())
+	nassertr_always(mNavMeshType, PointFlagList())
 
-	ValueListLPoint3f pointList;
+	PointFlagList pointFlagList;
 	//set the extremes
 	float recastStart[3], recastEnd[3];
 	rnsup::LVecBase3fToRecast(startPos, recastStart);
 	rnsup::LVecBase3fToRecast(endPos, recastEnd);
 	mTesterTool.setStartEndPos(recastStart, recastEnd);
 	//select tester tool mode
-	mTesterTool.setToolMode(rnsup::NavMeshTesterTool::TOOLMODE_PATHFIND_STRAIGHT);
+	mTesterTool.setToolMode(
+			rnsup::NavMeshTesterTool::TOOLMODE_PATHFIND_STRAIGHT);
 	//set crossing options
 	mTesterTool.setStraightOptions(crossingOptions);
 	//recalculate path
 	mTesterTool.recalc();
-	//get the list of points
+	//get the list of points and flags
+	float* points = mTesterTool.getStraightPath();
+	unsigned char* flags = mTesterTool.getStraightPathFlags();
 	for (int i = 0; i < mTesterTool.getNumStraightPath(); ++i)
 	{
-		float* path = mTesterTool.getStraightPath();
-		pointList.add_value(
-				rnsup::Recast3fToLVecBase3f(path[i * 3], path[i * 3 + 1],
-						path[i * 3 + 2]));
+		pointFlagList.add_value(
+				Pair<LPoint3f, unsigned char>(
+						rnsup::Recast3fToLVecBase3f(points[i * 3],
+								points[i * 3 + 1], points[i * 3 + 2]),
+						flags[i]));
 	}
 #ifdef RN_DEBUG
 	if (not mDebugCamera.is_empty())
@@ -1758,7 +1763,7 @@ ValueListLPoint3f RNNavMesh::get_path_find_straight(const LPoint3f& startPos,
 	//reset tester tool
 	mTesterTool.reset();
 	//
-	return pointList;
+	return pointFlagList;
 }
 
 /**
@@ -1935,7 +1940,7 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 				++iter)
 		{
 			//save this PointListArea
-			ValueListLPoint3f pointList = (*iter).first();
+			ValueList<LPoint3f> pointList = (*iter).first();
 			dg.add_uint32(pointList.size());
 			for (int i = 0; i != pointList.size(); ++i)
 			{
@@ -1954,7 +1959,7 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 				iter != mOffMeshConnections.end(); ++iter)
 		{
 			//save this point pair
-			ValueListLPoint3f pointPair = (*iter).first();
+			ValueList<LPoint3f> pointPair = (*iter).first();
 			pointPair[0].write_datagram(dg);
 			pointPair[1].write_datagram(dg);
 			bool bidir = (*iter).second();
@@ -2101,7 +2106,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	for (unsigned int i = 0; i < size; ++i)
 	{
 		// restore this PointListArea
-		ValueListLPoint3f pointList;
+		ValueList<LPoint3f> pointList;
 		unsigned int sizeP = scan.get_uint32();
 		for (unsigned int i = 0; i < sizeP; ++i)
 		{
@@ -2119,7 +2124,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	for (unsigned int i = 0; i < size; ++i)
 	{
 		// restore this point pair
-		ValueListLPoint3f pointPair;
+		ValueList<LPoint3f> pointPair;
 		LPoint3f point;
 		point.read_datagram(scan);
 		pointPair.add_value(point);

@@ -316,7 +316,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 		LPoint3f pOrig = navMeshMgr->get_collision_root().get_relative_point(
 				mReferenceNP, pos) + mHeigthCorrection;
 		// get the collision height wrt the parent node path: the nav mesh owner
-		PairBoolFloat gotCollisionZ = navMeshMgr->get_collision_height(pOrig,
+		Pair<bool,float> gotCollisionZ = navMeshMgr->get_collision_height(pOrig,
 				mReferenceNP);
 		if (gotCollisionZ.get_first())
 		{

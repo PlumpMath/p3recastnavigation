@@ -148,6 +148,10 @@ public:
 	{
 		return m_straightPath;
 	}
+	unsigned char* getStraightPathFlags()
+	{
+		return m_straightPathFlags;
+	}
 	int getNumStraightPath()
 	{
 		return m_nstraightPath;

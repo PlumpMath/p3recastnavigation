@@ -143,9 +143,9 @@ PUBLISHED:
 	INLINE NodePath get_owner_node_path() const;
 	///Helper typedefs.
 	//convex volume
-	typedef Pair<ValueListLPoint3f,int> PointListArea;
+	typedef Pair<ValueList<LPoint3f>,int> PointListArea;
 	//off mesh connection
-	typedef Pair<ValueListLPoint3f,bool> PointPairBidir;
+	typedef Pair<ValueList<LPoint3f>,bool> PointPairBidir;
 
 	/**
 	 * RNNavMesh related methods.
@@ -162,16 +162,16 @@ PUBLISHED:
 			float cost);
 	void set_crowd_include_flags(int oredFlags);
 	void set_crowd_exclude_flags(int oredFlags);
-	int add_convex_volume(const ValueListLPoint3f& points,
+	int add_convex_volume(const ValueList<LPoint3f>& points,
 			RNNavMeshPolyAreasEnum area);
 	int remove_convex_volume(const LPoint3f& insidePoint);
-	INLINE ValueListLPoint3f get_convex_volume(int index) const;
+	INLINE ValueList<LPoint3f> get_convex_volume(int index) const;
 	INLINE int get_num_convex_volumes() const;
 	MAKE_SEQ(get_convex_volumes, get_num_convex_volumes, get_convex_volume);
-	int add_off_mesh_connection(const ValueListLPoint3f& points,
+	int add_off_mesh_connection(const ValueList<LPoint3f>& points,
 			bool bidirectional);
 	int remove_off_mesh_connection(const LPoint3f& beginOrEndPoint);
-	INLINE ValueListLPoint3f get_off_mesh_connection(int index) const;
+	INLINE ValueList<LPoint3f> get_off_mesh_connection(int index) const;
 	INLINE int get_num_off_mesh_connections() const;
 	MAKE_SEQ(get_off_mesh_connections, get_num_off_mesh_connections, get_off_mesh_connection);
 	//TILE OBSTACLE
@@ -227,13 +227,29 @@ PUBLISHED:
 		NONE_CROSSINGS,AREA_CROSSINGS,ALL_CROSSINGS
 #endif //CPPPARSER
 	};
+
+	/**
+	 * Equivalent to dtStraightPathFlags.
+	 */
+	enum RNStraightPathFlags
+	{
+#ifndef CPPPARSER
+		START = DT_STRAIGHTPATH_START,
+		END = DT_STRAIGHTPATH_END,
+		OFFMESH_CONNECTION = DT_STRAIGHTPATH_OFFMESH_CONNECTION
+#else
+		START,END,OFFMESH_CONNECTION
+#endif //CPPPARSER
+	};
+
 	/**
 	 * Tester tool's related methods.
 	 */
 	///@{
-	ValueListLPoint3f get_path_find_follow(const LPoint3f& startPos,
+	ValueList<LPoint3f> get_path_find_follow(const LPoint3f& startPos,
 		const LPoint3f& endPos);
-	ValueListLPoint3f get_path_find_straight(const LPoint3f& startPos,
+	typedef ValueList<Pair<LPoint3f, unsigned char> > PointFlagList;
+	PointFlagList get_path_find_straight(const LPoint3f& startPos,
 		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS);
 	///@}
 

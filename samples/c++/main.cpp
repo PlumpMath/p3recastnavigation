@@ -332,7 +332,7 @@ void printCreationParameters()
 {
 	RNNavMeshManager* navMesMgr = RNNavMeshManager::get_global_ptr();
 	//
-	ValueListString valueList = navMesMgr->get_parameter_name_list(
+	ValueList<string> valueList = navMesMgr->get_parameter_name_list(
 			RNNavMeshManager::NAVMESH);
 	cout << endl << "RNNavMesh creation parameters:" << endl;
 	for (int i = 0; i < valueList.get_num_values(); ++i)
@@ -367,7 +367,7 @@ void setParametersBeforeCreation()
 	navMesMgr->set_parameter_value(RNNavMeshManager::NAVMESH, "agent_radius",
 			"1.0");
 
-	ValueListString valueList;
+	ValueList<string> valueList;
 	// set some off mesh connections: "area_type@flag1[:flag2...:flagN]@cost"
 	valueList.add_value("31.6,24.5,-2.0:20.2,9.4,-2.4@true");
 	valueList.add_value("21.1,-4.5,-2.4:32.3,-3.0,-1.5@true");
@@ -636,7 +636,7 @@ LPoint3f getRandomPos(NodePath modelNP)
 	// throw a ray downward from a point with z = double scene's height
 	// and x,y randomly within the scene's (x,y) plane
 	float x, y = 0.0;
-	PairBoolFloat gotCollisionZ;
+	Pair<bool,float> gotCollisionZ;
 	// set the ray origin at double of maximum height of the model
 	float zOrig = ((-modelDeltaCenter.get_z() + modelDims.get_z() / 2.0)
 			+ modelNP.get_z()) * 2.0;
