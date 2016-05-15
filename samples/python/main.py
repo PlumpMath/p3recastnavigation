@@ -24,10 +24,10 @@ sceneNP = None
 agentNP = [None, None]
 sceneFile = "nav_test.egg"
 agentFile = ["eve.egg", "ralph.egg"]
-agentAnimFiles = [["eve-walk.egg", "eve-offbalance.egg"], 
+agentAnimFiles = [["eve-walk.egg", "eve-offbalance.egg"],
                   ["ralph-walk.egg", "ralph-offbalance.egg"]]
 rateFactor = 1.50;
-agentAnimCtls = [[None, None],[None, None]]
+agentAnimCtls = [[None, None], [None, None]]
 # obstacle model
 obstacleFile = "plants2.egg"
 # bame file
@@ -160,7 +160,7 @@ def printCreationParameters():
     valueList = navMesMgr.get_parameter_name_list(RNNavMeshManager.CROWDAGENT)
     print("\n" + "RNCrowdAgent creation parameters:")
     for name in valueList:
-        print ("\t" + name + " = " +
+        print ("\t" + name + " = " + 
                navMesMgr.get_parameter_value(RNNavMeshManager.CROWDAGENT, name))
 
 # set parameters as strings before nav meshes/crowd agents creation
@@ -175,6 +175,13 @@ def setParametersBeforeCreation():
             "2.5")
     navMesMgr.set_parameter_value(RNNavMeshManager.NAVMESH, "agent_radius",
             "1.0");
+    # change an area flags cost (tricky because multi-valued)
+    valueList = navMesMgr.get_parameter_values(RNNavMeshManager.NAVMESH,
+            "area_flags_cost")
+    valueList.remove_value("1@0x02@10.0")
+    valueList.add_value("1@0x02@100.0")
+    navMesMgr.set_parameter_values(RNNavMeshManager.NAVMESH, "area_flags_cost",
+            valueList)
 
     valueList = ValueList_string()
     # set some off mesh connections: "area_type@flag1[:flag2...:flagN]@cost"

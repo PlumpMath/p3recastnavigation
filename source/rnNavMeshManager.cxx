@@ -184,9 +184,7 @@ NodePath RNNavMeshManager::get_crowd_agent(int index) const
 }
 
 /**
- * Sets a RNNavMeshManager's parameter to custom values.
- * This function sets a parameter to custom values which
- * overwrite the existing ones.
+ * Sets a multi-valued parameter to a multi-value overwriting the existing one(s).
  */
 void RNNavMeshManager::set_parameter_values(RNType type, const string& paramName,
 		const ValueList<string>& paramValues)
@@ -221,7 +219,7 @@ void RNNavMeshManager::set_parameter_values(RNType type, const string& paramName
 }
 
 /**
- * Gets the multiple values of a (actually set) parameter of the RNNavMeshManager.
+ * Gets the multiple values of a (actually set) parameter.
  */
 ValueList<string> RNNavMeshManager::get_parameter_values(RNType type, const string& paramName)
 {
@@ -255,7 +253,7 @@ ValueList<string> RNNavMeshManager::get_parameter_values(RNType type, const stri
 }
 
 /**
- * Sets the single value (i.e. the first one) of a parameter of the RNNavMesh.
+ * Sets a multi/single-valued parameter to a single value overwriting the existing one(s).
  */
 void RNNavMeshManager::set_parameter_value(RNType type, const string& paramName, const string& value)
 {
@@ -265,7 +263,7 @@ void RNNavMeshManager::set_parameter_value(RNType type, const string& paramName,
 }
 
 /**
- * Gets the single value (i.e. the first one) of a parameter of the RNNavMesh.
+ * Gets a single value (i.e. the first one) of a parameter.
  */
 string RNNavMeshManager::get_parameter_value(RNType type, const string& paramName)
 {
@@ -274,7 +272,7 @@ string RNNavMeshManager::get_parameter_value(RNType type, const string& paramNam
 }
 
 /**
- * Gets a list of the names of the parameters actually set into the RNNavMeshManager.
+ * Gets a list of the names of the parameters actually set.
  */
 ValueList<string> RNNavMeshManager::get_parameter_name_list(RNType type)
 {
@@ -310,7 +308,7 @@ ValueList<string> RNNavMeshManager::get_parameter_name_list(RNType type)
 }
 
 /**
- * Sets the RNNavMeshManager parameters to their default values (if any).
+ * Sets all parameters to their default values (if any).
  */
 void RNNavMeshManager::set_parameters_defaults(RNType type)
 {
