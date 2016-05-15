@@ -5,10 +5,10 @@
  * \author consultit
  */
 
-#include "../rnNavMeshManager.h"
+#include "rnNavMeshManager.h"
 
-#include "../rnCrowdAgent.h"
-#include "../rnNavMesh.h"
+#include "rnCrowdAgent.h"
+#include "rnNavMesh.h"
 #include "asyncTaskManager.h"
 #include "bamFile.h"
 

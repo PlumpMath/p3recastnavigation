@@ -97,7 +97,20 @@ int main(int argc, char *argv[])
 	cout << "set crowd agent move target on scene surface" << endl;
 	crowdAgent->set_move_target(LPoint3f(-20.5, 5.2, -2.36));
 
-	// handle change speed
+	ValueListLPoint3f pointList;
+	cout << "get path find follow/straight/sliced" << endl;
+//	pointList = navMesh->get_path_find_follow(crowdAgentNP.get_pos(),
+//			crowdAgent->get_move_target());
+	pointList = navMesh->get_path_find_straight(crowdAgentNP.get_pos(),
+			crowdAgent->get_move_target(), RNNavMesh::NONE_CROSSINGS);
+//	navMesh->get_path_find_sliced(crowdAgentNP.get_pos(),
+//			crowdAgent->get_move_target());
+	for (int i = 0; i < pointList.size(); ++i)
+	{
+		cout << pointList[i] << endl;
+	}
+
+// handle change speed
 	framework.define_key("s", "changeSpeed", &changeSpeed, NULL);
 
 	// place camera trackball (local coordinate)

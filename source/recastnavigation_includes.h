@@ -22,6 +22,7 @@ namespace rnsup
 	struct NavMeshPolyAreaCost;
 	struct DebugDrawPanda3d;
 	struct DebugDrawMeshDrawer;
+	struct NavMeshTesterTool;
 }
 
 struct dtNavMesh;

@@ -45,6 +45,7 @@ class NavMeshTesterTool : public NavMeshTypeTool
 
 	dtStatus m_pathFindStatus;
 
+public:
 	enum ToolMode
 	{
 		TOOLMODE_PATHFIND_FOLLOW,
@@ -56,7 +57,8 @@ class NavMeshTesterTool : public NavMeshTypeTool
 		TOOLMODE_FIND_POLYS_IN_SHAPE,
 		TOOLMODE_FIND_LOCAL_NEIGHBOURHOOD,
 	};
-	
+
+private:
 	ToolMode m_toolMode;
 
 	int m_straightPathOptions;
@@ -120,6 +122,37 @@ public:
 
 	void recalc();
 	void drawAgent(const float* pos, float r, float h, float c, const unsigned int col);
+
+	//
+	void setToolMode(ToolMode mode)
+	{
+		m_toolMode = mode;
+	}
+	void setStartEndPos(const float* s, const float* e);
+
+	//TOOLMODE_PATHFIND_FOLLOW
+	float *getSmoothPath()
+	{
+		return m_smoothPath;
+	}
+	int getNumSmoothPath()
+	{
+		return m_nsmoothPath;
+	}
+	//TOOLMODE_PATHFIND_STRAIGHT || TOOLMODE_PATHFIND_SLICED
+	void setStraightOptions(int options)
+	{
+		m_straightPathOptions = options;
+	}
+	float *getStraightPath()
+	{
+		return m_straightPath;
+	}
+	int getNumStraightPath()
+	{
+		return m_nstraightPath;
+	}
+
 };
 
 } // namespace rnsup

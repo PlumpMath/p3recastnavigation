@@ -8,9 +8,9 @@
 #ifndef RNCROWDAGENT_H_
 #define RNCROWDAGENT_H_
 
-#include "../rnNavMesh.h"
-#include "../rnNavMeshManager.h"
-#include "../rnTools.h"
+#include "rnNavMesh.h"
+#include "rnNavMeshManager.h"
+#include "rnTools.h"
 #include "recastnavigation_includes.h"
 #include "nodePath.h"
 

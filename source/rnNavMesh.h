@@ -8,7 +8,7 @@
 #ifndef RNNAVMESH_H_
 #define RNNAVMESH_H_
 
-#include "../rnTools.h"
+#include "rnTools.h"
 #include "recastnavigation_includes.h"
 #include "nodePath.h"
 
@@ -212,6 +212,29 @@ PUBLISHED:
 	MAKE_SEQ(get_crowd_agents, get_num_crowd_agents, get_crowd_agent);
 	INLINE PT(RNCrowdAgent) operator [](int index) const;
 	INLINE int size() const;
+	///@}
+
+	/**
+	 * Equivalent to dtStraightPathOptions.
+	 */
+	enum RNStraightPathOptions
+	{
+#ifndef CPPPARSER
+		NONE_CROSSINGS = 0,
+		AREA_CROSSINGS = DT_STRAIGHTPATH_AREA_CROSSINGS,
+		ALL_CROSSINGS = DT_STRAIGHTPATH_ALL_CROSSINGS
+#else
+		NONE_CROSSINGS,AREA_CROSSINGS,ALL_CROSSINGS
+#endif //CPPPARSER
+	};
+	/**
+	 * Tester tool's related methods.
+	 */
+	///@{
+	ValueListLPoint3f get_path_find_follow(const LPoint3f& startPos,
+		const LPoint3f& endPos);
+	ValueListLPoint3f get_path_find_straight(const LPoint3f& startPos,
+		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS);
 	///@}
 
 	void output(ostream &out) const;

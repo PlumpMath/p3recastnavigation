@@ -8,7 +8,7 @@
 #ifndef RNNAVMESHMANAGER_H_
 #define RNNAVMESHMANAGER_H_
 
-#include "../rnTools.h"
+#include "rnTools.h"
 #include "recastnavigation_includes.h"
 #include "collisionTraverser.h"
 #include "collisionHandlerQueue.h"

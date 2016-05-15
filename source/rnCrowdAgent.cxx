@@ -5,9 +5,9 @@
  * \author consultit
  */
 
-#include "../rnCrowdAgent.h"
+#include "rnCrowdAgent.h"
 
-#include "../rnNavMesh.h"
+#include "rnNavMesh.h"
 #include "throw_event.h"
 
 /**

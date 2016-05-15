@@ -34,8 +34,10 @@
 #	define snprintf _snprintf
 #endif
 
+#ifdef RN_DEBUG
 // Uncomment this to dump all the requests in stdout.
-#define DUMP_REQS
+//#define DUMP_REQS
+#endif
 
 // Returns a random number [0..1)
 static float frand()
@@ -231,8 +233,9 @@ NavMeshTesterTool::NavMeshTesterTool() :
 	m_pathIterPolyCount(0),
 	m_steerPointCount(0)
 {
-//	m_filter.setIncludeFlags(NAVMESH_POLYFLAGS_ALL ^ NAVMESH_POLYFLAGS_DISABLED);
-//	m_filter.setExcludeFlags(0);
+	m_filter = &m_defaultFilter;
+	m_filter->setIncludeFlags(NAVMESH_POLYFLAGS_ALL ^ NAVMESH_POLYFLAGS_DISABLED);
+	m_filter->setExcludeFlags(0);
 
 	m_polyPickExt[0] = 2;
 	m_polyPickExt[1] = 4;
@@ -253,11 +256,10 @@ void NavMeshTesterTool::init(NavMeshType* sample, dtQueryFilter* filter)
 	{
 		if (filter)
 		{
-			m_filter = *filter;
+			m_filter = filter;
 		}
 		else
 		{
-			m_filter = &m_defaultFilter;
 			// Change costs.
 			m_filter->setAreaCost(NAVMESH_POLYAREA_GROUND, 1.0f);
 			m_filter->setAreaCost(NAVMESH_POLYAREA_WATER, 10.0f);
@@ -467,6 +469,14 @@ void NavMeshTesterTool::init(NavMeshType* sample, dtQueryFilter* filter)
 //
 //	imguiSeparator();
 //}
+
+void NavMeshTesterTool::setStartEndPos(const float* s, const float* e)
+{
+	m_sposSet = true;
+	dtVcopy(m_spos, s);
+	m_eposSet = true;
+	dtVcopy(m_epos, e);
+}
 
 void NavMeshTesterTool::handleClick(const float* /*s*/, const float* p, bool shift)
 {
@@ -1091,6 +1101,11 @@ void NavMeshTesterTool::handleRender(duDebugDraw& dd)
 			dd.begin(DU_DRAW_LINES, 3.0f);
 			for (int i = 0; i < m_nsmoothPath; ++i)
 				dd.vertex(m_smoothPath[i*3], m_smoothPath[i*3+1]+0.1f, m_smoothPath[i*3+2], spathCol);
+			if (m_nsmoothPath % 2 != 0)
+			{
+				//make even number of points: add last one again
+				dd.vertex(m_smoothPath[(m_nsmoothPath-1)*3], m_smoothPath[(m_nsmoothPath-1)*3+1]+0.1f, m_smoothPath[(m_nsmoothPath-1)*3+2], spathCol);
+			}
 			dd.end();
 			dd.depthMask(true);
 		}
