@@ -1767,6 +1767,75 @@ RNNavMesh::PointFlagList RNNavMesh::get_path_find_straight(
 }
 
 /**
+ * Casts a 'walkability' ray from the start point toward the end point.
+ * Returns the first hit point if not walkable, or the end point if walkable.
+ * This method is meant only for short distance checks.
+ */
+LPoint3f RNNavMesh::check_walkability(const LPoint3f& startPos,
+		const LPoint3f& endPos)
+{
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, LPoint3f(FLT_MAX, FLT_MAX, FLT_MAX))
+
+	LPoint3f hitPoint = endPos;
+	//set the extremes
+	float recastStart[3], recastEnd[3];
+	rnsup::LVecBase3fToRecast(startPos, recastStart);
+	rnsup::LVecBase3fToRecast(endPos, recastEnd);
+	mTesterTool.setStartEndPos(recastStart, recastEnd);
+	//select tester tool mode
+	mTesterTool.setToolMode(rnsup::NavMeshTesterTool::TOOLMODE_RAYCAST);
+	//recalculate path
+	mTesterTool.recalc();
+	//get the hit point if any
+	if (mTesterTool.getHitResult())
+	{
+		float* hitPos = mTesterTool.getHitPos();
+		hitPoint = rnsup::Recast3fToLVecBase3f(hitPos[0], hitPos[1], hitPos[2]);
+	}
+#ifdef RN_DEBUG
+	if (not mDebugCamera.is_empty())
+	{
+		do_debug_static_render();
+	}
+#endif //RN_DEBUG
+	//reset tester tool
+	mTesterTool.reset();
+	//
+	return hitPoint;
+}
+
+/**
+ * Finds the distance from the specified position to the nearest polygon wall.
+ */
+float RNNavMesh::get_distance_to_wall(const LPoint3f& pos)
+{
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, FLT_MAX)
+
+	float distance = FLT_MAX;
+	//set the extremes
+	float recastPos[3];
+	rnsup::LVecBase3fToRecast(pos, recastPos);
+	//select tester tool mode
+	mTesterTool.setToolMode(rnsup::NavMeshTesterTool::TOOLMODE_DISTANCE_TO_WALL);
+	//recalculate path
+	mTesterTool.recalc();
+	//get the hit point if any
+	distance = mTesterTool.getDistanceToWall();
+#ifdef RN_DEBUG
+	if (not mDebugCamera.is_empty())
+	{
+		do_debug_static_render();
+	}
+#endif //RN_DEBUG
+	//reset tester tool
+	mTesterTool.reset();
+	//
+	return distance;
+}
+
+/**
  * Writes a sensible description of the RNNavMesh to the indicated output
  * stream.
  */

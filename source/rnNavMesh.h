@@ -251,6 +251,8 @@ PUBLISHED:
 	typedef ValueList<Pair<LPoint3f, unsigned char> > PointFlagList;
 	PointFlagList get_path_find_straight(const LPoint3f& startPos,
 		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS);
+	LPoint3f check_walkability(const LPoint3f& startPos, const LPoint3f& endPos);
+	float get_distance_to_wall(const LPoint3f& pos);
 	///@}
 
 	void output(ostream &out) const;

@@ -156,7 +156,20 @@ public:
 	{
 		return m_nstraightPath;
 	}
-
+	//TOOLMODE_RAYCAST
+	bool getHitResult()
+	{
+		return m_hitResult;
+	}
+	float *getHitPos()
+	{
+		return m_hitPos;
+	}
+	//TOOLMODE_DISTANCE_TO_WALL
+	float getDistanceToWall()
+	{
+		return m_distanceToWall;
+	}
 };
 
 } // namespace rnsup

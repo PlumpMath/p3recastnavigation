@@ -87,7 +87,7 @@ if __name__ == '__main__':
     pointList = navMesh.get_path_find_follow(
             crowdAgentNP.get_pos(), crowdAgent.get_move_target());
     for p in pointList:
-        print(p)
+        print("\t" + str(p))
         
     print("get path find to follow straight")
     pointFlagList = navMesh.get_path_find_straight(crowdAgentNP.get_pos(),
@@ -101,7 +101,19 @@ if __name__ == '__main__':
             pathFlag = "END";
         elif flag == RNNavMesh.OFFMESH_CONNECTION:
             pathFlag = "OFFMESH_CONNECTION";
-        print(str(pF.get_first()) + ", " + str(pathFlag))
+        print("\t" + str(pF.get_first()) + ", " + str(pathFlag))
+    
+    print("check walkability")
+    hitPoint = navMesh.check_walkability(
+            crowdAgentNP.get_pos(), crowdAgent.get_move_target())
+    if hitPoint == crowdAgent.get_move_target():
+        print("\t" + "walkable!")
+    else:
+        print("\t" + "not walkable!")
+
+    print("get distance to wall")
+    distance = navMesh.get_distance_to_wall(crowdAgentNP.get_pos())
+    print("\t" + str(distance))
     
     # handle change speed
     app.accept("s", changeSpeed)
