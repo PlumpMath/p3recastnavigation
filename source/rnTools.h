@@ -462,7 +462,7 @@ private:
 #define RN_NAVMESH_NULL -2
 
 ///inline
-#include "../rnTools.I"
+#include "rnTools.I"
 
 #if !defined(CPPPARSER) && !defined(_WIN32)
 extern template class ValueList<string>;

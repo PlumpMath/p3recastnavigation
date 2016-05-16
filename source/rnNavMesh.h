@@ -406,6 +406,6 @@ private:
 INLINE ostream &operator << (ostream &out, const RNNavMesh & navMesh);
 
 ///inline
-#include "../rnNavMesh.I"
+#include "rnNavMesh.I"
 
 #endif /* RNNAVMESH_H_ */

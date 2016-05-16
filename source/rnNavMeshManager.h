@@ -136,6 +136,6 @@ private:
 };
 
 ///inline
-#include "../rnNavMeshManager.I"
+#include "rnNavMeshManager.I"
 
 #endif /* RNNAVMESHMANAGER_H_ */

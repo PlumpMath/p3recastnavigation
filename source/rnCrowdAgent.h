@@ -213,6 +213,6 @@ private:
 INLINE ostream &operator << (ostream &out, const RNCrowdAgent & crowdAgent);
 
 ///inline
-#include "../rnCrowdAgent.I"
+#include "rnCrowdAgent.I"
 
 #endif /* RNCROWDAGENT_H_ */
