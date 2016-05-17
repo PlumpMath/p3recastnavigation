@@ -1966,7 +1966,7 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 	dg.add_string(get_name());
 
 	///Current underlying NavMeshType type.
-	dg.add_uint8((PN_uint8) mNavMeshTypeEnum);
+	dg.add_uint8((uint8_t) mNavMeshTypeEnum);
 
 	///RNNavMesh's NavMeshSettings equivalent.
 	mNavMeshSettings.write_datagram(dg);

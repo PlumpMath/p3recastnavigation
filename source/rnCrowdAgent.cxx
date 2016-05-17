@@ -449,7 +449,7 @@ void RNCrowdAgent::write_datagram(BamWriter *manager, Datagram &dg)
 	dg.add_string(get_name());
 
 	///The movement type.
-	dg.add_uint8((PN_uint8) mMovType);
+	dg.add_uint8((uint8_t) mMovType);
 	///The associated dtCrowdAgent data.
 	///@{
 	mAgentParams.write_datagram(dg);
