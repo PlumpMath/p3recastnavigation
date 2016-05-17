@@ -58,43 +58,73 @@ void RNNavMesh::set_nav_mesh_settings(const RNNavMeshSettings& settings)
 
 /**
  * Sets the Recast area's flags and traversal cost.
- * Can be set only before RNNavMesh is setup.
  * \note oredFlags: ored flags as specified in RNNavMeshPolyFlagsEnum.
  */
 void RNNavMesh::set_area_flags_cost(RNNavMeshPolyAreasEnum area, int oredFlags,
 		float cost)
 {
-	nassertv_always(not mNavMeshType)
-
 	//add area with corresponding ored ability flags
 	mPolyAreaFlags[area] = oredFlags;
 
 	//add area with corresponding cost
 	mPolyAreaCost[area] = cost;
+
+	if(mNavMeshType)
+	{
+		//there is a crowd tool because the recast nav mesh
+		//has been completely setup
+		rnsup::CrowdTool* crowdTool =
+				static_cast<rnsup::CrowdTool*>(mNavMeshType->getTool());
+		//set recast areas' costs
+		dtQueryFilter* filter =
+				crowdTool->getState()->getCrowd()->getEditableFilter(0);
+		rnsup::NavMeshPolyAreaCost::const_iterator iterAC;
+		for (iterAC = mPolyAreaCost.begin(); iterAC != mPolyAreaCost.end();
+				++iterAC)
+		{
+			filter->setAreaCost((*iterAC).first, (*iterAC).second);
+		}
+	}
 }
 
 /**
  * Set Recast Crowd include flags.
- * Can be set only before RNNavMesh is setup.
  * \note oredFlags: ored flags as specified in RNNavMeshPolyFlagsEnum.
  */
 void RNNavMesh::set_crowd_include_flags(int oredFlags)
 {
-	nassertv_always(not mNavMeshType)
-
 	mCrowdIncludeFlags = oredFlags;
+
+	if(mNavMeshType)
+	{
+		//there is a crowd tool because the recast nav mesh
+		//has been completely setup
+		rnsup::CrowdTool* crowdTool =
+				static_cast<rnsup::CrowdTool*>(mNavMeshType->getTool());
+		//set recast crowd include
+		crowdTool->getState()->getCrowd()->getEditableFilter(0)->setIncludeFlags(
+				mCrowdIncludeFlags);
+	}
 }
 
 /**
  * Set Recast Crowd exclude flags.
- * Can be set only before RNNavMesh is setup.
  * \note oredFlags: ored flags as specified in RNNavMeshPolyFlagsEnum.
  */
 void RNNavMesh::set_crowd_exclude_flags(int oredFlags)
 {
-	nassertv_always(not mNavMeshType)
-
 	mCrowdExcludeFlags = oredFlags;
+
+	if(mNavMeshType)
+	{
+		//there is a crowd tool because the recast nav mesh
+		//has been completely setup
+		rnsup::CrowdTool* crowdTool =
+				static_cast<rnsup::CrowdTool*>(mNavMeshType->getTool());
+		//set recast crowd exclude flags
+		crowdTool->getState()->getCrowd()->getEditableFilter(0)->setExcludeFlags(
+				mCrowdExcludeFlags);
+	}
 }
 
 /**
