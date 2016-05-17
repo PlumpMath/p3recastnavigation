@@ -97,6 +97,53 @@ int main(int argc, char *argv[])
 	cout << "set crowd agent move target on scene surface" << endl;
 	crowdAgent->set_move_target(LPoint3f(-20.5, 5.2, -2.36));
 
+	cout << "get path find to follow" << endl;
+	ValueList<LPoint3f> pointList = navMesh->get_path_find_follow(
+			crowdAgentNP.get_pos(), crowdAgent->get_move_target());
+	for (int i = 0; i < pointList.size(); ++i)
+	{
+		cout << "\t" << pointList[i] << endl;
+	}
+	cout << "get path find to follow straight" << endl;
+	ValueList<Pair<LPoint3f, unsigned char> > pointFlagList =
+			navMesh->get_path_find_straight(crowdAgentNP.get_pos(),
+					crowdAgent->get_move_target(), RNNavMesh::NONE_CROSSINGS);
+	for (int i = 0; i < pointFlagList.size(); ++i)
+	{
+		string pathFlag;
+		switch (pointFlagList[i].get_second())
+		{
+		case RNNavMesh::START:
+			pathFlag = "START";
+			break;
+		case RNNavMesh::END:
+			pathFlag = "END";
+			break;
+		case RNNavMesh::OFFMESH_CONNECTION:
+			pathFlag = "OFFMESH_CONNECTION";
+			break;
+		default:
+			break;
+		}
+		cout << "\t" << pointFlagList[i].get_first() << ", " << pathFlag << endl;
+	}
+
+	cout << "check walkability" << endl;
+	LPoint3f hitPoint = navMesh->check_walkability(
+			crowdAgentNP.get_pos(), crowdAgent->get_move_target());
+	if (hitPoint == crowdAgent->get_move_target())
+	{
+		cout << "\t" << "walkable!" << endl;
+	}
+	else
+	{
+		cout << "\t" << "not walkable!" << endl;
+	}
+
+	cout << "get distance to wall" << endl;
+	float distance = navMesh->get_distance_to_wall(crowdAgentNP.get_pos());
+	cout << "\t" << distance << endl;
+
 	// handle change speed
 	framework.define_key("s", "changeSpeed", &changeSpeed, NULL);
 

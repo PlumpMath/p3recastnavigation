@@ -332,7 +332,7 @@ void printCreationParameters()
 {
 	RNNavMeshManager* navMesMgr = RNNavMeshManager::get_global_ptr();
 	//
-	ValueListString valueList = navMesMgr->get_parameter_name_list(
+	ValueList<string> valueList = navMesMgr->get_parameter_name_list(
 			RNNavMeshManager::NAVMESH);
 	cout << endl << "RNNavMesh creation parameters:" << endl;
 	for (int i = 0; i < valueList.get_num_values(); ++i)
@@ -357,7 +357,8 @@ void printCreationParameters()
 void setParametersBeforeCreation()
 {
 	RNNavMeshManager* navMesMgr = RNNavMeshManager::get_global_ptr();
-	// tweak some nav mesh parameter
+	ValueList<string> valueList;
+	// tweak some nav mesh single-valued parameters
 	navMesMgr->set_parameter_value(RNNavMeshManager::NAVMESH, "navmesh_type",
 			"obstacle");
 	navMesMgr->set_parameter_value(RNNavMeshManager::NAVMESH, "build_all_tiles",
@@ -366,8 +367,15 @@ void setParametersBeforeCreation()
 			"2.5");
 	navMesMgr->set_parameter_value(RNNavMeshManager::NAVMESH, "agent_radius",
 			"1.0");
+	// change an area flags cost (tricky because multi-valued)
+	valueList = navMesMgr->get_parameter_values(RNNavMeshManager::NAVMESH,
+			"area_flags_cost");
+	valueList.remove_value("1@0x02@10.0");
+	valueList.add_value("1@0x02@100.0");
+	navMesMgr->set_parameter_values(RNNavMeshManager::NAVMESH,
+			"area_flags_cost", valueList);
 
-	ValueListString valueList;
+	valueList.clear();
 	// set some off mesh connections: "area_type@flag1[:flag2...:flagN]@cost"
 	valueList.add_value("31.6,24.5,-2.0:20.2,9.4,-2.4@true");
 	valueList.add_value("21.1,-4.5,-2.4:32.3,-3.0,-1.5@true");
@@ -636,7 +644,7 @@ LPoint3f getRandomPos(NodePath modelNP)
 	// throw a ray downward from a point with z = double scene's height
 	// and x,y randomly within the scene's (x,y) plane
 	float x, y = 0.0;
-	PairBoolFloat gotCollisionZ;
+	Pair<bool,float> gotCollisionZ;
 	// set the ray origin at double of maximum height of the model
 	float zOrig = ((-modelDeltaCenter.get_z() + modelDims.get_z() / 2.0)
 			+ modelNP.get_z()) * 2.0;

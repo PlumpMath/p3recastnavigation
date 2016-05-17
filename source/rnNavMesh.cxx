@@ -5,10 +5,10 @@
  * \author consultit
  */
 
-#include "../rnNavMesh.h"
+#include "rnNavMesh.h"
 
-#include "../rnCrowdAgent.h"
-#include "../rnNavMeshManager.h"
+#include "rnCrowdAgent.h"
+#include "rnNavMeshManager.h"
 #include "camera.h"
 
 #ifndef CPPPARSER
@@ -373,7 +373,7 @@ void RNNavMesh::do_initialize()
 						strtol(pointsAreaTypeStr[1].c_str(), NULL, 0) :
 						rnsup::NAVMESH_POLYAREA_GROUND);
 		//iterate over points
-		ValueListLPoint3f pointList;
+		ValueList<LPoint3f> pointList;
 		pvector<string> pointsStr = parseCompoundString(
 				pointsAreaTypeStr[0], ':');
 		pvector<string>::const_iterator iterP;
@@ -417,7 +417,7 @@ void RNNavMesh::do_initialize()
 						false : true);
 		//iterate over the first 2 points
 		//each point defaults to LPoint3f::zero()
-		ValueListLPoint3f pointPair;
+		ValueList<LPoint3f> pointPair;
 		pvector<string> pointsStr = parseCompoundString(
 				pointPairBidirStr[0], ':');
 		pvector<string>::const_iterator iterPStr;
@@ -575,7 +575,7 @@ int RNNavMesh::setup()
 	for (iterPLA = mConvexVolumes.begin(); iterPLA != mConvexVolumes.end();
 			++iterPLA)
 	{
-		ValueListLPoint3f points = iterPLA->first();
+		ValueList<LPoint3f> points = iterPLA->first();
 		//check if there are at least 3 points for
 		//complete a convex volume
 		if (points.size() < 3)
@@ -615,7 +615,7 @@ int RNNavMesh::setup()
 	for (iterPPB = mOffMeshConnections.begin();
 			iterPPB != mOffMeshConnections.end(); ++iterPPB)
 	{
-		ValueListLPoint3f pointPair = iterPPB->first();
+		ValueList<LPoint3f> pointPair = iterPPB->first();
 		bool bidir = iterPPB->second();
 
 		//1: set recast connection bidir
@@ -659,6 +659,10 @@ int RNNavMesh::setup()
 			mCrowdIncludeFlags);
 	crowdTool->getState()->getCrowd()->getEditableFilter(0)->setExcludeFlags(
 			mCrowdExcludeFlags);
+
+	//initialize the tester tool
+	mTesterTool.init(mNavMeshType,
+			crowdTool->getState()->getCrowd()->getEditableFilter(0));
 
 	//<this code is executed only when in manual setup:
 	//add to recast previously added CrowdAgents.
@@ -728,9 +732,10 @@ bool RNNavMesh::do_build_navMesh()
  * Can be set only before RNNavMesh is setup.
  * Returns the convex volume's index, or a negative number on error.
  */
-int RNNavMesh::add_convex_volume(const ValueListLPoint3f& points,
+int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
 		RNNavMeshPolyAreasEnum area)
 {
+	// go on if nav mesh has not been already setup
 	nassertr_always((not mNavMeshType) and (points.size() >= 3), -1)
 
 	// add to convex volumes
@@ -746,6 +751,7 @@ int RNNavMesh::add_convex_volume(const ValueListLPoint3f& points,
  */
 int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 {
+	// go on if nav mesh has not been already setup
 	nassertr_always(not mNavMeshType, RN_ERROR)
 
 	//set oldIndex=-1 in case of error
@@ -763,7 +769,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 	for(cvI = mConvexVolumes.begin(); cvI != mConvexVolumes.end(); ++cvI)
 	{
 		//try to add this convex volume (the NavMeshType has none)
-		ValueListLPoint3f points = cvI->first();
+		ValueList<LPoint3f> points = cvI->first();
 		cvTool->setAreaType(cvI->second());
 		float recastPos[3];
 		for (int iterP = 0; iterP != points.size(); ++iterP)
@@ -811,8 +817,9 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
  * \note pointPair[0] = begin point, pointPair[1] = end point
  * Returns the off mesh connection's index, or a negative number on error.
  */
-int RNNavMesh::add_off_mesh_connection(const ValueListLPoint3f& points, bool bidirectional)
+int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points, bool bidirectional)
 {
+	// go on if nav mesh has not been already setup
 	nassertr_always((not mNavMeshType) and (points.size() >= 2), -1)
 
 	// add to off mesh connections
@@ -827,6 +834,7 @@ int RNNavMesh::add_off_mesh_connection(const ValueListLPoint3f& points, bool bid
  */
 int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 {
+	// go on if nav mesh has not been already setup
 	nassertr_always(not mNavMeshType, -1)
 
 	//set oldIndex=-1 in case of error
@@ -845,7 +853,7 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 			++omcI)
 	{
 		//try to add this off mesh connection (the NavMeshType has none)
-		ValueListLPoint3f pointPair = omcI->first();
+		ValueList<LPoint3f> pointPair = omcI->first();
 		omcTool->setBidir(omcI->second());
 		float recastPos[3];
 		LPoint3f refPos;
@@ -1584,6 +1592,7 @@ void RNNavMesh::do_debug_static_render()
 	mNavMeshType->handleRender(*mDD);
 	mNavMeshType->getInputGeom()->drawConvexVolumes(mDD);
 	mNavMeshType->getInputGeom()->drawOffMeshConnections(mDD, true);
+	mTesterTool.handleRender(*mDD);
 }
 #endif //RN_DEBUG
 
@@ -1668,6 +1677,171 @@ void RNNavMesh::update(float dt)
 		}
 	}
 #endif //RN_DEBUG
+}
+
+/**
+ * Finds a path from the start point to the end point.
+ * Returns a list of points, empty on error.
+ */
+ValueList<LPoint3f> RNNavMesh::get_path_find_follow(const LPoint3f& startPos,
+		const LPoint3f& endPos)
+{
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, ValueList<LPoint3f>())
+
+	ValueList<LPoint3f> pointList;
+	//set the extremes
+	float recastStart[3], recastEnd[3];
+	rnsup::LVecBase3fToRecast(startPos, recastStart);
+	rnsup::LVecBase3fToRecast(endPos, recastEnd);
+	mTesterTool.setStartEndPos(recastStart, recastEnd);
+	//select tester tool mode
+	mTesterTool.setToolMode(rnsup::NavMeshTesterTool::TOOLMODE_PATHFIND_FOLLOW);
+	//recalculate path
+	mTesterTool.recalc();
+	//get the list of points
+	for (int i = 0; i < mTesterTool.getNumSmoothPath(); ++i)
+	{
+		float* path = mTesterTool.getSmoothPath();
+		pointList.add_value(
+				rnsup::Recast3fToLVecBase3f(path[i * 3], path[i * 3 + 1],
+						path[i * 3 + 2]));
+	}
+#ifdef RN_DEBUG
+	if (not mDebugCamera.is_empty())
+	{
+		do_debug_static_render();
+	}
+#endif //RN_DEBUG
+	//reset tester tool
+	mTesterTool.reset();
+	//
+	return pointList;
+}
+
+/**
+ * Finds a straight path from the start point to the end point.
+ * Returns a list of points, empty on error.
+ */
+RNNavMesh::PointFlagList RNNavMesh::get_path_find_straight(
+		const LPoint3f& startPos, const LPoint3f& endPos,
+		RNStraightPathOptions crossingOptions)
+{
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, PointFlagList())
+
+	PointFlagList pointFlagList;
+	//set the extremes
+	float recastStart[3], recastEnd[3];
+	rnsup::LVecBase3fToRecast(startPos, recastStart);
+	rnsup::LVecBase3fToRecast(endPos, recastEnd);
+	mTesterTool.setStartEndPos(recastStart, recastEnd);
+	//select tester tool mode
+	mTesterTool.setToolMode(
+			rnsup::NavMeshTesterTool::TOOLMODE_PATHFIND_STRAIGHT);
+	//set crossing options
+	mTesterTool.setStraightOptions(crossingOptions);
+	//recalculate path
+	mTesterTool.recalc();
+	//get the list of points and flags
+	float* points = mTesterTool.getStraightPath();
+	unsigned char* flags = mTesterTool.getStraightPathFlags();
+	for (int i = 0; i < mTesterTool.getNumStraightPath(); ++i)
+	{
+		pointFlagList.add_value(
+				Pair<LPoint3f, unsigned char>(
+						rnsup::Recast3fToLVecBase3f(points[i * 3],
+								points[i * 3 + 1], points[i * 3 + 2]),
+						flags[i]));
+	}
+#ifdef RN_DEBUG
+	if (not mDebugCamera.is_empty())
+	{
+		do_debug_static_render();
+	}
+#endif //RN_DEBUG
+	//reset tester tool
+	mTesterTool.reset();
+	//
+	return pointFlagList;
+}
+
+/**
+ * Casts a 'walkability' ray from the start point toward the end point.
+ * Returns the first hit point if not walkable, or the end point if walkable.
+ * This method is meant only for short distance checks.
+ */
+LPoint3f RNNavMesh::check_walkability(const LPoint3f& startPos,
+		const LPoint3f& endPos)
+{
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, LPoint3f(FLT_MAX, FLT_MAX, FLT_MAX))
+
+	LPoint3f hitPoint = endPos;
+	//set the extremes
+	float recastStart[3], recastEnd[3];
+	rnsup::LVecBase3fToRecast(startPos, recastStart);
+	rnsup::LVecBase3fToRecast(endPos, recastEnd);
+	mTesterTool.setStartEndPos(recastStart, recastEnd);
+	//select tester tool mode
+	mTesterTool.setToolMode(rnsup::NavMeshTesterTool::TOOLMODE_RAYCAST);
+	//recalculate path
+	mTesterTool.recalc();
+	//get the hit point if any
+	if (mTesterTool.getHitResult())
+	{
+		float* hitPos = mTesterTool.getHitPos();
+		hitPoint = rnsup::Recast3fToLVecBase3f(hitPos[0], hitPos[1], hitPos[2]);
+	}
+#ifdef RN_DEBUG
+	if (not mDebugCamera.is_empty())
+	{
+		do_debug_static_render();
+	}
+#endif //RN_DEBUG
+	//reset tester tool
+	mTesterTool.reset();
+	//
+	return hitPoint;
+}
+
+/**
+ * Finds the distance from the specified position to the nearest polygon wall.
+ */
+float RNNavMesh::get_distance_to_wall(const LPoint3f& pos)
+{
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, FLT_MAX)
+
+	float distance = FLT_MAX;
+	//set the extremes
+	float recastPos[3];
+	rnsup::LVecBase3fToRecast(pos, recastPos);
+	//select tester tool mode
+	mTesterTool.setToolMode(rnsup::NavMeshTesterTool::TOOLMODE_DISTANCE_TO_WALL);
+	//recalculate path
+	mTesterTool.recalc();
+	//get the hit point if any
+	distance = mTesterTool.getDistanceToWall();
+#ifdef RN_DEBUG
+	if (not mDebugCamera.is_empty())
+	{
+		do_debug_static_render();
+	}
+#endif //RN_DEBUG
+	//reset tester tool
+	mTesterTool.reset();
+	//
+	return distance;
+}
+
+/**
+ * Writes a sensible description of the RNNavMesh to the indicated output
+ * stream.
+ */
+void RNNavMesh::output(ostream &out) const
+{
+	out << get_type() << " " << get_name();
 }
 
 /**
@@ -1771,16 +1945,6 @@ int RNNavMesh::toggle_debug_drawing(bool enable)
 	return RN_SUCCESS;
 }
 
-
-/**
- * Writes a sensible description of the RNNavMesh to the indicated output
- * stream.
- */
-void RNNavMesh::output(ostream &out) const
-{
-	out << get_type() << " " << get_name();
-}
-
 //TypedWritable API
 /**
  * Tells the BamReader how to create objects of type RNNavMesh.
@@ -1802,7 +1966,7 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 	dg.add_string(get_name());
 
 	///Current underlying NavMeshType type.
-	dg.add_uint8((PN_uint8) mNavMeshTypeEnum);
+	dg.add_uint8((uint8_t) mNavMeshTypeEnum);
 
 	///RNNavMesh's NavMeshSettings equivalent.
 	mNavMeshSettings.write_datagram(dg);
@@ -1845,7 +2009,7 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 				++iter)
 		{
 			//save this PointListArea
-			ValueListLPoint3f pointList = (*iter).first();
+			ValueList<LPoint3f> pointList = (*iter).first();
 			dg.add_uint32(pointList.size());
 			for (int i = 0; i != pointList.size(); ++i)
 			{
@@ -1864,7 +2028,7 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 				iter != mOffMeshConnections.end(); ++iter)
 		{
 			//save this point pair
-			ValueListLPoint3f pointPair = (*iter).first();
+			ValueList<LPoint3f> pointPair = (*iter).first();
 			pointPair[0].write_datagram(dg);
 			pointPair[1].write_datagram(dg);
 			bool bidir = (*iter).second();
@@ -2011,7 +2175,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	for (unsigned int i = 0; i < size; ++i)
 	{
 		// restore this PointListArea
-		ValueListLPoint3f pointList;
+		ValueList<LPoint3f> pointList;
 		unsigned int sizeP = scan.get_uint32();
 		for (unsigned int i = 0; i < sizeP; ++i)
 		{
@@ -2029,7 +2193,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	for (unsigned int i = 0; i < size; ++i)
 	{
 		// restore this point pair
-		ValueListLPoint3f pointPair;
+		ValueList<LPoint3f> pointPair;
 		LPoint3f point;
 		point.read_datagram(scan);
 		pointPair.add_value(point);

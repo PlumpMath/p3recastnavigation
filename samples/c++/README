@@ -1,7 +1,7 @@
 Running the sample
 ******************
 The C++ sample code shows the use of the p3recastnavigation module.
-The C++ sample uses the autotools build system, so could be surely
+The C++ samples uses the autotools build system, so could be surely
 built on GNU/Linux using these commands within the "c++" folder:
 
   autoreconf -i -v -W no-all
@@ -10,7 +10,11 @@ built on GNU/Linux using these commands within the "c++" folder:
   
 and executed with:
 
-  ./sample
+  ./main
+  
+or
+
+  ./test
   
 However the code (main.cpp) should also compile successfully on other 
 platforms (after suitably creating/modifying the "main.h" file that defines 

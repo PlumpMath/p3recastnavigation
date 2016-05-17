@@ -5,7 +5,7 @@
  * \author consultit
  */
 
-#include "../rnTools.h"
+#include "rnTools.h"
 
 pvector<string> parseCompoundString(
 		const string& srcCompoundString, char separator)

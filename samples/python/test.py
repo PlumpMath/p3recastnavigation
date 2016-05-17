@@ -6,7 +6,7 @@ Created on Mar 24, 2016
 
 # from direct.actor.Actor import Actor
 import panda3d.core
-from p3recastnavigation import RNNavMeshManager
+from p3recastnavigation import RNNavMeshManager, RNNavMesh
 from panda3d.core import load_prc_file_data, LPoint3f
 from direct.showbase.ShowBase import ShowBase
 
@@ -82,6 +82,38 @@ if __name__ == '__main__':
     
     print("set crowd agent move target on scene surface")
     crowdAgent.set_move_target(LPoint3f(-20.5, 5.2, -2.36))
+
+    print("get path find to follow")
+    pointList = navMesh.get_path_find_follow(
+            crowdAgentNP.get_pos(), crowdAgent.get_move_target());
+    for p in pointList:
+        print("\t" + str(p))
+        
+    print("get path find to follow straight")
+    pointFlagList = navMesh.get_path_find_straight(crowdAgentNP.get_pos(),
+                    crowdAgent.get_move_target(), RNNavMesh.NONE_CROSSINGS);
+    for pF in pointFlagList:
+        pathFlag = None
+        flag = pF.get_second()
+        if flag == RNNavMesh.START:
+            pathFlag = "START"
+        elif flag == RNNavMesh.END:
+            pathFlag = "END";
+        elif flag == RNNavMesh.OFFMESH_CONNECTION:
+            pathFlag = "OFFMESH_CONNECTION";
+        print("\t" + str(pF.get_first()) + ", " + str(pathFlag))
+    
+    print("check walkability")
+    hitPoint = navMesh.check_walkability(
+            crowdAgentNP.get_pos(), crowdAgent.get_move_target())
+    if hitPoint == crowdAgent.get_move_target():
+        print("\t" + "walkable!")
+    else:
+        print("\t" + "not walkable!")
+
+    print("get distance to wall")
+    distance = navMesh.get_distance_to_wall(crowdAgentNP.get_pos())
+    print("\t" + str(distance))
     
     # handle change speed
     app.accept("s", changeSpeed)

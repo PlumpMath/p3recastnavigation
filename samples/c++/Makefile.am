@@ -66,6 +66,7 @@ common_sources = \
 	$(srcdir)/../../source/support/fastlz.c \
 	$(srcdir)/../../source/support/InputGeom.cpp \
 	$(srcdir)/../../source/support/MeshLoaderObj.cpp \
+	$(srcdir)/../../source/support/NavMeshTesterTool.cpp \
 	$(srcdir)/../../source/support/NavMeshType.cpp \
 	$(srcdir)/../../source/support/NavMeshType_Obstacle.cpp \
 	$(srcdir)/../../source/support/NavMeshType_Solo.cpp \

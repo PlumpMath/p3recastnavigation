@@ -73,6 +73,15 @@ INLINE void ValueList<Type>::operator =(ValueList&& copy)
 }
 
 /**
+ *
+ */
+template<typename Type>
+INLINE bool ValueList<Type>::operator== (const ValueList &other) const
+{
+	return _values == other._values;
+}
+
+/**
  * Removes all values from the collection.
  */
 template<typename Type>
@@ -151,7 +160,7 @@ INLINE ValueList<Type> ValueList<Type>::operator +(const ValueList &other) const
 template<typename Type>
 bool ValueList<Type>::remove_value(const Type& value)
 {
-	typename pvector<Type>::iterator iter = find(_values.begin(),
+	typename pvector<Type>::const_iterator iter = find(_values.begin(),
 			_values.end(), value);
 	nassertr_always(iter != _values.end(), false)
 

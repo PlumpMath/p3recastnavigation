@@ -5,9 +5,9 @@
  * \author consultit
  */
 
-#include "../rnCrowdAgent.h"
+#include "rnCrowdAgent.h"
 
-#include "../rnNavMesh.h"
+#include "rnNavMesh.h"
 #include "throw_event.h"
 
 /**
@@ -316,7 +316,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 		LPoint3f pOrig = navMeshMgr->get_collision_root().get_relative_point(
 				mReferenceNP, pos) + mHeigthCorrection;
 		// get the collision height wrt the parent node path: the nav mesh owner
-		PairBoolFloat gotCollisionZ = navMeshMgr->get_collision_height(pOrig,
+		Pair<bool,float> gotCollisionZ = navMeshMgr->get_collision_height(pOrig,
 				mReferenceNP);
 		if (gotCollisionZ.get_first())
 		{
@@ -449,7 +449,7 @@ void RNCrowdAgent::write_datagram(BamWriter *manager, Datagram &dg)
 	dg.add_string(get_name());
 
 	///The movement type.
-	dg.add_uint8((PN_uint8) mMovType);
+	dg.add_uint8((uint8_t) mMovType);
 	///The associated dtCrowdAgent data.
 	///@{
 	mAgentParams.write_datagram(dg);

@@ -13,6 +13,7 @@
 #include "support/ConvexVolumeTool.cpp"
 #include "support/DebugInterfaces.cpp"
 #include "support/MeshLoaderObj.cpp"
+#include "support/NavMeshTesterTool.cpp"
 #include "support/NavMeshType.cpp"
 #include "support/NavMeshType_Obstacle.cpp"
 #include "support/NavMeshType_Solo.cpp"

@@ -5,10 +5,10 @@
  * \author consultit
  */
 
-#include "../rnNavMeshManager.h"
+#include "rnNavMeshManager.h"
 
-#include "../rnCrowdAgent.h"
-#include "../rnNavMesh.h"
+#include "rnCrowdAgent.h"
+#include "rnNavMesh.h"
 #include "asyncTaskManager.h"
 #include "bamFile.h"
 
@@ -184,12 +184,10 @@ NodePath RNNavMeshManager::get_crowd_agent(int index) const
 }
 
 /**
- * Sets a RNNavMeshManager's parameter to custom values.
- * This function sets a parameter to custom values which
- * overwrite the existing ones.
+ * Sets a multi-valued parameter to a multi-value overwriting the existing one(s).
  */
 void RNNavMeshManager::set_parameter_values(RNType type, const string& paramName,
-		const ValueListString& paramValues)
+		const ValueList<string>& paramValues)
 {
 	pair<ParameterTableIter, ParameterTableIter> iterRange;
 	if (type == NAVMESH)
@@ -221,11 +219,11 @@ void RNNavMeshManager::set_parameter_values(RNType type, const string& paramName
 }
 
 /**
- * Gets the multiple values of a (actually set) parameter of the RNNavMeshManager.
+ * Gets the multiple values of a (actually set) parameter.
  */
-ValueListString RNNavMeshManager::get_parameter_values(RNType type, const string& paramName)
+ValueList<string> RNNavMeshManager::get_parameter_values(RNType type, const string& paramName)
 {
-	ValueListString strList;
+	ValueList<string> strList;
 	ParameterTableIter iter;
 	pair<ParameterTableIter, ParameterTableIter> iterRange;
 	if (type == NAVMESH)
@@ -255,30 +253,30 @@ ValueListString RNNavMeshManager::get_parameter_values(RNType type, const string
 }
 
 /**
- * Sets the single value (i.e. the first one) of a parameter of the RNNavMesh.
+ * Sets a multi/single-valued parameter to a single value overwriting the existing one(s).
  */
 void RNNavMeshManager::set_parameter_value(RNType type, const string& paramName, const string& value)
 {
-	ValueListString valueList;
+	ValueList<string> valueList;
 	valueList.add_value(value);
 	set_parameter_values(type, paramName, valueList);
 }
 
 /**
- * Gets the single value (i.e. the first one) of a parameter of the RNNavMesh.
+ * Gets a single value (i.e. the first one) of a parameter.
  */
 string RNNavMeshManager::get_parameter_value(RNType type, const string& paramName)
 {
-	ValueListString valueList = get_parameter_values(type, paramName);
+	ValueList<string> valueList = get_parameter_values(type, paramName);
 	return (valueList.size() != 0 ? valueList[0] : string(""));
 }
 
 /**
- * Gets a list of the names of the parameters actually set into the RNNavMeshManager.
+ * Gets a list of the names of the parameters actually set.
  */
-ValueListString RNNavMeshManager::get_parameter_name_list(RNType type)
+ValueList<string> RNNavMeshManager::get_parameter_name_list(RNType type)
 {
-	ValueListString strList;
+	ValueList<string> strList;
 	ParameterTableIter iter;
 	if (type == NAVMESH)
 	{
@@ -310,7 +308,7 @@ ValueListString RNNavMeshManager::get_parameter_name_list(RNType type)
 }
 
 /**
- * Sets the RNNavMeshManager parameters to their default values (if any).
+ * Sets all parameters to their default values (if any).
  */
 void RNNavMeshManager::set_parameters_defaults(RNType type)
 {
@@ -485,11 +483,11 @@ float RNNavMeshManager::get_bounding_dimensions(NodePath modelNP,
 
 /**
  * Throws a ray downward (-z direction default) from rayOrigin.
- * If collisions are found returns a PairBoolFloat == (true, height),
+ * If collisions are found returns a Pair<bool,float> == (true, height),
  * with height equal to the z-value of the first one.
- * If collisions are not found returns a PairBoolFloat == (false, 0.0).
+ * If collisions are not found returns a Pair<bool,float> == (false, 0.0).
  */
-PairBoolFloat RNNavMeshManager::get_collision_height(const LPoint3f& rayOrigin,
+Pair<bool,float> RNNavMeshManager::get_collision_height(const LPoint3f& rayOrigin,
 		const NodePath& space)
 {
 	//traverse downward starting at rayOrigin
@@ -503,10 +501,10 @@ PairBoolFloat RNNavMeshManager::get_collision_height(const LPoint3f& rayOrigin,
 				mCollisionHandler->get_entry(0);
 		LPoint3f target = entry0->get_surface_point(space);
 		float collisionHeight = target.get_z();
-		return PairBoolFloat(true, collisionHeight);
+		return Pair<bool,float>(true, collisionHeight);
 	}
 	//
-	return PairBoolFloat(false, 0.0);
+	return Pair<bool,float>(false, 0.0);
 }
 
 /**

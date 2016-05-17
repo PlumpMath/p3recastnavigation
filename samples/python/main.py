@@ -10,7 +10,7 @@ from panda3d.core import load_prc_file_data, NodePath, ClockObject, \
                 BitMask32, LVector3f, LVecBase3f, LPoint3f, \
                 AnimControlCollection, auto_bind, TextNode, TransformState
 from p3recastnavigation import RNNavMeshManager, RNCrowdAgent, \
-                ValueListString
+                ValueList_string
 from panda3d.bullet import *
 
 import random, sys
@@ -26,10 +26,10 @@ sceneNP = None
 agentNP = [None, None]
 sceneFile = "nav_test.egg"
 agentFile = ["eve.egg", "ralph.egg"]
-agentAnimFiles = [["eve-walk.egg", "eve-offbalance.egg"], 
+agentAnimFiles = [["eve-walk.egg", "eve-offbalance.egg"],
                   ["ralph-walk.egg", "ralph-offbalance.egg"]]
 rateFactor = 1.50;
-agentAnimCtls = [[None, None],[None, None]]
+agentAnimCtls = [[None, None], [None, None]]
 # obstacle model
 obstacleFile = "plants2.egg"
 # bame file
@@ -219,7 +219,7 @@ def printCreationParameters():
     valueList = navMesMgr.get_parameter_name_list(RNNavMeshManager.CROWDAGENT)
     print("\n" + "RNCrowdAgent creation parameters:")
     for name in valueList:
-        print ("\t" + name + " = " +
+        print ("\t" + name + " = " + 
                navMesMgr.get_parameter_value(RNNavMeshManager.CROWDAGENT, name))
 
 # set parameters as strings before nav meshes/crowd agents creation
@@ -234,8 +234,15 @@ def setParametersBeforeCreation():
             "2.5")
     navMesMgr.set_parameter_value(RNNavMeshManager.NAVMESH, "agent_radius",
             "1.0");
+    # change an area flags cost (tricky because multi-valued)
+    valueList = navMesMgr.get_parameter_values(RNNavMeshManager.NAVMESH,
+            "area_flags_cost")
+    valueList.remove_value("1@0x02@10.0")
+    valueList.add_value("1@0x02@100.0")
+    navMesMgr.set_parameter_values(RNNavMeshManager.NAVMESH, "area_flags_cost",
+            valueList)
 
-    valueList = ValueListString()
+    valueList = ValueList_string()
     # set some off mesh connections: "area_type@flag1[:flag2...:flagN]@cost"
     valueList.add_value("31.6,24.5,-2.0:20.2,9.4,-2.4@true")
     valueList.add_value("21.1,-4.5,-2.4:32.3,-3.0,-1.5@true")

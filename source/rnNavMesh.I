@@ -66,7 +66,7 @@ INLINE RNNavMeshSettings RNNavMesh::get_nav_mesh_settings() const
 /**
  * Gets a convex volume point list by index.
  */
-INLINE ValueListLPoint3f RNNavMesh::get_convex_volume(int index) const
+INLINE ValueList<LPoint3f> RNNavMesh::get_convex_volume(int index) const
 {
 	return mConvexVolumes[index].get_first();
 }
@@ -82,7 +82,7 @@ INLINE int RNNavMesh::get_num_convex_volumes() const
 /**
  * Gets an off mesh connection point pair (as 2 element list) by index.
  */
-INLINE ValueListLPoint3f RNNavMesh::get_off_mesh_connection(int index) const
+INLINE ValueList<LPoint3f> RNNavMesh::get_off_mesh_connection(int index) const
 {
 	return mOffMeshConnections[index].get_first();
 }

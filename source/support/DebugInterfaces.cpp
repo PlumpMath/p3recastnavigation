@@ -331,7 +331,7 @@ bool FileIO::read(void* ptr, const size_t size)
 
 DebugDrawPanda3d::DebugDrawPanda3d(NodePath render) :
 		m_render(render), m_depthMask(true), m_texture(true), m_vertexIdx(0), m_prim(
-				DU_DRAW_TRIS)
+				DU_DRAW_TRIS), m_size(0), m_quadCurrIdx(0)
 {
 }
 
