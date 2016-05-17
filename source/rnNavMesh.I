@@ -64,6 +64,51 @@ INLINE RNNavMeshSettings RNNavMesh::get_nav_mesh_settings() const
 }
 
 /**
+ * Sets the Recast area's ored flags.
+ * Can be set only before RNNavMesh is setup.
+ * \note oredFlags: by default flags as specified in RNNavMeshPolyFlagsEnum.
+ */
+INLINE void RNNavMesh::set_area_flags(RNNavMeshPolyAreasEnum area, int oredFlags)
+{
+	nassertv_always(not mNavMeshType)
+
+	//add area with corresponding ored ability flags
+	mPolyAreaFlags[area] = oredFlags;
+}
+
+/**
+ * Returns the Recast area's ored flags.
+ */
+INLINE int RNNavMesh::get_area_flags(RNNavMeshPolyAreasEnum area)
+{
+	return mPolyAreaFlags[area];
+}
+
+/**
+ * Returns the Recast area's traversal cost.
+ */
+INLINE float RNNavMesh::get_area_cost(RNNavMeshPolyAreasEnum area)
+{
+	return mPolyAreaCost[area];
+}
+
+/**
+ * Returns the Recast Crowd include flags.
+ */
+INLINE int RNNavMesh::get_crowd_include_flags()
+{
+	return mCrowdIncludeFlags;
+}
+
+/**
+ * Returns the Recast Crowd exclude flags.
+ */
+INLINE int RNNavMesh::get_crowd_exclude_flags()
+{
+	return mCrowdExcludeFlags;
+}
+
+/**
  * Gets a convex volume point list by index.
  */
 INLINE ValueList<LPoint3f> RNNavMesh::get_convex_volume(int index) const

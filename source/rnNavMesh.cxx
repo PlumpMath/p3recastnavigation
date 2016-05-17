@@ -57,15 +57,10 @@ void RNNavMesh::set_nav_mesh_settings(const RNNavMeshSettings& settings)
 }
 
 /**
- * Sets the Recast area's flags and traversal cost.
- * \note oredFlags: ored flags as specified in RNNavMeshPolyFlagsEnum.
+ * Sets the Recast area's traversal cost.
  */
-void RNNavMesh::set_area_flags_cost(RNNavMeshPolyAreasEnum area, int oredFlags,
-		float cost)
+void RNNavMesh::set_area_cost(RNNavMeshPolyAreasEnum area, float cost)
 {
-	//add area with corresponding ored ability flags
-	mPolyAreaFlags[area] = oredFlags;
-
 	//add area with corresponding cost
 	mPolyAreaCost[area] = cost;
 

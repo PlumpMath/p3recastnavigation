@@ -94,7 +94,7 @@ PUBLISHED:
 	enum RNNavMeshPolyAreasEnum
 	{
 #ifndef CPPPARSER
-		POLYAREA_GROUND = rnsup::NAVMESH_POLYAREA_GROUND,
+		POLYAREA_GROUND = rnsup::NAVMESH_POLYAREA_GROUND, ///used by all walkable polys: DON'T REDEFINE
 		POLYAREA_WATER = rnsup::NAVMESH_POLYAREA_WATER,
 		POLYAREA_ROAD = rnsup::NAVMESH_POLYAREA_ROAD,
 		POLYAREA_DOOR = rnsup::NAVMESH_POLYAREA_DOOR,
@@ -151,38 +151,49 @@ PUBLISHED:
 	 * RNNavMesh related methods.
 	 */
 	///@{
+	//SOLO TILE OBSTACLE
 	INLINE LVecBase3f get_recast_bounds_min() const;
 	INLINE LVecBase3f get_recast_bounds_max() const;
-	//SOLO TILE OBSTACLE
+
 	void set_nav_mesh_type_enum(RNNavMeshTypeEnum typeEnum);
 	INLINE RNNavMeshTypeEnum get_nav_mesh_type_enum() const;
 	void set_nav_mesh_settings(const RNNavMeshSettings& settings);
 	INLINE RNNavMeshSettings get_nav_mesh_settings() const;
-	void set_area_flags_cost(RNNavMeshPolyAreasEnum area, int oredFlags,
-			float cost);
+
+	INLINE void set_area_flags(RNNavMeshPolyAreasEnum area, int oredFlags);
+	INLINE int get_area_flags(RNNavMeshPolyAreasEnum area);
+	void set_area_cost(RNNavMeshPolyAreasEnum area, float cost);
+	INLINE float get_area_cost(RNNavMeshPolyAreasEnum area);
 	void set_crowd_include_flags(int oredFlags);
+	INLINE int get_crowd_include_flags();
 	void set_crowd_exclude_flags(int oredFlags);
+	INLINE int get_crowd_exclude_flags();
+
 	int add_convex_volume(const ValueList<LPoint3f>& points,
 			RNNavMeshPolyAreasEnum area);
 	int remove_convex_volume(const LPoint3f& insidePoint);
 	INLINE ValueList<LPoint3f> get_convex_volume(int index) const;
 	INLINE int get_num_convex_volumes() const;
 	MAKE_SEQ(get_convex_volumes, get_num_convex_volumes, get_convex_volume);
+
 	int add_off_mesh_connection(const ValueList<LPoint3f>& points,
 			bool bidirectional);
 	int remove_off_mesh_connection(const LPoint3f& beginOrEndPoint);
 	INLINE ValueList<LPoint3f> get_off_mesh_connection(int index) const;
 	INLINE int get_num_off_mesh_connections() const;
 	MAKE_SEQ(get_off_mesh_connections, get_num_off_mesh_connections, get_off_mesh_connection);
+
 	//TILE OBSTACLE
 	void set_nav_mesh_tile_settings(const RNNavMeshTileSettings& settings);
 	INLINE RNNavMeshTileSettings get_nav_mesh_tile_settings() const;
 	LVecBase2i get_tile_pos(const LPoint3f& pos);
+
 	//TILE
 	int build_tile(const LPoint3f& pos);
 	int remove_tile(const LPoint3f& pos);
 	int build_all_tiles();
 	int remove_all_tiles();
+
 	//OBSTACLE
 	int add_obstacle(NodePath objectNP);
 	int remove_obstacle(NodePath objectNP);
