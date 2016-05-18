@@ -160,10 +160,10 @@ PUBLISHED:
 	void set_nav_mesh_settings(const RNNavMeshSettings& settings);
 	INLINE RNNavMeshSettings get_nav_mesh_settings() const;
 
-	INLINE void set_area_flags(RNNavMeshPolyAreasEnum area, int oredFlags);
-	INLINE int get_area_flags(RNNavMeshPolyAreasEnum area);
-	void set_area_cost(RNNavMeshPolyAreasEnum area, float cost);
-	INLINE float get_area_cost(RNNavMeshPolyAreasEnum area);
+	INLINE void set_area_flags(int area, int oredFlags);
+	INLINE int get_area_flags(int area);
+	void set_area_cost(int area, float cost);
+	INLINE float get_area_cost(int area);
 	void set_crowd_include_flags(int oredFlags);
 	INLINE int get_crowd_include_flags();
 	void set_crowd_exclude_flags(int oredFlags);
@@ -172,6 +172,10 @@ PUBLISHED:
 	int add_convex_volume(const ValueList<LPoint3f>& points,
 			RNNavMeshPolyAreasEnum area);
 	int remove_convex_volume(const LPoint3f& insidePoint);
+	int set_convex_volume_area(const LPoint3f& insidePoint, int area);
+	int get_convex_volume_area(const LPoint3f& insidePoint);
+	int set_convex_volume_flags(const LPoint3f& insidePoint, int oredFlags);
+	int get_convex_volume_flags(const LPoint3f& insidePoint);
 	INLINE ValueList<LPoint3f> get_convex_volume(int index) const;
 	INLINE int get_num_convex_volumes() const;
 	MAKE_SEQ(get_convex_volumes, get_num_convex_volumes, get_convex_volume);

@@ -84,7 +84,7 @@ static int convexhull(const float* pts, int npts, int* out)
 	return i;
 }
 
-static int pointInPoly(int nvert, const float* verts, const float* p)
+int pointInPoly(int nvert, const float* verts, const float* p)
 {
 	int i, j, c = 0;
 	for (i = 0, j = nvert-1; i < nvert; j = i++)
@@ -96,6 +96,17 @@ static int pointInPoly(int nvert, const float* verts, const float* p)
 			c = !c;
 	}
 	return c;
+}
+
+void reverseVector(float* verts, const int nverts)
+{
+	float temp[3];
+	for (int i = 0; i < nverts/2; i++)
+	{
+		dtVcopy(temp, &verts[i*3]);
+		dtVcopy(&verts[i*3], &verts[(nverts - i - 1)*3]);
+		dtVcopy(&verts[(nverts - i - 1)*3], temp);
+	}
 }
 
 
@@ -156,6 +167,8 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 	InputGeom* geom = m_sample->getInputGeom();
 	if (!geom) return;
 	
+	m_convexVolumeIdx = -1;
+
 	if (shift)
 	{
 		// Delete
@@ -174,6 +187,8 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 		{
 			geom->deleteConvexVolume(nearestIndex);
 		}
+
+		m_convexVolumeIdx = nearestIndex;
 	}
 	else
 	{
@@ -206,6 +221,8 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 				{
 					geom->addConvexVolume(verts, m_nhull, minh, maxh, (unsigned char)m_areaType);
 				}
+
+				m_convexVolumeIdx = geom->getConvexVolumeCount();
 			}
 			
 			m_npts = 0;

@@ -47,6 +47,8 @@ class ConvexVolumeTool : public NavMeshTypeTool
 	int m_hull[MAX_PTS];
 	int m_nhull;
 	
+	int m_convexVolumeIdx;
+
 public:
 	ConvexVolumeTool();
 	
@@ -63,7 +65,18 @@ public:
 	virtual void handleUpdate(const float dt);
 	virtual void handleRender(duDebugDraw& dd);
 //	virtual void handleRenderOverlay(double* proj, double* model, int* view);
+
+	//the index of the just added/removed convex volume
+	int getConvexVolumeIdx()
+	{
+		return m_convexVolumeIdx;
+	}
 };
+
+//some helper function
+int pointInPoly(int nvert, const float* verts, const float* p);
+void reverseVector(float* verts, const int nverts);
+
 
 } // namespace rnsup
 

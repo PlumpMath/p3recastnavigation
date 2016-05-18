@@ -68,7 +68,7 @@ INLINE RNNavMeshSettings RNNavMesh::get_nav_mesh_settings() const
  * Can be set only before RNNavMesh is setup.
  * \note oredFlags: by default flags as specified in RNNavMeshPolyFlagsEnum.
  */
-INLINE void RNNavMesh::set_area_flags(RNNavMeshPolyAreasEnum area, int oredFlags)
+INLINE void RNNavMesh::set_area_flags(int area, int oredFlags)
 {
 	nassertv_always(not mNavMeshType)
 
@@ -79,7 +79,7 @@ INLINE void RNNavMesh::set_area_flags(RNNavMeshPolyAreasEnum area, int oredFlags
 /**
  * Returns the Recast area's ored flags.
  */
-INLINE int RNNavMesh::get_area_flags(RNNavMeshPolyAreasEnum area)
+INLINE int RNNavMesh::get_area_flags(int area)
 {
 	return mPolyAreaFlags[area];
 }
@@ -87,7 +87,7 @@ INLINE int RNNavMesh::get_area_flags(RNNavMeshPolyAreasEnum area)
 /**
  * Returns the Recast area's traversal cost.
  */
-INLINE float RNNavMesh::get_area_cost(RNNavMeshPolyAreasEnum area)
+INLINE float RNNavMesh::get_area_cost(int area)
 {
 	return mPolyAreaCost[area];
 }
