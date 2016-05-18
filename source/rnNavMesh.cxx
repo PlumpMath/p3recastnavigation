@@ -761,7 +761,7 @@ int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
 		RNNavMeshPolyAreasEnum area)
 {
 	// go on if nav mesh has not been already setup
-	nassertr_always((not mNavMeshType) and (points.size() >= 3), -1)
+	nassertr_always((not mNavMeshType) and (points.size() >= 3), RN_ERROR)
 
 	// add to convex volumes
 	mConvexVolumes.push_back(PointListArea(points, area));
@@ -845,7 +845,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points, bool bidirectional)
 {
 	// go on if nav mesh has not been already setup
-	nassertr_always((not mNavMeshType) and (points.size() >= 2), -1)
+	nassertr_always((not mNavMeshType) and (points.size() >= 2), RN_ERROR)
 
 	// add to off mesh connections
 	mOffMeshConnections.push_back(PointPairBidir(points, bidirectional));
@@ -860,7 +860,7 @@ int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points, bool b
 int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 {
 	// go on if nav mesh has not been already setup
-	nassertr_always(not mNavMeshType, -1)
+	nassertr_always(not mNavMeshType, RN_ERROR)
 
 	//set oldIndex=-1 in case of error
 	int oldIndex = -1;
