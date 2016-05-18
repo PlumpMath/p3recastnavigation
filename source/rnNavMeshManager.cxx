@@ -30,7 +30,7 @@ RNNavMeshManager::RNNavMeshManager(const NodePath& root,
 	mUpdateData.clear();
 	mUpdateTask.clear();
 	//
-	if (not mRoot.is_empty())
+	if (! mRoot.is_empty())
 	{
 		mCTrav = new CollisionTraverser();
 		mCollisionHandler = new CollisionHandlerQueue();
@@ -127,7 +127,7 @@ bool RNNavMeshManager::destroy_nav_mesh(NodePath navMeshNP)
  */
 NodePath RNNavMeshManager::get_nav_mesh(int index) const
 {
-	nassertr_always((index >= 0) and (index < (int ) mNavMeshes.size()), NodePath());
+	nassertr_always((index >= 0) && (index < (int ) mNavMeshes.size()), NodePath());
 
 	return NodePath::any_path(mNavMeshes[index]);
 }
@@ -137,7 +137,7 @@ NodePath RNNavMeshManager::get_nav_mesh(int index) const
  */
 NodePath RNNavMeshManager::create_crowd_agent(const string& name)
 {
-	nassertr_always(not name.empty(), NodePath())
+	nassertr_always(! name.empty(), NodePath())
 
 	PT(RNCrowdAgent) newCrowdAgent = new RNCrowdAgent(name);
 	nassertr_always(newCrowdAgent, NodePath())
@@ -178,7 +178,7 @@ bool RNNavMeshManager::destroy_crowd_agent(NodePath crowdAgentNP)
  */
 NodePath RNNavMeshManager::get_crowd_agent(int index) const
 {
-	nassertr_always((index >= 0) and (index < (int ) mCrowdAgents.size()), NodePath());
+	nassertr_always((index >= 0) && (index < (int ) mCrowdAgents.size()), NodePath());
 
 	return NodePath::any_path(mCrowdAgents[index]);
 }
@@ -284,7 +284,7 @@ ValueList<string> RNNavMeshManager::get_parameter_name_list(RNType type)
 				iter != mNavMeshesParameterTable.end(); ++iter)
 		{
 			string name = (*iter).first;
-			if (not strList.has_value(name))
+			if (! strList.has_value(name))
 			{
 				strList.add_value(name);
 			}
@@ -296,7 +296,7 @@ ValueList<string> RNNavMeshManager::get_parameter_name_list(RNType type)
 				iter != mCrowdAgentsParameterTable.end(); ++iter)
 		{
 			string name = (*iter).first;
-			if (not strList.has_value(name))
+			if (! strList.has_value(name))
 			{
 				strList.add_value(name);
 			}
@@ -539,7 +539,7 @@ bool RNNavMeshManager::write_to_bam_file(const string& fileName)
 					dg.add_bool(true) : dg.add_bool(false);
 			dgSink->put_datagram(dg);
 			//write the the nav mesh
-			if (not outBamFile.write_object((*iter)))
+			if (! outBamFile.write_object((*iter)))
 			{
 				errorReport += string("Error writing ")
 						+ string((*iter)->get_name()) + string("\n");

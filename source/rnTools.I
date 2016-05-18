@@ -105,7 +105,7 @@ INLINE int ValueList<Type>::get_num_values() const
 template<typename Type>
 INLINE Type ValueList<Type>::get_value(int index) const
 {
-	nassertr_always((index >= 0) and (index < (int ) _values.size()), Type())
+	nassertr_always((index >= 0) && (index < (int ) _values.size()), Type())
 
 	return _values[index];
 }
@@ -117,7 +117,7 @@ INLINE Type ValueList<Type>::get_value(int index) const
 template<typename Type>
 INLINE Type ValueList<Type>::operator [](int index) const
 {
-	nassertr_always((index >= 0) and (index < (int ) _values.size()), Type())
+	nassertr_always((index >= 0) && (index < (int ) _values.size()), Type())
 
 	return _values[index];
 }

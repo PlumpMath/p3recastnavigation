@@ -187,7 +187,6 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 		{
 			geom->deleteConvexVolume(nearestIndex);
 		}
-
 		m_convexVolumeIdx = nearestIndex;
 	}
 	else
@@ -215,14 +214,16 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 					float offset[MAX_PTS*2*3];
 					int noffset = rcOffsetPoly(verts, m_nhull, m_polyOffset, offset, MAX_PTS*2);
 					if (noffset > 0)
+					{
 						geom->addConvexVolume(offset, noffset, minh, maxh, (unsigned char)m_areaType);
+						m_convexVolumeIdx = geom->getConvexVolumeCount();
+					}
 				}
 				else
 				{
 					geom->addConvexVolume(verts, m_nhull, minh, maxh, (unsigned char)m_areaType);
+					m_convexVolumeIdx = geom->getConvexVolumeCount();
 				}
-
-				m_convexVolumeIdx = geom->getConvexVolumeCount();
 			}
 			
 			m_npts = 0;

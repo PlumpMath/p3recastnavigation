@@ -308,7 +308,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 
 	//update node path position
 	LPoint3f updatedPos = pos;
-	if ((mMovType == RECAST_KINEMATIC) and (velSquared > 0.0))
+	if ((mMovType == RECAST_KINEMATIC) && (velSquared > 0.0))
 	{
 		// get nav mesh manager
 		WPT(RNNavMeshManager) navMeshMgr = RNNavMeshManager::get_global_ptr();
@@ -338,7 +338,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 			do_throw_event(mMove);
 		}
 		//reset Steady event (if enabled and if thrown)
-		if (mSteady.mEnable and mSteady.mThrown)
+		if (mSteady.mEnable && mSteady.mThrown)
 		{
 			mSteady.mThrown = false;
 			mSteady.mTimeElapsed = 0.0;
@@ -347,7 +347,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 	else //vel.length_squared() == 0.0
 	{
 		//reset Move event (if enabled and if thrown)
-		if (mMove.mEnable and mMove.mThrown)
+		if (mMove.mEnable && mMove.mThrown)
 		{
 			mMove.mThrown = false;
 			mMove.mTimeElapsed = 0.0;
@@ -367,7 +367,7 @@ void RNCrowdAgent::do_enable_crowd_agent_event(RNEventThrown event,
 		ThrowEventData eventData)
 {
 	//some checks
-	nassertv_always(not eventData.mEventName.empty())
+	nassertv_always(! eventData.mEventName.empty())
 
 	if (eventData.mFrequency <= 0.0)
 	{

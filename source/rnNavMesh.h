@@ -363,6 +363,8 @@ private:
 	void do_set_crowd_agent_other_settings(
 	PT(RNCrowdAgent)crowdAgent, rnsup::CrowdTool* crowdTool);
 
+	int do_get_convex_volume_from_point(const LPoint3f& insidePoint);
+
 	int do_add_obstacle_to_recast(NodePath& objectNP, int index);
 	int do_remove_obstacle_from_recast(NodePath& objectNP, int obstacleRef);
 

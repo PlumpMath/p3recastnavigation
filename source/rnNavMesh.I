@@ -70,7 +70,7 @@ INLINE RNNavMeshSettings RNNavMesh::get_nav_mesh_settings() const
  */
 INLINE void RNNavMesh::set_area_flags(int area, int oredFlags)
 {
-	nassertv_always(not mNavMeshType)
+	nassertv_always(! mNavMeshType)
 
 	//add area with corresponding ored ability flags
 	mPolyAreaFlags[area] = oredFlags;
@@ -173,7 +173,7 @@ INLINE RNNavMeshTileSettings RNNavMesh::get_nav_mesh_tile_settings() const
  */
 INLINE PT(RNCrowdAgent) RNNavMesh::get_crowd_agent(int index) const
 {
-	nassertr_always((index >= 0) and (index < (int)mCrowdAgents.size()), NULL)
+	nassertr_always((index >= 0) && (index < (int)mCrowdAgents.size()), NULL)
 
 	return mCrowdAgents[index];
 }

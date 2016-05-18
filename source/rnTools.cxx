@@ -24,7 +24,7 @@ pvector<string> parseCompoundString(
 	char* pch;
 	char* start = dest;
 	bool stop = false;
-	while (not stop)
+	while (! stop)
 	{
 		string substring("");
 		pch = strchr(start, separator);

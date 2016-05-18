@@ -44,7 +44,7 @@ void RNNavMesh::set_nav_mesh_type_enum(RNNavMeshTypeEnum typeEnum)
 }
 
 /**
- * Sets up the underlying NavMeshType settings, if this RNNavMesh has been setup.
+ * Sets up the underlying NavMeshType settings.
  */
 void RNNavMesh::set_nav_mesh_settings(const RNNavMeshSettings& settings)
 {
@@ -83,7 +83,7 @@ void RNNavMesh::set_area_cost(int area, float cost)
 }
 
 /**
- * Set Recast Crowd include flags.
+ * Sets Recast Crowd include flags.
  * \note oredFlags: ored flags as specified in RNNavMeshPolyFlagsEnum.
  */
 void RNNavMesh::set_crowd_include_flags(int oredFlags)
@@ -123,7 +123,7 @@ void RNNavMesh::set_crowd_exclude_flags(int oredFlags)
 }
 
 /**
- * Sets up the underlying NavMeshType tile settings, if this RNNavMesh has been setup (only TILE and OBSTACLE).
+ * Sets up the underlying NavMeshType tile settings (only TILE and OBSTACLE).
  */
 void RNNavMesh::set_nav_mesh_tile_settings(
 		const RNNavMeshTileSettings& settings)
@@ -594,11 +594,11 @@ int RNNavMesh::setup()
 	mNavMeshType->setFlagsAreaTable(mPolyAreaFlags);
 
 	//set recast convex volumes
+	//mConvexVolumes could be modified during iteration so use this pattern:
 	rnsup::ConvexVolumeTool* cvTool = new rnsup::ConvexVolumeTool();
 	mNavMeshType->setTool(cvTool);
-	pvector<PointListArea>::iterator iterPLA;
-	for (iterPLA = mConvexVolumes.begin(); iterPLA != mConvexVolumes.end();
-			++iterPLA)
+	pvector<PointListArea>::iterator iterPLA = mConvexVolumes.begin();
+	while(iterPLA != mConvexVolumes.end())
 	{
 		ValueList<LPoint3f> points = iterPLA->first();
 		//check if there are at least 3 points for
@@ -630,6 +630,28 @@ int RNNavMesh::setup()
 		}
 		//re-insert the last point (to close convex volume)
 		mNavMeshType->getTool()->handleClick(NULL, recastPos, false);
+		//checks if really it was inserted
+		int idx = cvTool->getConvexVolumeIdx();
+		if(idx != -1)
+		{
+			//inserted
+			//now make sure mConvexVolumes and mGeom::m_volumes are synchronized
+			points.clear();
+			rnsup::ConvexVolume convexVol = mGeom->getConvexVolumes()[idx];
+			for (int i = 0; i < convexVol.nverts; ++i)
+			{
+				points.add_value(rnsup::RecastToLVecBase3f(convexVol.verts));
+			}
+		}
+		else
+		{
+			//not inserted: remove
+			//\see http://stackoverflow.com/questions/596162/can-you-remove-elements-from-a-stdlist-while-iterating-through-it
+			iterPLA = mConvexVolumes.erase(iterPLA);
+			continue;
+		}
+		//increment iterator
+		++iterPLA;
 	}
 	mNavMeshType->setTool(NULL);
 
@@ -662,7 +684,7 @@ int RNNavMesh::setup()
 	}
 	mNavMeshType->setTool(NULL);
 
-	//build navigation mesh actually
+	///build navigation mesh actually
 	do_build_navMesh();
 
 	//set crowd tool: this will be always on when nav mesh is setup
@@ -754,7 +776,7 @@ bool RNNavMesh::do_build_navMesh()
 
 /**
  * Adds a convex volume given its points (at least 3).
- * Can be set only before RNNavMesh is setup.
+ * Can be added only before RNNavMesh is setup.
  * Returns the convex volume's index, or a negative number on error.
  */
 int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
@@ -806,7 +828,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 		}
 		navMeshType->getTool()->handleClick(NULL, recastPos, false);
 		//check if convex volume has been actually added
-		if (navMeshType->getInputGeom()->getConvexVolumeCount() == 0)
+		if (cvTool->getConvexVolumeIdx() == -1)
 		{
 			continue;
 		}
@@ -816,7 +838,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 		rnsup::LVecBase3fToRecast(insidePos, recastPos);
 		navMeshType->getTool()->handleClick(NULL, recastPos, true);
 		//check if the convex volume has been removed
-		if (navMeshType->getInputGeom()->getConvexVolumeCount() == 0)
+		if (cvTool->getConvexVolumeIdx() != -1)
 		{
 			//this convex volume has been removed, i.e. insidePoint
 			//is indeed "inside" it, so calculate oldIndex (>=0), remove
@@ -837,7 +859,36 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 }
 
 /**
- *
+ * Gets the convex volume with the point inside.
+ * Returns the index of the convex volume, or -1 if none is found.
+ */
+int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint)
+{
+	//get hit point
+	float m_hitPos[3];
+	rnsup::LVecBase3fToRecast(insidePoint, m_hitPos);
+	//check if a convex volume was hit (see: Delete case of ConvexVolumeTool::handleClick)
+	int m_convexVolumeID = -1;
+	const rnsup::ConvexVolume* vols =
+			mNavMeshType->getInputGeom()->getConvexVolumes();
+	for (int i = 0; i < mNavMeshType->getInputGeom()->getConvexVolumeCount();
+			++i)
+	{
+		if (rnsup::pointInPoly(vols[i].nverts, vols[i].verts, m_hitPos)
+				&& m_hitPos[1] >= vols[i].hmin && m_hitPos[1] <= vols[i].hmax)
+		{
+			m_convexVolumeID = i;
+			break;
+		}
+	}
+	return m_convexVolumeID;
+}
+
+
+/**
+ * Sets the area of the convex volume with the point inside.
+ * Can be set only after RNNavMesh is setup.
+ * Returns the index of the convex volume, or -1 if none is found or on error.
  */
 int RNNavMesh::set_convex_volume_area(const LPoint3f& insidePoint, int area)
 {
@@ -849,115 +900,79 @@ int RNNavMesh::set_convex_volume_area(const LPoint3f& insidePoint, int area)
 		area = -area;
 	}
 
-	///HACK: use support functionality to remove convex volumes
-	//create fake InputGeom, NavMeshType and ConvexVolumeTool
-	rnsup::InputGeom* geom = new rnsup::InputGeom;
-	rnsup::NavMeshType* navMeshType = new rnsup::NavMeshType_Solo();
-	rnsup::ConvexVolumeTool* cvTool = new rnsup::ConvexVolumeTool();
-	navMeshType->handleMeshChanged(mGeom);
-	navMeshType->setTool(cvTool);
-	//cycle the existing convex volumes (see setup()) and
-	//check if they can be added then removed given the insidePoint
-	pvector<PointListArea>::iterator cvI;
-	for (cvI = mConvexVolumes.begin(); cvI != mConvexVolumes.end(); ++cvI)
+	int m_convexVolumeID = do_get_convex_volume_from_point(insidePoint);
+
+	// Check if the end point is close enough into a convex volume.
+	if (m_convexVolumeID != -1)
 	{
-		//try to add this convex volume (the NavMeshType has none)
-		ValueList<LPoint3f> points = cvI->first();
-		cvTool->setAreaType(cvI->second());
-		float recastPos[3];
-		for (int iterP = 0; iterP != points.size(); ++iterP)
+		///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
+		const float *m_queryPolyPtr =
+				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].verts;
+		int nverts =
+				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].nverts;
+
+		float *m_queryPoly = new float[nverts * 3];
+
+		for (int i = 0; i < nverts * 3; ++i)
 		{
-			LPoint3f refPos = mReferenceNP.get_relative_point(mOwnerObject,
-					points[iterP]);
-			rnsup::LVecBase3fToRecast(refPos, recastPos);
-			navMeshType->getTool()->handleClick(NULL, recastPos, false);
+			m_queryPoly[i] = m_queryPolyPtr[i];
 		}
-		navMeshType->getTool()->handleClick(NULL, recastPos, false);
-		//check if convex volume has been actually added
-		if (navMeshType->getInputGeom()->getConvexVolumeCount() == 0)
+
+		rnsup::reverseVector(m_queryPoly, nverts);
+
+		float m_centerPos[3];
+		m_centerPos[0] = m_centerPos[1] = m_centerPos[2] = 0;
+		for (int i = 0; i < nverts; ++i)
 		{
-			continue;
+			dtVadd(m_centerPos, m_centerPos, &m_queryPoly[i * 3]);
 		}
-		//now try to hit this convex volume
-		LPoint3f insidePos = mReferenceNP.get_relative_point(mOwnerObject,
-				insidePoint);
-		rnsup::LVecBase3fToRecast(insidePos, recastPos);
-		int m_convexVolumeID = navMeshType->getTool()->handleClick(NULL,
-				recastPos, true);
+		dtVscale(m_centerPos, m_centerPos, 1.0f / nverts);
 
-		// Check if the end point is close enough into a convex volume.
-		if (m_convexVolumeID != -1)
+		dtQueryFilter m_filter;
+		m_filter.setIncludeFlags(POLYFLAGS_ALL);
+		m_filter.setExcludeFlags(0);
+		dtPolyRef m_startRef;
+		float m_polyPickExt[3] =
+		{ 2, 4, 2 };
+		dtStatus status;
+		status = mNavMeshType->getNavMeshQuery()->findNearestPoly(m_centerPos,
+				m_polyPickExt, &m_filter, &m_startRef, 0);
+
+		nassertr_always(dtStatusSucceed(status), RN_ERROR)
+
+		static const int MAX_POLYS = 256;
+		dtPolyRef m_polys[MAX_POLYS];
+		dtPolyRef m_parent[MAX_POLYS];
+		int m_npolys;
+
+		status = mNavMeshType->getNavMeshQuery()->findPolysAroundShape(m_startRef,
+				m_queryPoly, nverts, &m_filter, m_polys, m_parent, 0, &m_npolys,
+				MAX_POLYS);
+
+		nassertr_always(dtStatusSucceed(status), RN_ERROR)
+
+		for (int i = 0; i < m_npolys; ++i)
 		{
-			///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
-			const float *m_queryPolyPtr =
-					mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].verts;
-			int nverts =
-					mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].nverts;
-
-			float *m_queryPoly = new float[nverts * 3];
-
-			for (int i = 0; i < nverts * 3; ++i)
+			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(m_polys[i],
+					&m_filter))
 			{
-				m_queryPoly[i] = m_queryPolyPtr[i];
+				status = mNavMeshType->getNavMesh()->setPolyArea(m_polys[i], area);
+				nassertr_always(dtStatusSucceed(status), RN_ERROR)
 			}
-
-			rnsup::reverseVector(m_queryPoly, nverts);
-
-			float m_centerPos[3];
-			m_centerPos[0] = m_centerPos[1] = m_centerPos[2] = 0;
-			for (int i = 0; i < nverts; ++i)
-			{
-				dtVadd(m_centerPos, m_centerPos, &m_queryPoly[i * 3]);
-			}
-			dtVscale(m_centerPos, m_centerPos, 1.0f / nverts);
-
-			dtQueryFilter m_filter;
-			m_filter.setIncludeFlags(POLYFLAGS_ALL);
-			m_filter.setExcludeFlags(0);
-			dtPolyRef m_startRef;
-			float m_polyPickExt[3] =
-			{ 2, 4, 2 };
-			dtStatus status;
-			status = mNavMeshType->getNavMeshQuery()->findNearestPoly(
-					m_centerPos, m_polyPickExt, &m_filter, &m_startRef, 0);
-
-			nassertr_always(dtStatusSucceed(status), RN_ERROR)
-
-			static const int MAX_POLYS = 256;
-			dtPolyRef m_polys[MAX_POLYS];
-			dtPolyRef m_parent[MAX_POLYS];
-			int m_npolys;
-
-			mNavMeshType->getNavMeshQuery()->findPolysAroundShape(m_startRef,
-					m_queryPoly, nverts, &m_filter, m_polys, m_parent, 0,
-					&m_npolys, MAX_POLYS);
-
-			for (int i = 0; i < m_npolys; ++i)
-			{
-				if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(m_polys[i],
-						&m_filter))
-				{
-					mNavMeshType->getNavMesh()->setPolyArea(m_polys[i], area);
-				}
-			}
-			delete[] m_queryPoly;
-			//update mConvexVolume area
-			mConvexVolumes.erase(cvI);
-			cvI->set_second(area);
 		}
-		// remove this convex volume and continue cycle
-		navMeshType->getInputGeom()->deleteConvexVolume(0);
+		delete[] m_queryPoly;
+		//mConvexVolumes and mGeom::m_volumes are synchronized
+		//update mConvexVolume area
+		mConvexVolumes[m_convexVolumeID].set_second(area);
 	}
-	//delete fake objects
-	navMeshType->setTool(NULL);
-	delete navMeshType;
-	delete geom;
-	//return success
-	return RN_SUCCESS;
+	//return
+	return m_convexVolumeID;
 }
 
 /**
- *
+ * Gets the area of the convex volume with the point inside.
+ * Can be get only after RNNavMesh is setup.
+ * Returns -1 if none is found.
  */
 int RNNavMesh::get_convex_volume_area(const LPoint3f& insidePoint)
 {
@@ -965,172 +980,96 @@ int RNNavMesh::get_convex_volume_area(const LPoint3f& insidePoint)
 	nassertr_always(mNavMeshType, RN_ERROR)
 
 	int area = RN_ERROR;
-	///HACK: use support functionality to remove convex volumes
-	//create fake InputGeom, NavMeshType and ConvexVolumeTool
-	rnsup::InputGeom* geom = new rnsup::InputGeom;
-	rnsup::NavMeshType* navMeshType = new rnsup::NavMeshType_Solo();
-	rnsup::ConvexVolumeTool* cvTool = new rnsup::ConvexVolumeTool();
-	navMeshType->handleMeshChanged(mGeom);
-	navMeshType->setTool(cvTool);
-	//cycle the existing convex volumes (see setup()) and
-	//check if they can be added then removed given the insidePoint
-	pvector<PointListArea>::iterator cvI;
-	for (cvI = mConvexVolumes.begin(); cvI != mConvexVolumes.end(); ++cvI)
+	int m_convexVolumeID = do_get_convex_volume_from_point(insidePoint);
+	//
+	if (m_convexVolumeID != -1)
 	{
-		//try to add this convex volume (the NavMeshType has none)
-		ValueList<LPoint3f> points = cvI->first();
-		cvTool->setAreaType(cvI->second());
-		float recastPos[3];
-		for (int iterP = 0; iterP != points.size(); ++iterP)
-		{
-			LPoint3f refPos = mReferenceNP.get_relative_point(mOwnerObject,
-					points[iterP]);
-			rnsup::LVecBase3fToRecast(refPos, recastPos);
-			navMeshType->getTool()->handleClick(NULL, recastPos, false);
-		}
-		navMeshType->getTool()->handleClick(NULL, recastPos, false);
-		//check if convex volume has been actually added
-		if (navMeshType->getInputGeom()->getConvexVolumeCount() == 0)
-		{
-			continue;
-		}
-		//now try to hit this convex volume
-		LPoint3f insidePos = mReferenceNP.get_relative_point(mOwnerObject,
-				insidePoint);
-		rnsup::LVecBase3fToRecast(insidePos, recastPos);
-		int m_convexVolumeID = navMeshType->getTool()->handleClick(NULL,
-				recastPos, true);
-
-		if(m_convexVolumeID != -1)
-		{
-			area = cvI->get_second();
-		}
-
-		// remove this convex volume and continue cycle
-		navMeshType->getInputGeom()->deleteConvexVolume(0);
+		//mConvexVolumes and mGeom::m_volumes are synchronized
+		area = mConvexVolumes[m_convexVolumeID].get_second();
 	}
-	//delete fake objects
-	navMeshType->setTool(NULL);
-	delete navMeshType;
-	delete geom;
 	//return area
 	return area;
 }
 
 /**
- *
+ * Sets the flags of the convex volume with the point inside.
+ * Can be set only after RNNavMesh is setup.
+ * Returns the index of the convex volume, or -1 if none is found or on error.
  */
 int RNNavMesh::set_convex_volume_flags(const LPoint3f& insidePoint, int oredFlags)
 {
 	// go on if nav mesh has been already setup
 	nassertr_always(mNavMeshType, RN_ERROR)
 
-	///HACK: use support functionality to remove convex volumes
-	//create fake InputGeom, NavMeshType and ConvexVolumeTool
-	rnsup::InputGeom* geom = new rnsup::InputGeom;
-	rnsup::NavMeshType* navMeshType = new rnsup::NavMeshType_Solo();
-	rnsup::ConvexVolumeTool* cvTool = new rnsup::ConvexVolumeTool();
-	navMeshType->handleMeshChanged(mGeom);
-	navMeshType->setTool(cvTool);
-	//cycle the existing convex volumes (see setup()) and
-	//check if they can be added then removed given the insidePoint
-	pvector<PointListArea>::iterator cvI;
-	for (cvI = mConvexVolumes.begin(); cvI != mConvexVolumes.end(); ++cvI)
+	int m_convexVolumeID = do_get_convex_volume_from_point(insidePoint);
+	// Check if the end point is close enough into a convex volume.
+	if (m_convexVolumeID != -1)
 	{
-		//try to add this convex volume (the NavMeshType has none)
-		ValueList<LPoint3f> points = cvI->first();
-		cvTool->setAreaType(cvI->second());
-		float recastPos[3];
-		for (int iterP = 0; iterP != points.size(); ++iterP)
+		///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
+		const float *m_queryPolyPtr =
+				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].verts;
+		int nverts =
+				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].nverts;
+
+		float *m_queryPoly = new float[nverts * 3];
+
+		for (int i = 0; i < nverts * 3; ++i)
 		{
-			LPoint3f refPos = mReferenceNP.get_relative_point(mOwnerObject,
-					points[iterP]);
-			rnsup::LVecBase3fToRecast(refPos, recastPos);
-			navMeshType->getTool()->handleClick(NULL, recastPos, false);
+			m_queryPoly[i] = m_queryPolyPtr[i];
 		}
-		navMeshType->getTool()->handleClick(NULL, recastPos, false);
-		//check if convex volume has been actually added
-		if (navMeshType->getInputGeom()->getConvexVolumeCount() == 0)
+
+		rnsup::reverseVector(m_queryPoly, nverts);
+
+		float m_centerPos[3];
+		m_centerPos[0] = m_centerPos[1] = m_centerPos[2] = 0;
+		for (int i = 0; i < nverts; ++i)
 		{
-			continue;
+			dtVadd(m_centerPos, m_centerPos, &m_queryPoly[i * 3]);
 		}
-		//now try to hit this convex volume
-		LPoint3f insidePos = mReferenceNP.get_relative_point(mOwnerObject,
-				insidePoint);
-		rnsup::LVecBase3fToRecast(insidePos, recastPos);
-		int m_convexVolumeID = navMeshType->getTool()->handleClick(NULL,
-				recastPos, true);
+		dtVscale(m_centerPos, m_centerPos, 1.0f / nverts);
 
-		// Check if the end point is close enough into a convex volume.
-		if (m_convexVolumeID != -1)
+		dtQueryFilter m_filter;
+		m_filter.setIncludeFlags(POLYFLAGS_ALL);
+		m_filter.setExcludeFlags(0);
+		dtPolyRef m_startRef;
+		float m_polyPickExt[3] =
+		{ 2, 4, 2 };
+		dtStatus status;
+		status = mNavMeshType->getNavMeshQuery()->findNearestPoly(m_centerPos,
+				m_polyPickExt, &m_filter, &m_startRef, 0);
+
+		nassertr_always(dtStatusSucceed(status), RN_ERROR)
+
+		static const int MAX_POLYS = 256;
+		dtPolyRef m_polys[MAX_POLYS];
+		dtPolyRef m_parent[MAX_POLYS];
+		int m_npolys;
+
+		status = mNavMeshType->getNavMeshQuery()->findPolysAroundShape(m_startRef,
+				m_queryPoly, nverts, &m_filter, m_polys, m_parent, 0, &m_npolys,
+				MAX_POLYS);
+
+		nassertr_always(dtStatusSucceed(status), RN_ERROR)
+
+		for (int i = 0; i < m_npolys; ++i)
 		{
-			///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
-			const float *m_queryPolyPtr =
-					mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].verts;
-			int nverts =
-					mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].nverts;
-
-			float *m_queryPoly = new float[nverts * 3];
-
-			for (int i = 0; i < nverts * 3; ++i)
+			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(m_polys[i],
+					&m_filter))
 			{
-				m_queryPoly[i] = m_queryPolyPtr[i];
+				status = mNavMeshType->getNavMesh()->setPolyFlags(m_polys[i], oredFlags);
+				nassertr_always(dtStatusSucceed(status), RN_ERROR)
 			}
-
-			rnsup::reverseVector(m_queryPoly, nverts);
-
-			float m_centerPos[3];
-			m_centerPos[0] = m_centerPos[1] = m_centerPos[2] = 0;
-			for (int i = 0; i < nverts; ++i)
-			{
-				dtVadd(m_centerPos, m_centerPos, &m_queryPoly[i * 3]);
-			}
-			dtVscale(m_centerPos, m_centerPos, 1.0f / nverts);
-
-			dtQueryFilter m_filter;
-			m_filter.setIncludeFlags(POLYFLAGS_ALL);
-			m_filter.setExcludeFlags(0);
-			dtPolyRef m_startRef;
-			float m_polyPickExt[3] =
-			{ 2, 4, 2 };
-			dtStatus status;
-			status = mNavMeshType->getNavMeshQuery()->findNearestPoly(
-					m_centerPos, m_polyPickExt, &m_filter, &m_startRef, 0);
-
-			nassertr_always(dtStatusSucceed(status), RN_ERROR)
-
-			static const int MAX_POLYS = 256;
-			dtPolyRef m_polys[MAX_POLYS];
-			dtPolyRef m_parent[MAX_POLYS];
-			int m_npolys;
-
-			mNavMeshType->getNavMeshQuery()->findPolysAroundShape(m_startRef,
-					m_queryPoly, nverts, &m_filter, m_polys, m_parent, 0,
-					&m_npolys, MAX_POLYS);
-
-			for (int i = 0; i < m_npolys; ++i)
-			{
-				if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(m_polys[i],
-						&m_filter))
-				{
-					mNavMeshType->getNavMesh()->setPolyFlags(m_polys[i], oredFlags);
-				}
-			}
-			delete[] m_queryPoly;
 		}
-		// remove this convex volume and continue cycle
-		navMeshType->getInputGeom()->deleteConvexVolume(0);
+		delete[] m_queryPoly;
 	}
-	//delete fake objects
-	navMeshType->setTool(NULL);
-	delete navMeshType;
-	delete geom;
-	//return success
-	return RN_SUCCESS;
+	//return
+	return m_convexVolumeID;
 }
 
 /**
- *
+ * Gets the flags of the convex volume with the point inside.
+ * Can be get only after RNNavMesh is setup.
+ * Returns -1 if none is found or on error.
  */
 int RNNavMesh::get_convex_volume_flags(const LPoint3f& insidePoint)
 {
@@ -1138,127 +1077,83 @@ int RNNavMesh::get_convex_volume_flags(const LPoint3f& insidePoint)
 	nassertr_always(mNavMeshType, RN_ERROR)
 
 	int oredFlags = RN_ERROR;
-	///HACK: use support functionality to remove convex volumes
-	//create fake InputGeom, NavMeshType and ConvexVolumeTool
-	rnsup::InputGeom* geom = new rnsup::InputGeom;
-	rnsup::NavMeshType* navMeshType = new rnsup::NavMeshType_Solo();
-	rnsup::ConvexVolumeTool* cvTool = new rnsup::ConvexVolumeTool();
-	navMeshType->handleMeshChanged(mGeom);
-	navMeshType->setTool(cvTool);
-	//cycle the existing convex volumes (see setup()) and
-	//check if they can be added then removed given the insidePoint
-	pvector<PointListArea>::iterator cvI;
-	for (cvI = mConvexVolumes.begin(); cvI != mConvexVolumes.end(); ++cvI)
+	int m_convexVolumeID = do_get_convex_volume_from_point(insidePoint);
+	// Check if the end point is close enough into a convex volume.
+	if (m_convexVolumeID != -1)
 	{
-		//try to add this convex volume (the NavMeshType has none)
-		ValueList<LPoint3f> points = cvI->first();
-		cvTool->setAreaType(cvI->second());
-		float recastPos[3];
-		for (int iterP = 0; iterP != points.size(); ++iterP)
+		///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
+		const float *m_queryPolyPtr =
+				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].verts;
+		int nverts =
+				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].nverts;
+
+		float *m_queryPoly = new float[nverts * 3];
+
+		for (int i = 0; i < nverts * 3; ++i)
 		{
-			LPoint3f refPos = mReferenceNP.get_relative_point(mOwnerObject,
-					points[iterP]);
-			rnsup::LVecBase3fToRecast(refPos, recastPos);
-			navMeshType->getTool()->handleClick(NULL, recastPos, false);
+			m_queryPoly[i] = m_queryPolyPtr[i];
 		}
-		navMeshType->getTool()->handleClick(NULL, recastPos, false);
-		//check if convex volume has been actually added
-		if (navMeshType->getInputGeom()->getConvexVolumeCount() == 0)
+
+		rnsup::reverseVector(m_queryPoly, nverts);
+
+		float m_centerPos[3];
+		m_centerPos[0] = m_centerPos[1] = m_centerPos[2] = 0;
+		for (int i = 0; i < nverts; ++i)
 		{
-			continue;
+			dtVadd(m_centerPos, m_centerPos, &m_queryPoly[i * 3]);
 		}
-		//now try to hit this convex volume
-		LPoint3f insidePos = mReferenceNP.get_relative_point(mOwnerObject,
-				insidePoint);
-		rnsup::LVecBase3fToRecast(insidePos, recastPos);
-		int m_convexVolumeID = navMeshType->getTool()->handleClick(NULL,
-				recastPos, true);
+		dtVscale(m_centerPos, m_centerPos, 1.0f / nverts);
 
-		// Check if the end point is close enough into a convex volume.
-		if (m_convexVolumeID != -1)
+		dtQueryFilter m_filter;
+		m_filter.setIncludeFlags(POLYFLAGS_ALL);
+		m_filter.setExcludeFlags(0);
+		dtPolyRef m_startRef;
+		float m_polyPickExt[3] =
+		{ 2, 4, 2 };
+		dtStatus status;
+		status = mNavMeshType->getNavMeshQuery()->findNearestPoly(m_centerPos,
+				m_polyPickExt, &m_filter, &m_startRef, 0);
+
+		nassertr_always(dtStatusSucceed(status), RN_ERROR)
+
+		static const int MAX_POLYS = 256;
+		dtPolyRef m_polys[MAX_POLYS];
+		dtPolyRef m_parent[MAX_POLYS];
+		int m_npolys;
+
+		status = mNavMeshType->getNavMeshQuery()->findPolysAroundShape(m_startRef,
+				m_queryPoly, nverts, &m_filter, m_polys, m_parent, 0, &m_npolys,
+				MAX_POLYS);
+
+		nassertr_always(dtStatusSucceed(status), RN_ERROR)
+
+		unsigned short flags, oldFlags;
+		for (int i = 0; i < m_npolys; ++i)
 		{
-			///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
-			const float *m_queryPolyPtr =
-					mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].verts;
-			int nverts =
-					mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].nverts;
-
-			float *m_queryPoly = new float[nverts * 3];
-
-			for (int i = 0; i < nverts * 3; ++i)
+			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(m_polys[i],
+					&m_filter))
 			{
-				m_queryPoly[i] = m_queryPolyPtr[i];
-			}
-
-			rnsup::reverseVector(m_queryPoly, nverts);
-
-			float m_centerPos[3];
-			m_centerPos[0] = m_centerPos[1] = m_centerPos[2] = 0;
-			for (int i = 0; i < nverts; ++i)
-			{
-				dtVadd(m_centerPos, m_centerPos, &m_queryPoly[i * 3]);
-			}
-			dtVscale(m_centerPos, m_centerPos, 1.0f / nverts);
-
-			dtQueryFilter m_filter;
-			m_filter.setIncludeFlags(POLYFLAGS_ALL);
-			m_filter.setExcludeFlags(0);
-			dtPolyRef m_startRef;
-			float m_polyPickExt[3] =
-			{ 2, 4, 2 };
-			dtStatus status;
-			status = mNavMeshType->getNavMeshQuery()->findNearestPoly(
-					m_centerPos, m_polyPickExt, &m_filter, &m_startRef, 0);
-
-			nassertr_always(dtStatusSucceed(status), RN_ERROR)
-
-			static const int MAX_POLYS = 256;
-			dtPolyRef m_polys[MAX_POLYS];
-			dtPolyRef m_parent[MAX_POLYS];
-			int m_npolys;
-
-			mNavMeshType->getNavMeshQuery()->findPolysAroundShape(m_startRef,
-					m_queryPoly, nverts, &m_filter, m_polys, m_parent, 0,
-					&m_npolys, MAX_POLYS);
-
-			unsigned short flags, oldFlags;
-			for (int i = 0; i < m_npolys; ++i)
-			{
-				if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(m_polys[i],
-						&m_filter))
+				oldFlags = flags;
+				mNavMeshType->getNavMesh()->getPolyFlags(m_polys[i], &flags);
+				if ((i > 0))
 				{
-					oldFlags = flags;
-					mNavMeshType->getNavMesh()->getPolyFlags(m_polys[i],
-							&flags);
-					if ((i > 0))
+					if (!(oldFlags == flags))
 					{
-						if (!(oldFlags == flags))
-						{
-							oredFlags = RN_ERROR;
-							break;
-						}
+						oredFlags = RN_ERROR;
+						break;
 					}
 				}
-				else
-				{
-					break;
-				}
 			}
-			delete[] m_queryPoly;
+			else
+			{
+				break;
+			}
 		}
-		// remove this convex volume and continue cycle
-		navMeshType->getInputGeom()->deleteConvexVolume(0);
+		delete[] m_queryPoly;
 	}
-	//delete fake objects
-	navMeshType->setTool(NULL);
-	delete navMeshType;
-	delete geom;
 	//return oredFlags
 	return oredFlags;
 }
-
-
-
 
 /**
  * Adds an off mesh connection given its two points and if bidirectional.
@@ -1432,6 +1327,7 @@ int RNNavMesh::cleanup()
 
 /**
  * Gets the position of a RNNavMesh's tile (TILE).
+ * Can be get only after RNNavMesh is setup.
  */
 LVecBase2i RNNavMesh::get_tile_pos(const LPoint3f& pos)
 {
@@ -1458,6 +1354,7 @@ LVecBase2i RNNavMesh::get_tile_pos(const LPoint3f& pos)
 
 /**
  * Builds a RNNavMesh's tile (TILE).
+ * Can be built only after RNNavMesh is setup.
  */
 int RNNavMesh::build_tile(const LPoint3f& pos)
 {
@@ -1484,6 +1381,7 @@ int RNNavMesh::build_tile(const LPoint3f& pos)
 
 /**
  * Removes a RNNavMesh's tile (TILE).
+ * Can be get only after RNNavMesh is setup.
  */
 int RNNavMesh::remove_tile(const LPoint3f& pos)
 {
@@ -1510,6 +1408,7 @@ int RNNavMesh::remove_tile(const LPoint3f& pos)
 
 /**
  * Builds all RNNavMesh's tiles (TILE).
+ * Can be get only after RNNavMesh is setup.
  */
 int RNNavMesh::build_all_tiles()
 {
@@ -1532,6 +1431,7 @@ int RNNavMesh::build_all_tiles()
 
 /**
  * Removes all RNNavMesh's tiles (TILE).
+ * Can be get only after RNNavMesh is setup.
  */
 int RNNavMesh::remove_all_tiles()
 {
@@ -1954,6 +1854,7 @@ const RNCrowdAgentParams& params)
 
 /**
  * Gets the underlying dtTileCache (OBSTACLE).
+ * Can be get only after RNNavMesh is setup.
  */
 dtTileCache* RNNavMesh::get_recast_tile_cache()
 {
@@ -1965,6 +1866,7 @@ dtTileCache* RNNavMesh::get_recast_tile_cache()
 
 /**
  * Sets the target for a given added RNCrowdAgent.
+ * Can be get only after RNNavMesh is setup.
  */
 int RNNavMesh::do_set_crowd_agent_target(PT(RNCrowdAgent)crowdAgent,
 const LPoint3f& moveTarget)
@@ -1989,6 +1891,7 @@ const LPoint3f& moveTarget)
 
 /**
  * Sets the target velocity for a given added RNCrowdAgent.
+ * Can be get only after RNNavMesh is setup.
  */
 int RNNavMesh::do_set_crowd_agent_velocity(PT(RNCrowdAgent)crowdAgent,
 const LVector3f& moveVelocity)
@@ -2130,6 +2033,7 @@ void RNNavMesh::update(float dt)
 
 /**
  * Finds a path from the start point to the end point.
+ * Can be get only after RNNavMesh is setup.
  * Returns a list of points, empty on error.
  */
 ValueList<LPoint3f> RNNavMesh::get_path_find_follow(const LPoint3f& startPos,
@@ -2170,6 +2074,7 @@ ValueList<LPoint3f> RNNavMesh::get_path_find_follow(const LPoint3f& startPos,
 
 /**
  * Finds a straight path from the start point to the end point.
+ * Can be get only after RNNavMesh is setup.
  * Returns a list of points, empty on error.
  */
 RNNavMesh::PointFlagList RNNavMesh::get_path_find_straight(
@@ -2216,7 +2121,8 @@ RNNavMesh::PointFlagList RNNavMesh::get_path_find_straight(
 }
 
 /**
- * Casts a 'walkability' ray from the start point toward the end point.
+ * Casts a walkability/visibility ray from the start point toward the end point.
+ * Can be casted only after RNNavMesh is setup.
  * Returns the first hit point if not walkable, or the end point if walkable.
  * This method is meant only for short distance checks.
  */
@@ -2256,6 +2162,7 @@ LPoint3f RNNavMesh::check_walkability(const LPoint3f& startPos,
 
 /**
  * Finds the distance from the specified position to the nearest polygon wall.
+ * Can be found only after RNNavMesh is setup.
  */
 float RNNavMesh::get_distance_to_wall(const LPoint3f& pos)
 {
@@ -2295,6 +2202,7 @@ void RNNavMesh::output(ostream &out) const
 
 /**
  * Enables the debug drawing, only if nav mesh has been already setup.
+ * Can be enabled only after RNNavMesh is setup.
  * A camera node path should be passed as argument.
  */
 void RNNavMesh::enable_debug_drawing(NodePath debugCamera)
