@@ -187,8 +187,8 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 		if (nearestIndex != -1)
 		{
 			geom->deleteConvexVolume(nearestIndex);
+			m_convexVolumeIdx = nearestIndex;
 		}
-		m_convexVolumeIdx = nearestIndex;
 	}
 	else
 	{

@@ -40,6 +40,8 @@ class OffMeshConnectionTool : public NavMeshTypeTool
 	bool m_hitPosSet;
 	bool m_bidir;
 	unsigned char m_oldFlags;
+
+	int m_offMeshConnectionIdx;
 	
 public:
 	OffMeshConnectionTool();
@@ -57,6 +59,11 @@ public:
 //	virtual void handleRenderOverlay(double* proj, double* model, int* view);
 
 	void setBidir(bool bidir) { m_bidir = bidir; }
+	//the index of the just added/removed off mesh connection
+	int getOffMeshConnectionIdx()
+	{
+		return m_offMeshConnectionIdx;
+	}
 };
 
 } // namespace rnsup

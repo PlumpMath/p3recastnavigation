@@ -382,6 +382,58 @@ INLINE void RNNavMeshTileSettings::set_tileSize(float value)
 	_navMeshTileSettings.m_tileSize = value;
 }
 
+///Convex volume settings.
+INLINE int RNConvexVolumeSettings::get_area() const
+{
+	return _area;
+}
+INLINE void RNConvexVolumeSettings::set_area(int value)
+{
+	_area = value;
+}
+INLINE int RNConvexVolumeSettings::get_flags() const
+{
+	return _flags;
+}
+INLINE void RNConvexVolumeSettings::set_flags(int value)
+{
+	_flags = value;
+}
+
+///Off mesh connection settings.
+INLINE float RNOffMeshConnectionSettings::get_rad() const
+{
+	return _rad;
+}
+INLINE void RNOffMeshConnectionSettings::set_rad(float value)
+{
+	_rad = value;
+}
+INLINE unsigned char RNOffMeshConnectionSettings::get_bidir() const
+{
+	return _bidir;
+}
+INLINE void RNOffMeshConnectionSettings::set_bidir(unsigned char value)
+{
+	_bidir = value;
+}
+INLINE int RNOffMeshConnectionSettings::get_area() const
+{
+	return _area;
+}
+INLINE void RNOffMeshConnectionSettings::set_area(int value)
+{
+	_area = value;
+}
+INLINE int RNOffMeshConnectionSettings::get_flags() const
+{
+	return _flags;
+}
+INLINE void RNOffMeshConnectionSettings::set_flags(int value)
+{
+	_flags = value;
+}
+
 ///CrowdAgentParams
 INLINE float RNCrowdAgentParams::get_radius() const
 {

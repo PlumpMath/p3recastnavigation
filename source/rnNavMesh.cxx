@@ -60,7 +60,7 @@ void RNNavMesh::set_nav_mesh_settings(const RNNavMeshSettings& settings)
 /**
  * Sets the Recast area's traversal cost.
  */
-void RNNavMesh::set_area_cost(int area, float cost)
+void RNNavMesh::set_crowd_area_cost(int area, float cost)
 {
 	//add area with corresponding cost
 	mPolyAreaCost[area] = cost;
@@ -375,7 +375,7 @@ void RNNavMesh::do_initialize()
 	//get convex volumes
 	plist<string> mConvexVolumesParam = mTmpl->get_parameter_values(RNNavMeshManager::NAVMESH,
 			string("convex_volume"));
-	pvector<PointListArea> convexVolumes;
+	pvector<PointListConvexVolumeSettings> convexVolumes;
 	for (iterStr = mConvexVolumesParam.begin();
 			iterStr != mConvexVolumesParam.end(); ++iterStr)
 	{
@@ -415,7 +415,10 @@ void RNNavMesh::do_initialize()
 			pointList.add_value(point);
 		}
 		//insert convex volume to the list
-		convexVolumes.push_back(PointListArea(pointList, areaType));
+		RNConvexVolumeSettings settings;
+		settings.set_area(areaType);
+		settings.set_flags(flagsAreaTable[areaType]);
+		convexVolumes.push_back(PointListConvexVolumeSettings(pointList, settings));
 	}
 	//get off mesh connections
 	plist<string> mOffMeshConnectionsParam = mTmpl->get_parameter_values(
@@ -502,10 +505,10 @@ void RNNavMesh::do_initialize()
 int RNNavMesh::setup()
 {
 	// go on if nav mesh has not been setup yet
-	nassertr_always(! mNavMeshType, RN_SUCCESS)
+	nassertr_always(!mNavMeshType, RN_SUCCESS)
 
 	// go on if owner object not empty
-	nassertr_always(! mOwnerObject.is_empty(), RN_NAVMESH_NULL)
+	nassertr_always(!mOwnerObject.is_empty(), RN_NAVMESH_NULL)
 
 	set_name(mOwnerObject.get_name() + string("_RNNavMesh"));
 
@@ -528,10 +531,10 @@ int RNNavMesh::setup()
 	PRINT_DEBUG("RNNavMesh::setup");
 
 	//don't load model mesh more than once
-	if (! mGeom)
+	if (!mGeom)
 	{
 		//load the mesh from the owner node path
-		if (! do_load_model_mesh(mOwnerObject))
+		if (!do_load_model_mesh(mOwnerObject))
 		{
 			cleanup();
 			return RN_ERROR;
@@ -598,8 +601,9 @@ int RNNavMesh::setup()
 	//mConvexVolumes could be modified during iteration so use this pattern:
 	rnsup::ConvexVolumeTool* cvTool = new rnsup::ConvexVolumeTool();
 	mNavMeshType->setTool(cvTool);
-	pvector<PointListArea>::iterator iterPLA = mConvexVolumes.begin();
-	while(iterPLA != mConvexVolumes.end())
+	pvector<PointListConvexVolumeSettings>::iterator iterPLA =
+			mConvexVolumes.begin();
+	while (iterPLA != mConvexVolumes.end())
 	{
 		ValueList<LPoint3f> points = iterPLA->first();
 		//check if there are at least 3 points for
@@ -633,7 +637,7 @@ int RNNavMesh::setup()
 		mNavMeshType->getTool()->handleClick(NULL, recastPos, false);
 		//checks if really it was inserted
 		int idx = cvTool->getConvexVolumeIdx();
-		if(idx != -1)
+		if (idx != -1)
 		{
 			//inserted
 			//now make sure mConvexVolumes and mGeom::m_volumes are synchronized
@@ -643,6 +647,11 @@ int RNNavMesh::setup()
 			{
 				points.add_value(rnsup::RecastToLVecBase3f(convexVol.verts));
 			}
+			//mConvexVolumes and mGeom::m_volumes have the same order
+			nassertr_always(mGeom->getConvexVolumeCount() == idx, RN_ERROR)
+			nassertr_always((iterPLA - mConvexVolumes.begin()) == idx, RN_ERROR)
+
+			mConvexVolumes[idx].set_first(points);
 		}
 		else
 		{
@@ -781,13 +790,16 @@ bool RNNavMesh::do_build_navMesh()
  * Returns the convex volume's index, or a negative number on error.
  */
 int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
-		RNNavMeshPolyAreasEnum area)
+		int area)
 {
 	// go on if nav mesh has not been already setup
-	nassertr_always((! mNavMeshType) && (points.size() >= 3), RN_ERROR)
+	nassertr_always((!mNavMeshType) && (points.size() >= 3), RN_ERROR)
 
 	// add to convex volumes
-	mConvexVolumes.push_back(PointListArea(points, area));
+	RNConvexVolumeSettings settings;
+	settings.set_area(area);
+	settings.set_flags(mPolyAreaFlags[area]);
+	mConvexVolumes.push_back(PointListConvexVolumeSettings(points, settings));
 	return (int) (mConvexVolumes.size() - 1);
 }
 
@@ -813,12 +825,12 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 	navMeshType->setTool(cvTool);
 	//cycle the existing convex volumes (see setup()) and
 	//check if they can be added then removed given the insidePoint
-	pvector<PointListArea>::iterator cvI;
+	pvector<PointListConvexVolumeSettings>::iterator cvI;
 	for(cvI = mConvexVolumes.begin(); cvI != mConvexVolumes.end(); ++cvI)
 	{
 		//try to add this convex volume (the NavMeshType has none)
 		ValueList<LPoint3f> points = cvI->first();
-		cvTool->setAreaType(cvI->second());
+		cvTool->setAreaType(cvI->second().get_area());
 		float recastPos[3];
 		for (int iterP = 0; iterP != points.size(); ++iterP)
 		{
@@ -942,19 +954,22 @@ int RNNavMesh::do_find_polys_of_convex_volume(int convexVolumeID,
 }
 
 /**
- * Sets the area of the convex volume with the point inside.
+ * Update settings of the convex volume with the point inside.
  * Can be set only after RNNavMesh is setup.
  * Returns the index of the convex volume, or -1 if none is found or on error.
  */
-int RNNavMesh::set_convex_volume_area(const LPoint3f& insidePoint, int area)
+int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
+		const RNConvexVolumeSettings settings)
 {
 	// go on if nav mesh has been already setup
 	nassertr_always(mNavMeshType, RN_ERROR)
 
+	int area = settings.get_area();
 	if (area < 0)
 	{
 		area = -area;
 	}
+	int oredFlags = settings.get_flags();
 
 	int convexVolumeID = do_get_convex_volume_from_point(insidePoint);
 
@@ -965,7 +980,7 @@ int RNNavMesh::set_convex_volume_area(const LPoint3f& insidePoint, int area)
 		static const int MAX_POLYS = 256;
 		dtPolyRef polys[MAX_POLYS];
 		int npolys;
-		dtStatus status;
+		dtStatus status, status2;
 
 		nassertr_always(
 				do_find_polys_of_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
@@ -979,7 +994,9 @@ int RNNavMesh::set_convex_volume_area(const LPoint3f& insidePoint, int area)
 			{
 				status = mNavMeshType->getNavMesh()->setPolyArea(polys[p],
 						area);
-				if (!dtStatusSucceed(status))
+				status2 = mNavMeshType->getNavMesh()->setPolyFlags(polys[p],
+						oredFlags);
+				if (!(dtStatusSucceed(status)) && dtStatusSucceed(status2))
 				{
 					break;
 				}
@@ -993,17 +1010,23 @@ int RNNavMesh::set_convex_volume_area(const LPoint3f& insidePoint, int area)
 		if (p == npolys)
 		{
 			//mConvexVolumes and mGeom::m_volumes are synchronized
-			//update mConvexVolume area
-			mConvexVolumes[convexVolumeID].set_second(area);
+			//update mConvexVolume settings
+			RNConvexVolumeSettings settings;
+			settings.set_area(area);
+			settings.set_flags(oredFlags);
+			mConvexVolumes[convexVolumeID].set_second(settings);
 		}
 		else
 		{
 			//errors: reset to previous values
-			int oldArea = mConvexVolumes[convexVolumeID].get_second();
-			for(int i = 0; i < p; ++i)
+			int oldArea =
+					mConvexVolumes[convexVolumeID].get_second().get_area();
+			int oldFlags =
+					mConvexVolumes[convexVolumeID].get_second().get_flags();
+			for (int i = 0; i < p; ++i)
 			{
-				mNavMeshType->getNavMesh()->setPolyArea(polys[p],
-										oldArea);
+				mNavMeshType->getNavMesh()->setPolyArea(polys[p], oldArea);
+				mNavMeshType->getNavMesh()->setPolyFlags(polys[p], oldFlags);
 			}
 			convexVolumeID = -1;
 		}
@@ -1019,145 +1042,26 @@ int RNNavMesh::set_convex_volume_area(const LPoint3f& insidePoint, int area)
 }
 
 /**
- * Gets the area of the convex volume with the point inside.
+ * Returns settings of the convex volume with the point inside.
  * Can be get only after RNNavMesh is setup.
- * Returns -1 if none is found.
+ * Returns RNConvexVolumeSettings() if none is found.
  */
-int RNNavMesh::get_convex_volume_area(const LPoint3f& insidePoint)
+RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(const LPoint3f& insidePoint)
 {
 	// go on if nav mesh has been already setup
-	nassertr_always(mNavMeshType, RN_ERROR)
+	nassertr_always(mNavMeshType, RNConvexVolumeSettings())
 
-	int area = RN_ERROR;
+	RNConvexVolumeSettings settings;
+
 	int convexVolumeID = do_get_convex_volume_from_point(insidePoint);
 	//
 	if (convexVolumeID != -1)
 	{
 		//mConvexVolumes and mGeom::m_volumes are synchronized
-		area = mConvexVolumes[convexVolumeID].get_second();
+		settings = mConvexVolumes[convexVolumeID].get_second();
 	}
-	//return area
-	return area;
-}
-
-/**
- * Sets the flags of the convex volume with the point inside.
- * Can be set only after RNNavMesh is setup.
- * Returns the index of the convex volume, or -1 if none is found or on error.
- */
-int RNNavMesh::set_convex_volume_flags(const LPoint3f& insidePoint, int oredFlags)
-{
-	// go on if nav mesh has been already setup
-	nassertr_always(mNavMeshType, RN_ERROR)
-
-	int convexVolumeID = do_get_convex_volume_from_point(insidePoint);
-
-	// check if a convex volume was it
-	if (convexVolumeID != -1)
-	{
-		dtQueryFilter filter;
-		static const int MAX_POLYS = 256;
-		dtPolyRef polys[MAX_POLYS];
-		int npolys;
-		dtStatus status;
-
-		nassertr_always(
-				do_find_polys_of_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
-				RN_ERROR)
-
-		int p;
-		for (p = 0; p < npolys; ++p)
-		{
-			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(polys[p],
-					&filter))
-			{
-				status = mNavMeshType->getNavMesh()->setPolyFlags(polys[p],
-						oredFlags);
-				if (!dtStatusSucceed(status))
-				{
-					break;
-				}
-			}
-			else
-			{
-				break;
-			}
-		}
-		//check if all OK
-		if (p != npolys)
-		{
-			//errors: reset to default flags
-			//mConvexVolumes and mGeom::m_volumes are synchronized
-			int defaultFlags =
-					mPolyAreaFlags[mConvexVolumes[convexVolumeID].get_second()];
-			for (int i = 0; i < p; ++i)
-			{
-				mNavMeshType->getNavMesh()->setPolyFlags(polys[p],
-						defaultFlags);
-			}
-			convexVolumeID = -1;
-		}
-	}
-#ifdef RN_DEBUG
-	if (!mDebugCamera.is_empty())
-	{
-		do_debug_static_render();
-	}
-#endif //RN_DEBUG
-	//return
-	return convexVolumeID;
-}
-
-/**
- * Gets the flags of the convex volume with the point inside.
- * Can be get only after RNNavMesh is setup.
- * Returns -1 if none is found or on error.
- */
-int RNNavMesh::get_convex_volume_flags(const LPoint3f& insidePoint)
-{
-	// go on if nav mesh has been already setup
-	nassertr_always(mNavMeshType, RN_ERROR)
-
-	unsigned short int oredFlags = RN_ERROR;
-	int convexVolumeID = do_get_convex_volume_from_point(insidePoint);
-
-	// check if a convex volume was it
-	if (convexVolumeID != -1)
-	{
-		dtQueryFilter filter;
-		static const int MAX_POLYS = 256;
-		dtPolyRef polys[MAX_POLYS];
-		int npolys;
-		dtStatus status;
-
-		nassertr_always(
-				do_find_polys_of_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
-				RN_ERROR)
-
-		unsigned short oldFlags;
-		int p;
-		for (p = 0; p < npolys; ++p)
-		{
-			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(polys[p],
-					&filter))
-			{
-				//save last value
-				oldFlags = oredFlags;
-				mNavMeshType->getNavMesh()->getPolyFlags(polys[p], &oredFlags);
-				if ((p > 0) && (oldFlags != oredFlags))
-				{
-					oredFlags = RN_ERROR;
-					break;
-				}
-			}
-			else
-			{
-				break;
-			}
-		}
-	}
-	//return oredFlags
-	return oredFlags;
+	//return settings
+	return settings;
 }
 
 /**
@@ -1214,7 +1118,7 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 		rnsup::LVecBase3fToRecast(refPos, recastPos);
 		navMeshType->getTool()->handleClick(NULL, recastPos, false);
 		//check if off mesh connection has been actually added
-		if (navMeshType->getInputGeom()->getOffMeshConnectionCount() == 0)
+		if (omcTool->getOffMeshConnectionIdx() == -1)
 		{
 			continue;
 		}
@@ -1224,7 +1128,7 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 		rnsup::LVecBase3fToRecast(beginOrEndPos, recastPos);
 		navMeshType->getTool()->handleClick(NULL, recastPos, true);
 		//check if the off mesh connection has been removed
-		if (navMeshType->getInputGeom()->getOffMeshConnectionCount() == 0)
+		if (omcTool->getOffMeshConnectionIdx() == -1)
 		{
 			//this off mesh connection has been removed, so
 			//calculate oldIndex (>=0), remove the off mesh
@@ -2366,19 +2270,18 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 	///Convex volumes (see support/ConvexVolumeTool.h).
 	dg.add_uint32(mConvexVolumes.size());
 	{
-		pvector<PointListArea>::iterator iter;
+		pvector<PointListConvexVolumeSettings>::iterator iter;
 		for (iter = mConvexVolumes.begin(); iter != mConvexVolumes.end();
 				++iter)
 		{
-			//save this PointListArea
+			//save this PointListConvexVolumeSettings
 			ValueList<LPoint3f> pointList = (*iter).first();
 			dg.add_uint32(pointList.size());
 			for (int i = 0; i != pointList.size(); ++i)
 			{
 				pointList[i].write_datagram(dg);
 			}
-			int area = (*iter).second();
-			dg.add_int32(area);
+			(*iter).second().write_datagram(dg);
 		}
 	}
 
@@ -2545,9 +2448,11 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 			point.read_datagram(scan);
 			pointList.add_value(point);
 		}
-		int area = scan.get_int32();
+		RNConvexVolumeSettings settings;
+		settings.read_datagram(scan);
 		// insert into mConvexVolumes
-		mConvexVolumes.push_back(PointListArea(pointList, area));
+		mConvexVolumes.push_back(
+				PointListConvexVolumeSettings(pointList, settings));
 	}
 
 	///Off mesh connections (see support/OffMeshConnectionTool.h).

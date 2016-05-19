@@ -297,8 +297,8 @@ struct EXPORT_CLASS RNNavMeshSettings
 PUBLISHED:
 	RNNavMeshSettings();
 #ifndef CPPPARSER
-	RNNavMeshSettings(const rnsup::NavMeshSettings& navMeshSettings) :
-			_navMeshSettings(navMeshSettings)
+	RNNavMeshSettings(const rnsup::NavMeshSettings& settings) :
+			_navMeshSettings(settings)
 	{
 	}
 	operator rnsup::NavMeshSettings() const
@@ -348,8 +348,8 @@ struct EXPORT_CLASS RNNavMeshTileSettings
 PUBLISHED:
 	RNNavMeshTileSettings();
 #ifndef CPPPARSER
-	RNNavMeshTileSettings(const rnsup::NavMeshTileSettings& navMeshTileSettings) :
-			_navMeshTileSettings(navMeshTileSettings)
+	RNNavMeshTileSettings(const rnsup::NavMeshTileSettings& settings) :
+			_navMeshTileSettings(settings)
 	{
 	}
 	operator rnsup::NavMeshTileSettings() const
@@ -373,14 +373,58 @@ public:
 	void read_datagram(DatagramIterator &scan);
 };
 
+///Convex volume settings.
+struct EXPORT_CLASS RNConvexVolumeSettings
+{
+PUBLISHED:
+	RNConvexVolumeSettings();
+
+	INLINE int get_area() const;
+	INLINE void set_area(int value);
+	INLINE int get_flags() const;
+	INLINE void set_flags(int value);
+private:
+	int _area;
+	int _flags;
+
+public:
+	void write_datagram(Datagram &dg) const;
+	void read_datagram(DatagramIterator &scan);
+};
+
+///Off mesh connection settings.
+struct EXPORT_CLASS RNOffMeshConnectionSettings
+{
+PUBLISHED:
+	RNOffMeshConnectionSettings();
+
+	INLINE float get_rad() const;
+	INLINE void set_rad(float value);
+	INLINE unsigned char get_bidir() const;
+	INLINE void set_bidir(unsigned char value);
+	INLINE int get_area() const;
+	INLINE void set_area(int value);
+	INLINE int get_flags() const;
+	INLINE void set_flags(int value);
+private:
+	float _rad;
+	unsigned char _bidir;
+	int _area;
+	int _flags;
+
+public:
+	void write_datagram(Datagram &dg) const;
+	void read_datagram(DatagramIterator &scan);
+};
+
 ///CrowdAgentParams
 struct EXPORT_CLASS RNCrowdAgentParams
 {
 PUBLISHED:
 	RNCrowdAgentParams();
 #ifndef CPPPARSER
-	RNCrowdAgentParams(const dtCrowdAgentParams& crowdAgentParams) :
-			_dtCrowdAgentParams(crowdAgentParams)
+	RNCrowdAgentParams(const dtCrowdAgentParams& params) :
+			_dtCrowdAgentParams(params)
 	{
 	}
 	operator dtCrowdAgentParams() const
