@@ -12,6 +12,7 @@
 #include "camera.h"
 
 #ifndef CPPPARSER
+#include "library/DetourCommon.h"
 #include "support/ConvexVolumeTool.h"
 #include "support/NavMeshType_Solo.h"
 #include "support/OffMeshConnectionTool.h"
@@ -865,25 +866,80 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint)
 {
 	//get hit point
-	float m_hitPos[3];
-	rnsup::LVecBase3fToRecast(insidePoint, m_hitPos);
+	float hitPos[3];
+	rnsup::LVecBase3fToRecast(insidePoint, hitPos);
 	//check if a convex volume was hit (see: Delete case of ConvexVolumeTool::handleClick)
-	int m_convexVolumeID = -1;
+	int convexVolumeID = -1;
 	const rnsup::ConvexVolume* vols =
 			mNavMeshType->getInputGeom()->getConvexVolumes();
 	for (int i = 0; i < mNavMeshType->getInputGeom()->getConvexVolumeCount();
 			++i)
 	{
-		if (rnsup::pointInPoly(vols[i].nverts, vols[i].verts, m_hitPos)
-				&& m_hitPos[1] >= vols[i].hmin && m_hitPos[1] <= vols[i].hmax)
+		if (rnsup::pointInPoly(vols[i].nverts, vols[i].verts, hitPos)
+				&& hitPos[1] >= vols[i].hmin && hitPos[1] <= vols[i].hmax)
 		{
-			m_convexVolumeID = i;
+			convexVolumeID = i;
 			break;
 		}
 	}
-	return m_convexVolumeID;
+	return convexVolumeID;
 }
 
+/**
+ * Finds polygons of a convex volume.
+ */
+int RNNavMesh::do_find_polys_of_convex_volume(int convexVolumeID,
+		dtQueryFilter& filter, dtPolyRef* polys, int& npolys, const int MAX_POLYS)
+{
+	///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
+	const float *queryPolyPtr =
+			mNavMeshType->getInputGeom()->getConvexVolumes()[convexVolumeID].verts;
+	int nverts =
+			mNavMeshType->getInputGeom()->getConvexVolumes()[convexVolumeID].nverts;
+
+	float *queryPoly = new float[nverts * 3];
+
+	for (int i = 0; i < nverts * 3; ++i)
+	{
+		queryPoly[i] = queryPolyPtr[i];
+	}
+
+	rnsup::reverseVector(queryPoly, nverts);
+
+	float centerPos[3];
+	centerPos[0] = centerPos[1] = centerPos[2] = 0;
+	for (int i = 0; i < nverts; ++i)
+	{
+		dtVadd(centerPos, centerPos, &queryPoly[i * 3]);
+	}
+	dtVscale(centerPos, centerPos, 1.0f / nverts);
+
+	filter.setIncludeFlags(POLYFLAGS_ALL);
+	filter.setExcludeFlags(0);
+	dtPolyRef startRef;
+	float polyPickExt[3] =
+	{ 2, 4, 2 };
+	dtStatus status;
+	status = mNavMeshType->getNavMeshQuery()->findNearestPoly(centerPos,
+			polyPickExt, &filter, &startRef, 0);
+
+	if (!(dtStatusSucceed(status)))
+	{
+		delete[] queryPoly;
+		return RN_ERROR;
+	}
+
+	dtPolyRef parent[MAX_POLYS];
+	status = mNavMeshType->getNavMeshQuery()->findPolysAroundShape(startRef,
+			queryPoly, nverts, &filter, polys, parent, 0, &npolys,
+			MAX_POLYS);
+
+	delete[] queryPoly;
+
+	nassertr_always(dtStatusSucceed(status), RN_ERROR)
+
+	return RN_SUCCESS;
+}
 
 /**
  * Sets the area of the convex volume with the point inside.
@@ -900,73 +956,66 @@ int RNNavMesh::set_convex_volume_area(const LPoint3f& insidePoint, int area)
 		area = -area;
 	}
 
-	int m_convexVolumeID = do_get_convex_volume_from_point(insidePoint);
+	int convexVolumeID = do_get_convex_volume_from_point(insidePoint);
 
-	// Check if the end point is close enough into a convex volume.
-	if (m_convexVolumeID != -1)
+	// check if a convex volume was it
+	if (convexVolumeID != -1)
 	{
-		///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
-		const float *m_queryPolyPtr =
-				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].verts;
-		int nverts =
-				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].nverts;
-
-		float *m_queryPoly = new float[nverts * 3];
-
-		for (int i = 0; i < nverts * 3; ++i)
-		{
-			m_queryPoly[i] = m_queryPolyPtr[i];
-		}
-
-		rnsup::reverseVector(m_queryPoly, nverts);
-
-		float m_centerPos[3];
-		m_centerPos[0] = m_centerPos[1] = m_centerPos[2] = 0;
-		for (int i = 0; i < nverts; ++i)
-		{
-			dtVadd(m_centerPos, m_centerPos, &m_queryPoly[i * 3]);
-		}
-		dtVscale(m_centerPos, m_centerPos, 1.0f / nverts);
-
-		dtQueryFilter m_filter;
-		m_filter.setIncludeFlags(POLYFLAGS_ALL);
-		m_filter.setExcludeFlags(0);
-		dtPolyRef m_startRef;
-		float m_polyPickExt[3] =
-		{ 2, 4, 2 };
-		dtStatus status;
-		status = mNavMeshType->getNavMeshQuery()->findNearestPoly(m_centerPos,
-				m_polyPickExt, &m_filter, &m_startRef, 0);
-
-		nassertr_always(dtStatusSucceed(status), RN_ERROR)
-
+		dtQueryFilter filter;
 		static const int MAX_POLYS = 256;
-		dtPolyRef m_polys[MAX_POLYS];
-		dtPolyRef m_parent[MAX_POLYS];
-		int m_npolys;
+		dtPolyRef polys[MAX_POLYS];
+		int npolys;
+		dtStatus status;
 
-		status = mNavMeshType->getNavMeshQuery()->findPolysAroundShape(m_startRef,
-				m_queryPoly, nverts, &m_filter, m_polys, m_parent, 0, &m_npolys,
-				MAX_POLYS);
+		nassertr_always(
+				do_find_polys_of_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
+				RN_ERROR)
 
-		nassertr_always(dtStatusSucceed(status), RN_ERROR)
-
-		for (int i = 0; i < m_npolys; ++i)
+		int p;
+		for (p = 0; p < npolys; ++p)
 		{
-			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(m_polys[i],
-					&m_filter))
+			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(polys[p],
+					&filter))
 			{
-				status = mNavMeshType->getNavMesh()->setPolyArea(m_polys[i], area);
-				nassertr_always(dtStatusSucceed(status), RN_ERROR)
+				status = mNavMeshType->getNavMesh()->setPolyArea(polys[p],
+						area);
+				if (!dtStatusSucceed(status))
+				{
+					break;
+				}
+			}
+			else
+			{
+				break;
 			}
 		}
-		delete[] m_queryPoly;
-		//mConvexVolumes and mGeom::m_volumes are synchronized
-		//update mConvexVolume area
-		mConvexVolumes[m_convexVolumeID].set_second(area);
+		//check if all OK
+		if (p == npolys)
+		{
+			//mConvexVolumes and mGeom::m_volumes are synchronized
+			//update mConvexVolume area
+			mConvexVolumes[convexVolumeID].set_second(area);
+		}
+		else
+		{
+			//errors: reset to previous values
+			int oldArea = mConvexVolumes[convexVolumeID].get_second();
+			for(int i = 0; i < p; ++i)
+			{
+				mNavMeshType->getNavMesh()->setPolyArea(polys[p],
+										oldArea);
+			}
+			convexVolumeID = -1;
+		}
 	}
+#ifdef RN_DEBUG
+	if (!mDebugCamera.is_empty())
+	{
+		do_debug_static_render();
+	}
+#endif //RN_DEBUG
 	//return
-	return m_convexVolumeID;
+	return convexVolumeID;
 }
 
 /**
@@ -980,12 +1029,12 @@ int RNNavMesh::get_convex_volume_area(const LPoint3f& insidePoint)
 	nassertr_always(mNavMeshType, RN_ERROR)
 
 	int area = RN_ERROR;
-	int m_convexVolumeID = do_get_convex_volume_from_point(insidePoint);
+	int convexVolumeID = do_get_convex_volume_from_point(insidePoint);
 	//
-	if (m_convexVolumeID != -1)
+	if (convexVolumeID != -1)
 	{
 		//mConvexVolumes and mGeom::m_volumes are synchronized
-		area = mConvexVolumes[m_convexVolumeID].get_second();
+		area = mConvexVolumes[convexVolumeID].get_second();
 	}
 	//return area
 	return area;
@@ -1001,69 +1050,62 @@ int RNNavMesh::set_convex_volume_flags(const LPoint3f& insidePoint, int oredFlag
 	// go on if nav mesh has been already setup
 	nassertr_always(mNavMeshType, RN_ERROR)
 
-	int m_convexVolumeID = do_get_convex_volume_from_point(insidePoint);
-	// Check if the end point is close enough into a convex volume.
-	if (m_convexVolumeID != -1)
+	int convexVolumeID = do_get_convex_volume_from_point(insidePoint);
+
+	// check if a convex volume was it
+	if (convexVolumeID != -1)
 	{
-		///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
-		const float *m_queryPolyPtr =
-				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].verts;
-		int nverts =
-				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].nverts;
-
-		float *m_queryPoly = new float[nverts * 3];
-
-		for (int i = 0; i < nverts * 3; ++i)
-		{
-			m_queryPoly[i] = m_queryPolyPtr[i];
-		}
-
-		rnsup::reverseVector(m_queryPoly, nverts);
-
-		float m_centerPos[3];
-		m_centerPos[0] = m_centerPos[1] = m_centerPos[2] = 0;
-		for (int i = 0; i < nverts; ++i)
-		{
-			dtVadd(m_centerPos, m_centerPos, &m_queryPoly[i * 3]);
-		}
-		dtVscale(m_centerPos, m_centerPos, 1.0f / nverts);
-
-		dtQueryFilter m_filter;
-		m_filter.setIncludeFlags(POLYFLAGS_ALL);
-		m_filter.setExcludeFlags(0);
-		dtPolyRef m_startRef;
-		float m_polyPickExt[3] =
-		{ 2, 4, 2 };
-		dtStatus status;
-		status = mNavMeshType->getNavMeshQuery()->findNearestPoly(m_centerPos,
-				m_polyPickExt, &m_filter, &m_startRef, 0);
-
-		nassertr_always(dtStatusSucceed(status), RN_ERROR)
-
+		dtQueryFilter filter;
 		static const int MAX_POLYS = 256;
-		dtPolyRef m_polys[MAX_POLYS];
-		dtPolyRef m_parent[MAX_POLYS];
-		int m_npolys;
+		dtPolyRef polys[MAX_POLYS];
+		int npolys;
+		dtStatus status;
 
-		status = mNavMeshType->getNavMeshQuery()->findPolysAroundShape(m_startRef,
-				m_queryPoly, nverts, &m_filter, m_polys, m_parent, 0, &m_npolys,
-				MAX_POLYS);
+		nassertr_always(
+				do_find_polys_of_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
+				RN_ERROR)
 
-		nassertr_always(dtStatusSucceed(status), RN_ERROR)
-
-		for (int i = 0; i < m_npolys; ++i)
+		int p;
+		for (p = 0; p < npolys; ++p)
 		{
-			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(m_polys[i],
-					&m_filter))
+			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(polys[p],
+					&filter))
 			{
-				status = mNavMeshType->getNavMesh()->setPolyFlags(m_polys[i], oredFlags);
-				nassertr_always(dtStatusSucceed(status), RN_ERROR)
+				status = mNavMeshType->getNavMesh()->setPolyFlags(polys[p],
+						oredFlags);
+				if (!dtStatusSucceed(status))
+				{
+					break;
+				}
+			}
+			else
+			{
+				break;
 			}
 		}
-		delete[] m_queryPoly;
+		//check if all OK
+		if (p != npolys)
+		{
+			//errors: reset to default flags
+			//mConvexVolumes and mGeom::m_volumes are synchronized
+			int defaultFlags =
+					mPolyAreaFlags[mConvexVolumes[convexVolumeID].get_second()];
+			for (int i = 0; i < p; ++i)
+			{
+				mNavMeshType->getNavMesh()->setPolyFlags(polys[p],
+						defaultFlags);
+			}
+			convexVolumeID = -1;
+		}
 	}
+#ifdef RN_DEBUG
+	if (!mDebugCamera.is_empty())
+	{
+		do_debug_static_render();
+	}
+#endif //RN_DEBUG
 	//return
-	return m_convexVolumeID;
+	return convexVolumeID;
 }
 
 /**
@@ -1076,72 +1118,36 @@ int RNNavMesh::get_convex_volume_flags(const LPoint3f& insidePoint)
 	// go on if nav mesh has been already setup
 	nassertr_always(mNavMeshType, RN_ERROR)
 
-	int oredFlags = RN_ERROR;
-	int m_convexVolumeID = do_get_convex_volume_from_point(insidePoint);
-	// Check if the end point is close enough into a convex volume.
-	if (m_convexVolumeID != -1)
+	unsigned short int oredFlags = RN_ERROR;
+	int convexVolumeID = do_get_convex_volume_from_point(insidePoint);
+
+	// check if a convex volume was it
+	if (convexVolumeID != -1)
 	{
-		///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
-		const float *m_queryPolyPtr =
-				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].verts;
-		int nverts =
-				mNavMeshType->getInputGeom()->getConvexVolumes()[m_convexVolumeID].nverts;
-
-		float *m_queryPoly = new float[nverts * 3];
-
-		for (int i = 0; i < nverts * 3; ++i)
-		{
-			m_queryPoly[i] = m_queryPolyPtr[i];
-		}
-
-		rnsup::reverseVector(m_queryPoly, nverts);
-
-		float m_centerPos[3];
-		m_centerPos[0] = m_centerPos[1] = m_centerPos[2] = 0;
-		for (int i = 0; i < nverts; ++i)
-		{
-			dtVadd(m_centerPos, m_centerPos, &m_queryPoly[i * 3]);
-		}
-		dtVscale(m_centerPos, m_centerPos, 1.0f / nverts);
-
-		dtQueryFilter m_filter;
-		m_filter.setIncludeFlags(POLYFLAGS_ALL);
-		m_filter.setExcludeFlags(0);
-		dtPolyRef m_startRef;
-		float m_polyPickExt[3] =
-		{ 2, 4, 2 };
-		dtStatus status;
-		status = mNavMeshType->getNavMeshQuery()->findNearestPoly(m_centerPos,
-				m_polyPickExt, &m_filter, &m_startRef, 0);
-
-		nassertr_always(dtStatusSucceed(status), RN_ERROR)
-
+		dtQueryFilter filter;
 		static const int MAX_POLYS = 256;
-		dtPolyRef m_polys[MAX_POLYS];
-		dtPolyRef m_parent[MAX_POLYS];
-		int m_npolys;
+		dtPolyRef polys[MAX_POLYS];
+		int npolys;
+		dtStatus status;
 
-		status = mNavMeshType->getNavMeshQuery()->findPolysAroundShape(m_startRef,
-				m_queryPoly, nverts, &m_filter, m_polys, m_parent, 0, &m_npolys,
-				MAX_POLYS);
+		nassertr_always(
+				do_find_polys_of_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
+				RN_ERROR)
 
-		nassertr_always(dtStatusSucceed(status), RN_ERROR)
-
-		unsigned short flags, oldFlags;
-		for (int i = 0; i < m_npolys; ++i)
+		unsigned short oldFlags;
+		int p;
+		for (p = 0; p < npolys; ++p)
 		{
-			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(m_polys[i],
-					&m_filter))
+			if (mNavMeshType->getNavMeshQuery()->isValidPolyRef(polys[p],
+					&filter))
 			{
-				oldFlags = flags;
-				mNavMeshType->getNavMesh()->getPolyFlags(m_polys[i], &flags);
-				if ((i > 0))
+				//save last value
+				oldFlags = oredFlags;
+				mNavMeshType->getNavMesh()->getPolyFlags(polys[p], &oredFlags);
+				if ((p > 0) && (oldFlags != oredFlags))
 				{
-					if (!(oldFlags == flags))
-					{
-						oredFlags = RN_ERROR;
-						break;
-					}
+					oredFlags = RN_ERROR;
+					break;
 				}
 			}
 			else
@@ -1149,7 +1155,6 @@ int RNNavMesh::get_convex_volume_flags(const LPoint3f& insidePoint)
 				break;
 			}
 		}
-		delete[] m_queryPoly;
 	}
 	//return oredFlags
 	return oredFlags;
