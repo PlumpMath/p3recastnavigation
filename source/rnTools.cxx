@@ -199,6 +199,12 @@ void RNNavMeshTileSettings::read_datagram(DatagramIterator &scan)
 
 ///Convex volume settings.
 /**
+ *
+ */
+RNConvexVolumeSettings::RNConvexVolumeSettings()
+{
+}
+/**
  * Writes the RNConvexVolumeSettings into a datagram.
  */
 void RNConvexVolumeSettings::write_datagram(Datagram &dg) const
@@ -217,12 +223,18 @@ void RNConvexVolumeSettings::read_datagram(DatagramIterator &scan)
 
 ///Off mesh connection settings.
 /**
+ *
+ */
+RNOffMeshConnectionSettings::RNOffMeshConnectionSettings()
+{
+}
+/**
  * Writes the RNOffMeshConnectionSettings into a datagram.
  */
 void RNOffMeshConnectionSettings::write_datagram(Datagram &dg) const
 {
 	dg.add_stdfloat(get_rad());
-	dg.add_uint8(get_bidir());
+	dg.add_bool(get_bidir());
 	dg.add_int32(get_area());
 	dg.add_int32(get_flags());
 }
@@ -232,7 +244,7 @@ void RNOffMeshConnectionSettings::write_datagram(Datagram &dg) const
 void RNOffMeshConnectionSettings::read_datagram(DatagramIterator &scan)
 {
 	set_rad(scan.get_stdfloat());
-	set_bidir(scan.get_uint8());
+	set_bidir(scan.get_bool());
 	set_area(scan.get_int32());
 	set_flags(scan.get_int32());
 }

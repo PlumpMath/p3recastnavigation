@@ -169,8 +169,12 @@ PUBLISHED:
 	MAKE_SEQ(get_convex_volumes, get_num_convex_volumes, get_convex_volume);
 	//OFF MESH CONNECTION
 	int add_off_mesh_connection(const ValueList<LPoint3f>& points,
-			bool bidirectional);
+		bool bidirectional);
 	int remove_off_mesh_connection(const LPoint3f& beginOrEndPoint);
+	int set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
+		const RNOffMeshConnectionSettings settings);
+	RNOffMeshConnectionSettings get_off_mesh_connection_settings(
+		const LPoint3f& beginOrEndPoint);
 	INLINE ValueList<LPoint3f> get_off_mesh_connection(int index) const;
 	INLINE int get_num_off_mesh_connections() const;
 	MAKE_SEQ(get_off_mesh_connections, get_num_off_mesh_connections, get_off_mesh_connection);
@@ -253,7 +257,7 @@ public:
 	//convex volume
 	typedef Pair<ValueList<LPoint3f>,RNConvexVolumeSettings> PointListConvexVolumeSettings;
 	//off mesh connection
-	typedef Pair<ValueList<LPoint3f>,bool> PointPairBidir;
+	typedef Pair<ValueList<LPoint3f>,RNOffMeshConnectionSettings> PointPairOffMeshConnectionSettings;
 
 	///Library & support low level related methods (C++ only).
 	inline rnsup::InputGeom* get_recast_input_geom() const;
@@ -298,7 +302,7 @@ private:
 	///Convex volumes (see support/ConvexVolumeTool.h).
 	pvector<PointListConvexVolumeSettings> mConvexVolumes;
 	///Off mesh connections (see support/OffMeshConnectionTool.h).
-	pvector<PointPairBidir> mOffMeshConnections;
+	pvector<PointPairOffMeshConnectionSettings> mOffMeshConnections;
 	/// Obstacles.
 	typedef Pair<int, NodePath> Obstacle;
 	pvector<Obstacle> mObstacles;
@@ -333,6 +337,8 @@ private:
 	int do_get_convex_volume_from_point(const LPoint3f& insidePoint);
 	int do_find_polys_of_convex_volume(int convexVolumeID, dtQueryFilter& filter,
 			dtPolyRef* polys, int& npolys, const int MAX_POLYS);
+
+	int do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint);
 
 	int do_add_obstacle_to_recast(NodePath& objectNP, int index);
 	int do_remove_obstacle_from_recast(NodePath& objectNP, int obstacleRef);

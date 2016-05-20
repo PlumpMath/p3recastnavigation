@@ -217,13 +217,13 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 					if (noffset > 0)
 					{
 						geom->addConvexVolume(offset, noffset, minh, maxh, (unsigned char)m_areaType);
-						m_convexVolumeIdx = geom->getConvexVolumeCount();
+						m_convexVolumeIdx = geom->getConvexVolumeCount() - 1;
 					}
 				}
 				else
 				{
 					geom->addConvexVolume(verts, m_nhull, minh, maxh, (unsigned char)m_areaType);
-					m_convexVolumeIdx = geom->getConvexVolumeCount();
+					m_convexVolumeIdx = geom->getConvexVolumeCount() - 1;
 				}
 			}
 			

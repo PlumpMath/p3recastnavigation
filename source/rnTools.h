@@ -400,15 +400,15 @@ PUBLISHED:
 
 	INLINE float get_rad() const;
 	INLINE void set_rad(float value);
-	INLINE unsigned char get_bidir() const;
-	INLINE void set_bidir(unsigned char value);
+	INLINE bool get_bidir() const;
+	INLINE void set_bidir(bool value);
 	INLINE int get_area() const;
 	INLINE void set_area(int value);
 	INLINE int get_flags() const;
 	INLINE void set_flags(int value);
 private:
 	float _rad;
-	unsigned char _bidir;
+	bool _bidir;
 	int _area;
 	int _flags;
 

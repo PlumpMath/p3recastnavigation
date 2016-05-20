@@ -454,7 +454,8 @@ void handleCrowdAgentEvent(const Event* e, void* data)
 // place crowd agents randomly
 void placeCrowdAgents(const Event* e, void* data)
 {
-	for (int i = 0; i < NUMAGENTS; ++i)
+	int i;
+	for (i = 0; i < NUMAGENTS; ++i)
 	{
 		// remove agent from nav mesh
 		navMesh->remove_crowd_agent(NodePath::any_path(crowdAgent[i]));
@@ -464,6 +465,10 @@ void placeCrowdAgents(const Event* e, void* data)
 		// re-add agent to nav mesh
 		navMesh->add_crowd_agent(NodePath::any_path(crowdAgent[i]));
 	}
+	//just for debug draw the last agent's straight path
+	navMesh->get_path_find_straight(
+			NodePath::any_path((*navMesh)[i - 1]).get_pos(),
+			(*navMesh)[i - 1]->get_move_target());
 }
 
 // throws a ray and returns the first collision entry or nullptr
@@ -511,10 +516,14 @@ void setMoveTarget(const Event* e, void* data)
 	if (entry0)
 	{
 		LPoint3f target = entry0->get_surface_point(NodePath());
-		for (int i = 0; i < navMesh->get_num_crowd_agents(); ++i)
+		int i;
+		for (i = 0; i < navMesh->get_num_crowd_agents(); ++i)
 		{
 			(*navMesh)[i]->set_move_target(target);
 		}
+		//just for debug draw the last agent's straight path
+		navMesh->get_path_find_straight(
+				NodePath::any_path((*navMesh)[i-1]).get_pos(), target);
 	}
 }
 

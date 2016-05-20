@@ -15,7 +15,7 @@ AM_LDFLAGS = -L/usr/lib/x86_64-linux-gnu/panda3d
 LDADD = -lp3framework -lpanda -lpandaexpress -lp3dtool -lp3dtoolconfig \
 		-lp3pystub -lXxf86dga -lpython2.7 -lpandaphysics -lpthread
 
-noinst_PROGRAMS = main test
+noinst_PROGRAMS = basic main test
 
 BUILT_SOURCES = main.h
 
@@ -73,6 +73,12 @@ common_sources = \
 	$(srcdir)/../../source/support/NavMeshType_Tile.cpp \
 	$(srcdir)/../../source/support/OffMeshConnectionTool.cpp \
 	$(srcdir)/../../source/support/PerfTimer.cpp
+
+#basic
+basic_SOURCES = \
+	basic.cpp
+
+nodist_basic_SOURCES = $(common_sources)
 
 #main
 main_SOURCES = \

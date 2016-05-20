@@ -409,11 +409,11 @@ INLINE void RNOffMeshConnectionSettings::set_rad(float value)
 {
 	_rad = value;
 }
-INLINE unsigned char RNOffMeshConnectionSettings::get_bidir() const
+INLINE bool RNOffMeshConnectionSettings::get_bidir() const
 {
 	return _bidir;
 }
-INLINE void RNOffMeshConnectionSettings::set_bidir(unsigned char value)
+INLINE void RNOffMeshConnectionSettings::set_bidir(bool value)
 {
 	_bidir = value;
 }

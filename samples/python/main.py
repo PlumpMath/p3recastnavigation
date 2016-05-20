@@ -250,6 +250,11 @@ def placeCrowdAgents():
         NodePath.any_path(crowdAgent[i]).set_pos(randPos)
         # re-add agent to nav mesh
         navMesh.add_crowd_agent(NodePath.any_path(crowdAgent[i]))
+    #just for debug draw the last agent's straight path
+    navMesh.get_path_find_straight(
+            NodePath.any_path(navMesh[i]).get_pos(),
+            navMesh[i].get_move_target());
+
 
 # throws a ray and returns the first collision entry or nullptr
 def getCollisionEntryFromCamera():
@@ -287,6 +292,9 @@ def setMoveTarget():
         target = entry0.get_surface_point(NodePath())
         for agent in navMesh:
             agent.set_move_target(target)
+        #just for debug draw the last agent's straight path
+        navMesh.get_path_find_straight(
+                NodePath.any_path(agent).get_pos(), target);
 
 # handle add/remove obstacles
 def handleObstacles(data):
