@@ -109,11 +109,12 @@ INLINE int RNNavMesh::get_crowd_exclude_flags()
 }
 
 /**
- * Gets a convex volume point list by index.
+ * Gets a convex volume's unique reference (>0) by index
+ * (i.e. position into internal repository).
  */
-INLINE ValueList<LPoint3f> RNNavMesh::get_convex_volume(int index) const
+INLINE int RNNavMesh::get_convex_volume(int index) const
 {
-	return mConvexVolumes[index].get_first();
+	return mConvexVolumes[index].get_second().get_ref();
 }
 
 /**
@@ -125,11 +126,12 @@ INLINE int RNNavMesh::get_num_convex_volumes() const
 }
 
 /**
- * Gets an off mesh connection point pair (as 2 element list) by index.
+ * Gets a off mesh connection's unique reference (>0) by index
+ * (i.e. position into internal repository).
  */
-INLINE ValueList<LPoint3f> RNNavMesh::get_off_mesh_connection(int index) const
+INLINE int RNNavMesh::get_off_mesh_connection(int index) const
 {
-	return mOffMeshConnections[index].get_first();
+	return mOffMeshConnections[index].get_second().get_ref();
 }
 
 /**
@@ -224,12 +226,14 @@ inline void RNNavMesh::do_reset()
 	mOffMeshConnections.clear();
 	mObstacles.clear();
 	mCrowdAgents.clear();
+	mRef = 0;
 #ifdef RN_DEBUG
 	mDebugNodePath.clear();
 	mDebugCamera.clear();
 	mDD = NULL;
 	mDDM = NULL;
 	mEnableDrawUpdate = false;
+	mDDUnsetup = NULL;
 #endif //RN_DEBUG
 }
 
@@ -271,6 +275,14 @@ inline dtCrowd* RNNavMesh::get_recast_crowd() const
 inline rnsup::NavMeshType& RNNavMesh::get_nav_mesh_type()
 {
 	return *mNavMeshType;
+}
+
+/**
+ *
+ */
+inline int RNNavMesh::unique_ref()
+{
+	return ++mRef;
 }
 
 /**

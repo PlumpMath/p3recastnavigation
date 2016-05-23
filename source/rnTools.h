@@ -383,9 +383,12 @@ PUBLISHED:
 	INLINE void set_area(int value);
 	INLINE int get_flags() const;
 	INLINE void set_flags(int value);
+	INLINE int get_ref() const;
+	INLINE void set_ref(int value);
 private:
 	int _area;
 	int _flags;
+	int _ref;
 
 public:
 	void write_datagram(Datagram &dg) const;
@@ -406,11 +409,14 @@ PUBLISHED:
 	INLINE void set_area(int value);
 	INLINE int get_flags() const;
 	INLINE void set_flags(int value);
+	INLINE int get_ref() const;
+	INLINE void set_ref(int value);
 private:
 	float _rad;
 	bool _bidir;
 	int _area;
 	int _flags;
+	int _ref;
 
 public:
 	void write_datagram(Datagram &dg) const;

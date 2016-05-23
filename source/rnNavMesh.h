@@ -144,6 +144,7 @@ PUBLISHED:
 	//GENERAL PARAMETERS
 	INLINE LVecBase3f get_recast_bounds_min() const;
 	INLINE LVecBase3f get_recast_bounds_max() const;
+
 	//NAVMESH PARAMETERS
 	void set_nav_mesh_type_enum(RNNavMeshTypeEnum typeEnum);
 	INLINE RNNavMeshTypeEnum get_nav_mesh_type_enum() const;
@@ -151,6 +152,7 @@ PUBLISHED:
 	INLINE RNNavMeshSettings get_nav_mesh_settings() const;
 	INLINE void set_area_flags(int area, int oredFlags);
 	INLINE int get_area_flags(int area);
+
 	//CROWD PARAMETERS
 	void set_crowd_area_cost(int area, float cost);
 	INLINE float get_area_cost(int area);
@@ -158,15 +160,18 @@ PUBLISHED:
 	INLINE int get_crowd_include_flags();
 	void set_crowd_exclude_flags(int oredFlags);
 	INLINE int get_crowd_exclude_flags();
+
 	//CONVEX VOLUME
 	int add_convex_volume(const ValueList<LPoint3f>& points, int area);
 	int remove_convex_volume(const LPoint3f& insidePoint);
 	int set_convex_volume_settings(const LPoint3f& insidePoint,
 		const RNConvexVolumeSettings settings);
 	RNConvexVolumeSettings get_convex_volume_settings(const LPoint3f& insidePoint);
-	INLINE ValueList<LPoint3f> get_convex_volume(int index) const;
+	ValueList<LPoint3f> get_convex_volume_by_ref(int ref);
+	INLINE int get_convex_volume(int index) const;
 	INLINE int get_num_convex_volumes() const;
 	MAKE_SEQ(get_convex_volumes, get_num_convex_volumes, get_convex_volume);
+
 	//OFF MESH CONNECTION
 	int add_off_mesh_connection(const ValueList<LPoint3f>& points,
 		bool bidirectional);
@@ -175,7 +180,8 @@ PUBLISHED:
 		const RNOffMeshConnectionSettings settings);
 	RNOffMeshConnectionSettings get_off_mesh_connection_settings(
 		const LPoint3f& beginOrEndPoint);
-	INLINE ValueList<LPoint3f> get_off_mesh_connection(int index) const;
+	ValueList<LPoint3f> get_off_mesh_connection_by_ref(int ref);
+	INLINE int get_off_mesh_connection(int index) const;
 	INLINE int get_num_off_mesh_connections() const;
 	MAKE_SEQ(get_off_mesh_connections, get_num_off_mesh_connections, get_off_mesh_connection);
 
@@ -184,11 +190,13 @@ PUBLISHED:
 	void set_nav_mesh_tile_settings(const RNNavMeshTileSettings& settings);
 	INLINE RNNavMeshTileSettings get_nav_mesh_tile_settings() const;
 	LVecBase2i get_tile_pos(const LPoint3f& pos);
+
 	//TILE
 	int build_tile(const LPoint3f& pos);
 	int remove_tile(const LPoint3f& pos);
 	int build_all_tiles();
 	int remove_all_tiles();
+
 	//OBSTACLE
 	int add_obstacle(NodePath objectNP);
 	int remove_obstacle(NodePath objectNP);
@@ -268,6 +276,9 @@ public:
 	inline rnsup::NavMeshType& get_nav_mesh_type();
 	inline operator rnsup::NavMeshType&();
 
+	///Unique ref producer.
+	int unique_ref();
+
 protected:
 	friend class RNNavMeshManager;
 	friend class RNCrowdAgent;
@@ -319,6 +330,9 @@ private:
 	///Tester tool.
 	rnsup::NavMeshTesterTool mTesterTool;
 
+	///Unique ref.
+	int mRef;
+
 	void do_reset();
 	void do_initialize();
 	void do_finalize();
@@ -339,6 +353,8 @@ private:
 			dtPolyRef* polys, int& npolys, const int MAX_POLYS);
 
 	int do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint);
+	int do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
+			dtPolyRef* poly, dtOffMeshConnection& offmeshlink);
 
 	int do_add_obstacle_to_recast(NodePath& objectNP, int index);
 	int do_remove_obstacle_from_recast(NodePath& objectNP, int obstacleRef);
@@ -355,6 +371,10 @@ private:
 	bool mEnableDrawUpdate;
 	/// Debug render with DebugDrawPanda3d.
 	void do_debug_static_render();
+	/// DebugDrawers.
+	rnsup::DebugDrawPanda3d* mDDUnsetup;
+	///Debug render when mNavMeshType is un-setup.
+	void do_debug_static_render_unsetup();
 #endif //RN_DEBUG
 
 	// Explicitly disabled copy constructor and copy assignment operator.

@@ -399,6 +399,14 @@ INLINE void RNConvexVolumeSettings::set_flags(int value)
 {
 	_flags = value;
 }
+INLINE int RNConvexVolumeSettings::get_ref() const
+{
+	return _ref;
+}
+INLINE void RNConvexVolumeSettings::set_ref(int value)
+{
+	_ref = value;
+}
 
 ///Off mesh connection settings.
 INLINE float RNOffMeshConnectionSettings::get_rad() const
@@ -432,6 +440,14 @@ INLINE int RNOffMeshConnectionSettings::get_flags() const
 INLINE void RNOffMeshConnectionSettings::set_flags(int value)
 {
 	_flags = value;
+}
+INLINE int RNOffMeshConnectionSettings::get_ref() const
+{
+	return _ref;
+}
+INLINE void RNOffMeshConnectionSettings::set_ref(int value)
+{
+	_ref = value;
 }
 
 ///CrowdAgentParams

@@ -13,14 +13,10 @@
 
 #include "main.h"
 
-///functions' declarations
-void changeSpeed(const Event*, void*);
-
 ///global data
 PandaFramework framework;
 WindowFramework *window;
 PT(RNCrowdAgent)crowdAgent;
-bool halfVel = true;
 
 int main(int argc, char *argv[])
 {
@@ -97,9 +93,6 @@ int main(int argc, char *argv[])
 	cout << "set crowd agent move target on scene surface" << endl;
 	crowdAgent->set_move_target(LPoint3f(-20.5, 5.2, -2.36));
 
-	// handle change speed
-	framework.define_key("s", "changeSpeed", &changeSpeed, NULL);
-
 	// place camera trackball (local coordinate)
 	PT(Trackball)trackball = DCAST(Trackball, window->get_mouse().find("**/+Trackball").node());
 	trackball->set_pos(-10.0, 90.0, -2.0);
@@ -109,22 +102,4 @@ int main(int argc, char *argv[])
 	framework.main_loop();
 
 	return (0);
-}
-
-///functions' definitions
-// handle change speed
-void changeSpeed(const Event* e, void* data)
-{
-	RNCrowdAgentParams ap = crowdAgent->get_params();
-	float vel = ap.get_maxSpeed();
-	if (halfVel)
-	{
-		ap.set_maxSpeed(vel / 2.0);
-	}
-	else
-	{
-		ap.set_maxSpeed(vel * 2.0);
-	}
-	crowdAgent->set_params(ap);
-	halfVel = not halfVel;
 }

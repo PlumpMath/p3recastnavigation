@@ -419,6 +419,8 @@ void RNNavMesh::do_initialize()
 		RNConvexVolumeSettings settings;
 		settings.set_area(areaType);
 		settings.set_flags(mPolyAreaFlags[areaType]);
+		int ref = unique_ref();
+		settings.set_ref(ref);
 		mConvexVolumes.push_back(PointListConvexVolumeSettings(pointList, settings));
 	}
 
@@ -482,6 +484,8 @@ void RNNavMesh::do_initialize()
 		settings.set_bidir(bidir);
 		settings.set_area(POLYAREA_JUMP);
 		settings.set_flags(POLYFLAGS_JUMP);
+		int ref = unique_ref();
+		settings.set_ref(ref);
 		mOffMeshConnections.push_back(PointPairOffMeshConnectionSettings(pointPair, settings));
 	}
 
@@ -492,6 +496,17 @@ void RNNavMesh::do_initialize()
 	//set nav mesh tile settings: already done
 	//set reference node path
 	mReferenceNP = NodePath::any_path(this);
+	//
+#ifdef RN_DEBUG
+	// un-setup debug node path
+	NodePath debugNodePathUnsetup = mReferenceNP.attach_new_node(
+				string("DebugNodePathUsetup") + get_name());
+	//no collide mask for all their children
+	debugNodePathUnsetup.set_collide_mask(BitMask32::all_off());
+	// enable un-setup debug drawing
+	mDDUnsetup = new rnsup::DebugDrawPanda3d(debugNodePathUnsetup);
+	do_debug_static_render_unsetup();
+#endif //RN_DEBUG
 }
 
 /**
@@ -603,7 +618,7 @@ int RNNavMesh::setup()
 				mConvexVolumes.begin();
 		while (iter != mConvexVolumes.end())
 		{
-			ValueList<LPoint3f> points = iter->first();
+			ValueList<LPoint3f>& points = iter->first();
 			//check if there are at least 3 points for
 			//complete a convex volume
 			if (points.size() < 3)
@@ -644,7 +659,7 @@ int RNNavMesh::setup()
 				for (int i = 0; i < convexVol.nverts; ++i)
 				{
 					points.add_value(
-							rnsup::RecastToLVecBase3f(convexVol.verts));
+							rnsup::RecastToLVecBase3f(&convexVol.verts[i * 3]));
 				}
 				//mConvexVolumes and mGeom::m_volumes have the same order
 				nassertr_always(mGeom->getConvexVolumeCount() - 1 == idx,
@@ -675,7 +690,7 @@ int RNNavMesh::setup()
 				mOffMeshConnections.begin();
 		while (iter != mOffMeshConnections.end())
 		{
-			ValueList<LPoint3f> pointPair = iter->first();
+			ValueList<LPoint3f>& pointPair = iter->first();
 			bool bidir = iter->second().get_bidir();
 
 			//1: set recast connection bidir
@@ -804,6 +819,13 @@ int RNNavMesh::setup()
 	}
 	//>
 	//
+#ifdef RN_DEBUG
+	// disable un-setup debug drawing
+	mDDUnsetup->reset();
+	delete mDDUnsetup;
+	mDDUnsetup = NULL;
+#endif //RN_DEBUG
+	//
 	return RN_SUCCESS;
 }
 
@@ -824,9 +846,12 @@ bool RNNavMesh::do_build_navMesh()
 }
 
 /**
- * Adds a convex volume given its points (at least 3).
+ * Adds a convex volume given its points (at least 3) and the area type.
  * Can be added only before RNNavMesh is setup.
- * Returns the convex volume's index, or a negative number on error.
+ * Returns the convex volume's unique reference, or a negative number on error.
+ * \note The returned reference is temporary: after setup this convex volume
+ * may be eliminated, so reference validity should always be verified before
+ * use.
  */
 int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
 		int area)
@@ -838,64 +863,65 @@ int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
 	RNConvexVolumeSettings settings;
 	settings.set_area(area);
 	settings.set_flags(mPolyAreaFlags[area]);
+	int ref = unique_ref();
+	settings.set_ref(ref);
 	mConvexVolumes.push_back(PointListConvexVolumeSettings(points, settings));
-	return (int) (mConvexVolumes.size() - 1);
+#ifdef RN_DEBUG
+	do_debug_static_render_unsetup();
+#endif //RN_DEBUG
+	return ref;
 }
 
 /**
  * Removes a convex volume given an internal point.
  * Can be removed only before RNNavMesh is setup.
  * \note The first one found volume will be removed.
- * Returns the convex volume's old index, or a negative number on error.
+ * Returns the convex volume's reference, or a negative number on error.
  */
 int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 {
 	// go on if nav mesh has not been already setup
-	nassertr_always(! mNavMeshType, RN_ERROR)
+	nassertr_always(!mNavMeshType, RN_ERROR)
 
-	//set oldIndex=-1 in case of error
-	int oldIndex = -1;
+	//set oldRef=-1 in case of error
+	int oldRef = -1;
 	///HACK: use support functionality to remove convex volumes
 	//create fake InputGeom, NavMeshType and ConvexVolumeTool
 	rnsup::InputGeom* geom = new rnsup::InputGeom;
 	rnsup::NavMeshType* navMeshType = new rnsup::NavMeshType_Solo();
 	rnsup::ConvexVolumeTool* cvTool = new rnsup::ConvexVolumeTool();
-	navMeshType->handleMeshChanged(mGeom);
+	navMeshType->handleMeshChanged(geom);
 	navMeshType->setTool(cvTool);
 	//cycle the existing convex volumes (see setup()) and
 	//check if they can be added then removed given the insidePoint
 	pvector<PointListConvexVolumeSettings>::iterator cvI;
-	for(cvI = mConvexVolumes.begin(); cvI != mConvexVolumes.end(); ++cvI)
+	for (cvI = mConvexVolumes.begin(); cvI != mConvexVolumes.end(); ++cvI)
 	{
 		//try to add this convex volume (the NavMeshType has none)
 		ValueList<LPoint3f> points = cvI->first();
 		cvTool->setAreaType(cvI->second().get_area());
 		float recastPos[3];
-		for (int iterP = 0; iterP != points.size(); ++iterP)
+		for (int i = 0; i != points.size(); ++i)
 		{
-			LPoint3f refPos = mReferenceNP.get_relative_point(mOwnerObject,
-					points[iterP]);
-			rnsup::LVecBase3fToRecast(refPos, recastPos);
-			navMeshType->getTool()->handleClick(NULL, recastPos, false);
+			rnsup::LVecBase3fToRecast(points[i], recastPos);
+			cvTool->handleClick(NULL, recastPos, false);
 		}
-		navMeshType->getTool()->handleClick(NULL, recastPos, false);
+		cvTool->handleClick(NULL, recastPos, false);
 		//check if convex volume has been actually added
 		if (cvTool->getConvexVolumeIdx() == -1)
 		{
 			continue;
 		}
 		//now try to remove this convex volume
-		LPoint3f insidePos = mReferenceNP.get_relative_point(mOwnerObject,
-				insidePoint);
-		rnsup::LVecBase3fToRecast(insidePos, recastPos);
-		navMeshType->getTool()->handleClick(NULL, recastPos, true);
+		rnsup::LVecBase3fToRecast(insidePoint, recastPos);
+		cvTool->handleClick(NULL, recastPos, true);
 		//check if the convex volume has been removed
 		if (cvTool->getConvexVolumeIdx() != -1)
 		{
 			//this convex volume has been removed, i.e. insidePoint
-			//is indeed "inside" it, so calculate oldIndex (>=0), remove
+			//is indeed "inside" it, so calculate oldRef (>=0), remove
 			//the convex volume and then stop cycle
-			oldIndex = cvI - mConvexVolumes.begin();
+			oldRef = (*cvI).second().get_ref();
 			mConvexVolumes.erase(cvI);
 			break;
 		}
@@ -906,8 +932,11 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 	navMeshType->setTool(NULL);
 	delete navMeshType;
 	delete geom;
-	//return oldIndex or -1
-	return oldIndex;
+#ifdef RN_DEBUG
+	do_debug_static_render_unsetup();
+#endif //RN_DEBUG
+	//return oldRef or -1
+	return oldRef;
 }
 
 /**
@@ -993,7 +1022,7 @@ int RNNavMesh::do_find_polys_of_convex_volume(int convexVolumeID,
 }
 
 /**
- * Update settings of the convex volume with the point inside.
+ * Updates settings of the convex volume with the point inside.
  * Can be set only after RNNavMesh is setup.
  * Returns the index of the convex volume, or -1 if none is found or on error.
  */
@@ -1008,12 +1037,6 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 	// check if a convex volume was it
 	if (convexVolumeID != -1)
 	{
-		int area = settings.get_area();
-		if (area < 0)
-		{
-			area = -area;
-		}
-
 		dtQueryFilter filter;
 		static const int MAX_POLYS = 256;
 		dtPolyRef polys[MAX_POLYS];
@@ -1024,6 +1047,9 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 				do_find_polys_of_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
 				RN_ERROR)
 
+		int area = (
+				settings.get_area() >= 0 ?
+						settings.get_area() : -settings.get_area());
 		int p;
 		for (p = 0; p < npolys; ++p)
 		{
@@ -1034,7 +1060,7 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 						area);
 				status2 = mNavMeshType->getNavMesh()->setPolyFlags(polys[p],
 						settings.get_flags());
-				if (!(dtStatusSucceed(status)) && dtStatusSucceed(status2))
+				if (!(dtStatusSucceed(status) && dtStatusSucceed(status2)))
 				{
 					break;
 				}
@@ -1100,15 +1126,40 @@ RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(const LPoint3f& ins
 }
 
 /**
+ * Gets a convex volume's point list given its unique reference (>0).
+ * Returns an empty list on error.
+ */
+ValueList<LPoint3f> RNNavMesh::get_convex_volume_by_ref(int ref)
+{
+	ValueList<LPoint3f> pointList;
+
+	pvector<PointListConvexVolumeSettings>::iterator iter;
+	for (iter = mConvexVolumes.begin(); iter != mConvexVolumes.end(); ++iter)
+	{
+		if ((*iter).second().get_ref() == ref)
+		{
+			// break: LPoint3f by ref is present
+			pointList = (*iter).first();
+			break;
+		}
+	}
+	return pointList;
+}
+
+/**
  * Adds an off mesh connection given its two points and if bidirectional.
  * Can be added only before RNNavMesh is setup.
  * \note pointPair[0] = begin point, pointPair[1] = end point
- * Returns the off mesh connection's index, or a negative number on error.
+ * Returns the off mesh connection's unique reference, or a negative number
+ * on error.
+ * \note The returned reference is temporary: after setup this off mesh
+ * connection may be eliminated, so reference validity should always be
+ * verified before use.
  */
 int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points, bool bidirectional)
 {
 	// go on if nav mesh has not been already setup
-	nassertr_always((! mNavMeshType) && (points.size() >= 2), RN_ERROR)
+	nassertr_always((!mNavMeshType) && (points.size() >= 2), RN_ERROR)
 
 	// add to off mesh connections
 	RNOffMeshConnectionSettings settings;
@@ -1116,28 +1167,34 @@ int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points, bool b
 	settings.set_bidir(bidirectional);
 	settings.set_area(POLYAREA_JUMP);
 	settings.set_flags(POLYFLAGS_JUMP);
-	mOffMeshConnections.push_back(PointPairOffMeshConnectionSettings(points, settings));
-	return (int) (mOffMeshConnections.size() - 1);
+	int ref = unique_ref();
+	settings.set_ref(ref);
+	mOffMeshConnections.push_back(
+			PointPairOffMeshConnectionSettings(points, settings));
+#ifdef RN_DEBUG
+	do_debug_static_render_unsetup();
+#endif //RN_DEBUG
+	return ref;
 }
 
 /**
  * Removes an off mesh connection given the begin or end point.
  * Can be removed only before RNNavMesh is setup.
- * Returns the off mesh connection's old index, or a negative number on error.
+ * Returns the off mesh connection's reference, or a negative number on error.
  */
 int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 {
 	// go on if nav mesh has not been already setup
-	nassertr_always(! mNavMeshType, RN_ERROR)
+	nassertr_always(!mNavMeshType, RN_ERROR)
 
-	//set oldIndex=-1 in case of error
-	int oldIndex = -1;
+	//set oldRef=-1 in case of error
+	int oldRef = -1;
 	///HACK: use support functionality to remove off mesh connections
 	//create fake InputGeom, NavMeshType and OffMeshConnectionTool
 	rnsup::InputGeom* geom = new rnsup::InputGeom;
 	rnsup::NavMeshType* navMeshType = new rnsup::NavMeshType_Solo();
 	rnsup::OffMeshConnectionTool* omcTool = new rnsup::OffMeshConnectionTool();
-	navMeshType->handleMeshChanged(mGeom);
+	navMeshType->handleMeshChanged(geom);
 	navMeshType->setTool(omcTool);
 	//cycle the existing off mesh connections (see setup()) and
 	//check if they can be added then removed given the insidePoint
@@ -1149,54 +1206,51 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 		ValueList<LPoint3f> pointPair = omcI->first();
 		omcTool->setBidir(omcI->second().get_bidir());
 		float recastPos[3];
-		LPoint3f refPos;
-		refPos = mReferenceNP.get_relative_point(mOwnerObject, pointPair[0]);
-		rnsup::LVecBase3fToRecast(refPos, recastPos);
-		navMeshType->getTool()->handleClick(NULL, recastPos, false);
-		refPos = mReferenceNP.get_relative_point(mOwnerObject,
-				pointPair[1]);
-		rnsup::LVecBase3fToRecast(refPos, recastPos);
-		navMeshType->getTool()->handleClick(NULL, recastPos, false);
+		rnsup::LVecBase3fToRecast(pointPair[0], recastPos);
+		omcTool->handleClick(NULL, recastPos, false);
+		rnsup::LVecBase3fToRecast(pointPair[1], recastPos);
+		omcTool->handleClick(NULL, recastPos, false);
 		//check if off mesh connection has been actually added
 		if (omcTool->getOffMeshConnectionIdx() == -1)
 		{
 			continue;
 		}
 		//now try to remove this off mesh connection
-		LPoint3f beginOrEndPos = mReferenceNP.get_relative_point(mOwnerObject,
-				beginOrEndPoint);
-		rnsup::LVecBase3fToRecast(beginOrEndPos, recastPos);
-		navMeshType->getTool()->handleClick(NULL, recastPos, true);
+		rnsup::LVecBase3fToRecast(beginOrEndPoint, recastPos);
+		omcTool->handleClick(NULL, recastPos, true);
 		//check if the off mesh connection has been removed
 		if (omcTool->getOffMeshConnectionIdx() == -1)
 		{
 			//this off mesh connection has been removed, so
-			//calculate oldIndex (>=0), remove the off mesh
+			//calculate oldRef (>=0), remove the off mesh
 			//connection and then stop cycle
-			oldIndex = omcI - mOffMeshConnections.begin();
+			oldRef = (*omcI).second().get_ref();
 			mOffMeshConnections.erase(omcI);
 			break;
 		}
 		// remove this convex volume and continue cycle
-		navMeshType->getInputGeom()->deleteOffMeshConnection(0);
+		geom->deleteOffMeshConnection(0);
 	}
 	//delete fake objects
 	navMeshType->setTool(NULL);
 	delete navMeshType;
 	delete geom;
-	//return oldIndex or -1
-	return oldIndex;
+#ifdef RN_DEBUG
+	do_debug_static_render_unsetup();
+#endif //RN_DEBUG
+	//return oldRef or -1
+	return oldRef;
 }
 
 /**
  * Gets the off mesh connection given the begin or end point.
  * Returns the index of the convex volume, or -1 if none is found.
  */
-int RNNavMesh::do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint)
+int RNNavMesh::do_get_off_mesh_connection_from_point(const LPoint3f& startEndPoint)
 {
 	//get hit point
 	float hitPos[3];
-	rnsup::LVecBase3fToRecast(insidePoint, hitPos);
+	rnsup::LVecBase3fToRecast(startEndPoint, hitPos);
 	//check if a off mesh connection was hit (see: Delete case of OffMeshConnectionTool::handleClick)
 	int offMeshConnectionID = -1;
 	// Find nearest link end-point
@@ -1216,7 +1270,7 @@ int RNNavMesh::do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint
 			nearestIndex = i / 2; // Each link has two vertices.
 		}
 	}
-	// If end point close enough, delete it.
+	// If end point close enough, got it.
 	if (nearestIndex != -1
 			&& sqrtf(nearestDist)
 					< mOffMeshConnections[nearestIndex].second().get_rad())
@@ -1226,8 +1280,96 @@ int RNNavMesh::do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint
 	return offMeshConnectionID;
 }
 
+
+int RNNavMesh::do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
+		dtPolyRef* poly, dtOffMeshConnection& offmeshlink)// XXX
+{
+	//get the start pos
+	const float* pos =
+			&(mNavMeshType->getInputGeom()->getOffMeshConnectionVerts()[offMeshConnectionID
+					* 3]);
+//	//or get the end pos
+//	float* pos =
+//			&(mNavMeshType->getInputGeom()->getOffMeshConnectionVerts()[offMeshConnectionID
+//					* 3 + 3]);
+
+	//https://groups.google.com/forum/#!searchin/recastnavigation/how$20to$20search$20off$20mesh$20connection|sort:relevance/recastnavigation/kYbahygY96s/JIUz-bb5C4IJ
+	const dtNavMesh& mesh = *mNavMeshType->getNavMesh();
+	int ctx = 0, cty = 0;
+	mesh.calcTileLoc(pos, &ctx, &cty);
+
+//	for (int i = 0; i < mNavMeshType->getNavMesh()->getMaxTiles(); ++i)
+	for (int ty = cty - 1; ty <= cty + 1; ty++)
+	{
+		for (int tx = ctx - 1; tx <= ctx + 1; tx++)
+		{
+			// If using tile cache, use the one which returns multiple tiles.
+			const dtMeshTile* tile = mesh.getTileAt(tx, ty, 0);
+			if (!tile)
+			{
+				continue;
+			}
+			// Handle tile...
+//		const dtMeshTile* tile = mesh.getTile(i);
+//		if (!tile->header)
+//		{
+//			continue;
+//		}
+			for (int j = 0; j < tile->header->offMeshConCount; ++j)
+			{
+
+				/*dtOffMeshConnection& */offmeshlink = tile->offMeshCons[j];// XXX
+				const float* startpos = offmeshlink.pos;
+				const float* endpos = &offmeshlink.pos[3];
+				float radius = offmeshlink.rad;
+				if (dtVdist(pos, startpos) > radius
+						&& dtVdist(pos, endpos) > radius)
+				{
+					continue;
+				}
+
+				dtPolyRef base = mNavMeshType->getNavMesh()->getPolyRefBase(
+						tile);
+				/*dtPolyRef*/*poly = base | (dtPolyRef) offmeshlink.poly;
+
+//				bool enable;//fake
+//				unsigned short flags;
+//				dtStatus status = mNavMeshType->getNavMesh()->getPolyFlags(
+//						*poly, &flags);
+//				if (dtStatusSucceed(status))
+//				{
+//					if (enable)
+//						flags &= ~POLYFLAGS_DISABLED;
+//					else
+//						flags |= POLYFLAGS_DISABLED;
+//					mNavMeshType->getNavMesh()->setPolyFlags(*poly, flags);
+//				}
+			}
+		}
+	}
+
+	///////////////////////////////////////////////////
+//	int ctx = 0, cty = 0;
+//	mesh.calcTileLoc(pos, &ctx, &cty);
+//
+//	for (int ty = cty - 1; ty <= cty + 1; ty++)
+//	{
+//		for (int tx = ctx - 1; tx <= ctx + 1; tx++)
+//		{
+//			// If using tile cache, use the one which returns multiple tiles.
+//			const dtMeshTile* tile = mesh.getTileAt(tx, ty, 0);
+//			if (!tile)
+//				continue;
+//			// Handle tile...
+//		}
+//	}
+
+	return RN_SUCCESS;
+}
+
+
 /**
- * Update settings of the off mesh connection given the begin or end point.
+ * Updates settings of the off mesh connection given the begin or end point.
  * Can be set only after RNNavMesh is setup.
  * Returns the index of the off mesh connection, or -1 if none is found or on error.
  */
@@ -1243,26 +1385,50 @@ int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 	// check if a off mesh connection was it
 	if (offMeshConnectionID != -1)
 	{
-		int area = settings.get_area();
-		if (area < 0)
+		dtPolyRef poly;
+		dtOffMeshConnection offmeshlink;	/// XXX
+		dtStatus status, status2;
+
+		nassertr_always(
+				do_find_poly_of_off_mesh_connection(offMeshConnectionID, &poly, offmeshlink) == RN_SUCCESS,
+				RN_ERROR)
+
+		int area = (
+				settings.get_area() >= 0 ?
+						settings.get_area() : -settings.get_area());
+
+		// XXX rad dynamically changeable ? test!
+		// if not possible remove parameter dtOffMeshConnection& offmeshlink
+		// from do_find_poly_of_off_mesh_connection()
+		int rad = (
+				settings.get_rad() >= 0 ?
+						settings.get_rad() : -settings.get_rad());// XXX
+		offmeshlink.rad = rad; // XXX
+		status = mNavMeshType->getNavMesh()->setPolyArea(poly, area);
+		status2 = mNavMeshType->getNavMesh()->setPolyFlags(poly,
+				settings.get_flags());
+		if (dtStatusSucceed(status) && dtStatusSucceed(status2))
 		{
-			area = -area;
+			//mOffMeshConnections and mGeom's off mesh connections are synchronized
+			//update mOffMeshConnections settings
+			mOffMeshConnections[offMeshConnectionID].set_second(settings);
 		}
-
-		//update inner geom
-		mNavMeshType->getInputGeom()->getOffMeshConnectionRads()[offMeshConnectionID] =
-				settings.get_rad();
-		mNavMeshType->getInputGeom()->getOffMeshConnectionDirs()[offMeshConnectionID] =
-				settings.get_bidir();
-		mNavMeshType->getInputGeom()->getOffMeshConnectionAreas()[offMeshConnectionID] =
-				area;
-		mNavMeshType->getInputGeom()->getOffMeshConnectionFlags()[offMeshConnectionID] =
-				settings.get_flags();
-
-		//mOffMeshConnections and mGeom's off mesh connections are synchronized
-		//update mOffMeshConnections settings
-		mOffMeshConnections[offMeshConnectionID].set_second(settings);
+		else
+		{
+			//errors: reset to previous values
+			int oldRad =
+					mOffMeshConnections[offMeshConnectionID].get_second().get_rad(); // XXX
+			int oldArea =
+					mOffMeshConnections[offMeshConnectionID].get_second().get_area();
+			int oldFlags =
+					mOffMeshConnections[offMeshConnectionID].get_second().get_flags();
+			offmeshlink.rad = oldRad; // XXX
+			mNavMeshType->getNavMesh()->setPolyArea(poly, oldArea);
+			mNavMeshType->getNavMesh()->setPolyFlags(poly, oldFlags);
+			offMeshConnectionID = -1;
+		}
 	}
+
 #ifdef RN_DEBUG
 	if (!mDebugCamera.is_empty())
 	{
@@ -1299,6 +1465,28 @@ RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 }
 
 /**
+ * Gets an off mesh connection's point list given its unique reference (>0).
+ * Returns an empty list on error.
+ */
+ValueList<LPoint3f> RNNavMesh::get_off_mesh_connection_by_ref(int ref)
+{
+	ValueList<LPoint3f> pointList;
+
+	pvector<PointPairOffMeshConnectionSettings>::iterator iter;
+	for (iter = mOffMeshConnections.begin(); iter != mOffMeshConnections.end();
+			++iter)
+	{
+		if ((*iter).second().get_ref() == ref)
+		{
+			// break: LPoint3f by ref is present
+			pointList = (*iter).first();
+			break;
+		}
+	}
+	return pointList;
+}
+
+/**
  * On destruction cleanup.
  * Gives a RNNavMesh the ability to do any required cleanup just
  * when being destroyed.
@@ -1319,6 +1507,12 @@ void RNNavMesh::do_finalize()
 
 	//remove this NodePath
 	NodePath::any_path(this).remove_node();
+	//
+#ifdef RN_DEBUG
+	// delete un-setup debug drawing
+	mDDUnsetup->reset();
+	delete mDDUnsetup;
+#endif //RN_DEBUG
 	//
 	do_reset();
 }
@@ -1376,8 +1570,16 @@ int RNNavMesh::cleanup()
 	set_name("RNNavMesh");
 
 #ifdef RN_DEBUG
-	//disable debug drawing;
+	// disable debug drawing;
 	disable_debug_drawing();
+	// un-setup debug node path
+	NodePath debugNodePathUnsetup = mReferenceNP.attach_new_node(
+				string("DebugNodePathUsetup") + get_name());
+	//no collide mask for all their children
+	debugNodePathUnsetup.set_collide_mask(BitMask32::all_off());
+	// enable un-setup debug drawing
+	mDDUnsetup = new rnsup::DebugDrawPanda3d(debugNodePathUnsetup);
+	do_debug_static_render_unsetup();
 #endif //RN_DEBUG
 
 	//
@@ -1661,6 +1863,7 @@ int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP, int obstacleRe
 
 /**
  * Gets an obstacle's NodePath by its unique reference (>0).
+ * Return an empty NodePath on error.
  */
 NodePath RNNavMesh::get_obstacle_by_ref(int ref)
 {
@@ -1998,12 +2201,72 @@ void RNNavMesh::do_set_crowd_agent_other_settings(PT(RNCrowdAgent)crowdAgent,
  */
 void RNNavMesh::do_debug_static_render()
 {
-	//debug render with DebugDrawPanda3d
+	// debug render with DebugDrawPanda3d
 	mDD->reset();
 	mNavMeshType->handleRender(*mDD);
 	mNavMeshType->getInputGeom()->drawConvexVolumes(mDD);
 	mNavMeshType->getInputGeom()->drawOffMeshConnections(mDD, true);
 	mTesterTool.handleRender(*mDD);
+}
+/**
+ * Renders static geometry on debug with mNavMeshType un-setup.
+ */
+void RNNavMesh::do_debug_static_render_unsetup()
+{
+	// add convex volumes and off mesh connections to a geom
+	rnsup::InputGeom* geomUnsetup = new rnsup::InputGeom();
+	{
+		pvector<PointListConvexVolumeSettings>::iterator iter =
+				mConvexVolumes.begin();
+		while (iter != mConvexVolumes.end())
+		{
+			ValueList<LPoint3f>& points = iter->first();
+			int area = iter->second().get_area();
+			// iterate, compute recast points
+			float* recastPos = new float[points.size() * 3];
+			float minh = FLT_MAX, maxh = 0;
+			for (int i = 0; i != points.size(); ++i)
+			{
+				rnsup::LVecBase3fToRecast(points[i], &recastPos[i * 3]);
+				minh = rcMin(minh, recastPos[i*3+1]);
+			}
+			minh -= 1.0;
+			maxh = minh + 6.0;
+			//insert convex volume
+			geomUnsetup->addConvexVolume(recastPos, points.size(), minh, maxh,
+					area);
+			// delete recastPos
+			delete[] recastPos;
+			//increment iterator
+			++iter;
+		}
+	}
+	{
+		pvector<PointPairOffMeshConnectionSettings>::iterator iter =
+				mOffMeshConnections.begin();
+		while (iter != mOffMeshConnections.end())
+		{
+			ValueList<LPoint3f>& pointPair = iter->first();
+			bool bidir = iter->second().get_bidir();
+
+			//compute and insert first recast point
+			float recastPos[3 * 2];
+			rnsup::LVecBase3fToRecast(pointPair[0], &recastPos[0]);
+			rnsup::LVecBase3fToRecast(pointPair[1], &recastPos[3]);
+			mNavMeshType->getTool()->handleClick(NULL, recastPos, false);
+			// insert off mesh connection
+			geomUnsetup->addOffMeshConnection(&recastPos[0], &recastPos[3],
+					mNavMeshSettings.get_agentRadius(), bidir, POLYAREA_JUMP,
+					POLYFLAGS_JUMP);
+			//increment iterator
+			++iter;
+		}
+	}
+	//debug render with DebugDrawPanda3d
+	mDDUnsetup->reset();
+	geomUnsetup->drawConvexVolumes(mDDUnsetup);
+	geomUnsetup->drawOffMeshConnections(mDDUnsetup, true);
+	delete geomUnsetup;
 }
 #endif //RN_DEBUG
 
@@ -2050,7 +2313,7 @@ void RNNavMesh::do_create_nav_mesh_type(rnsup::NavMeshType* navMeshType)
 void RNNavMesh::update(float dt)
 {
 	// go on if nav mesh has been already setup
-	nassertv_always(mNavMeshType)
+	RETURN_ON_COND(!mNavMeshType,)
 
 #ifdef TESTING
 	dt = 0.016666667; //60 fps
@@ -2279,6 +2542,8 @@ void RNNavMesh::enable_debug_drawing(NodePath debugCamera)
 		mDebugNodePath.set_bin(string("fixed"), 10);
 		//by default mDebugNodePath is hidden
 		mDebugNodePath.hide();
+		//no collide mask for all their children
+		mDebugNodePath.set_collide_mask(BitMask32::all_off());
 		//create new DebugDrawers
 		mDD = new rnsup::DebugDrawPanda3d(mDebugNodePath);
 		NodePath meshDrawerCamera = mDebugCamera;
@@ -2449,6 +2714,9 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 			(*iter).second().write_datagram(dg);
 		}
 	}
+
+	///Unique ref.
+	dg.add_uint32(mRef);
 
 	/// Pointers
 	///The owner object NodePath this RNNavMesh is associated to.
@@ -2621,6 +2889,9 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 		mOffMeshConnections.push_back(
 				PointPairOffMeshConnectionSettings(pointPair, settings));
 	}
+
+	///Unique ref.
+	mRef = scan.get_int32();
 
 	/// Pointers
 	///The owner object NodePath this RNNavMesh is associated to.
