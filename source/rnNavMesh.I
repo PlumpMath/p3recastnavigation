@@ -79,7 +79,7 @@ INLINE void RNNavMesh::set_area_flags(int area, int oredFlags)
 /**
  * Returns the Recast area's ored flags.
  */
-INLINE int RNNavMesh::get_area_flags(int area)
+INLINE int RNNavMesh::get_area_flags(int area) const
 {
 	return mPolyAreaFlags[area];
 }
@@ -87,7 +87,7 @@ INLINE int RNNavMesh::get_area_flags(int area)
 /**
  * Returns the Recast area's traversal cost.
  */
-INLINE float RNNavMesh::get_area_cost(int area)
+INLINE float RNNavMesh::get_area_cost(int area) const
 {
 	return mPolyAreaCost[area];
 }
@@ -95,7 +95,7 @@ INLINE float RNNavMesh::get_area_cost(int area)
 /**
  * Returns the Recast Crowd include flags.
  */
-INLINE int RNNavMesh::get_crowd_include_flags()
+INLINE int RNNavMesh::get_crowd_include_flags() const
 {
 	return mCrowdIncludeFlags;
 }
@@ -103,7 +103,7 @@ INLINE int RNNavMesh::get_crowd_include_flags()
 /**
  * Returns the Recast Crowd exclude flags.
  */
-INLINE int RNNavMesh::get_crowd_exclude_flags()
+INLINE int RNNavMesh::get_crowd_exclude_flags() const
 {
 	return mCrowdExcludeFlags;
 }
@@ -272,7 +272,7 @@ inline dtCrowd* RNNavMesh::get_recast_crowd() const
 /**
  * NavMeshType reference getter function.
  */
-inline rnsup::NavMeshType& RNNavMesh::get_nav_mesh_type()
+inline rnsup::NavMeshType& RNNavMesh::get_nav_mesh_type() const
 {
 	return *mNavMeshType;
 }

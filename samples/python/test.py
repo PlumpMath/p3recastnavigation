@@ -17,7 +17,7 @@ navMesh = None
 crowdAgent = None
 sceneNP = None
 setupCleanupFlag = True
-toggleDebugFlag = True
+toggleDebugFlag = False
 halfVel = True
 query = 0
 area = 0
@@ -90,16 +90,21 @@ def addDoor(data):
         addPoint = data
         point = entry0.get_surface_point(NodePath())
         if not addPoint:
+            RNNavMeshManager.get_global_ptr().debug_draw_reset()
             # add to list
             pointList.add_value(point)
+            RNNavMeshManager.get_global_ptr().debug_draw_primitive(
+                    RNNavMeshManager.POINTS, pointList,
+                    LVecBase4f(1.0, 0.0, 0.0, 1.0), 4.0)
             print(point)
         else:
+            RNNavMeshManager.get_global_ptr().debug_draw_reset()
             # add last point to list
             pointList.add_value(point)
             print(point)
             # add convex volume (door)
             ref = navMesh.add_convex_volume(pointList, RNNavMesh.POLYAREA_DOOR)
-            print("Added door with (temporary) ref: " + str(ref))
+            print("Added (temporary) door with ref: " + str(ref))
             doorRefs.append(ref)
             # reset list
             pointList[:] = []
@@ -117,6 +122,9 @@ def removeDoor():
         ref = navMesh.remove_convex_volume(point)
         if ref >= 0:
             print("Removed door with ref: " + str(ref))
+
+def openCloseDoor():
+    pass
 
 # throws a ray and returns the first collision entry or nullptr
 def getCollisionEntryFromCamera():
@@ -159,6 +167,9 @@ def toggleSetupCleanup():
         navMesh.set_owner_node_path(sceneNP)
         navMesh.setup()
         navMesh.enable_debug_drawing(app.camera)
+        # show debug draw
+        navMesh.toggle_debug_drawing(True)
+        toggleDebugFlag = False
     else:
         # false: cleanup
         navMesh.cleanup()
@@ -170,8 +181,7 @@ def toggleSetupCleanup():
         for i in range(navMesh.get_num_obstacles()):
             ref = navMesh.get_obstacle(i)
             navMesh.get_obstacle_by_ref(ref).reparent_to(app.render)
-        # reset debug draw flag
-        toggleDebugFlag = true
+        
     setupCleanupFlag = not setupCleanupFlag
 
 if __name__ == '__main__':

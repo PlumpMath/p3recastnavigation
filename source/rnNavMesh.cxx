@@ -849,8 +849,8 @@ bool RNNavMesh::do_build_navMesh()
  * Adds a convex volume given its points (at least 3) and the area type.
  * Can be added only before RNNavMesh is setup.
  * Returns the convex volume's unique reference, or a negative number on error.
- * \note The returned reference is temporary: after setup this convex volume
- * may be eliminated, so reference validity should always be verified before
+ * \note The added convex volume is temporary: after setup this convex volume
+ * can be eliminated, so reference validity should always be verified before
  * use.
  */
 int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
@@ -943,7 +943,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
  * Gets the convex volume with the point inside.
  * Returns the index of the convex volume, or -1 if none is found.
  */
-int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint)
+int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) const
 {
 	//get hit point
 	float hitPos[3];
@@ -1103,16 +1103,16 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 }
 
 /**
- * Returns settings of the convex volume with the point inside.
+ * Returns settings of the convex volume given a point inside.
  * Can be get only after RNNavMesh is setup.
  * Returns RNConvexVolumeSettings() if none is found.
  */
-RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(const LPoint3f& insidePoint)
+RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(const LPoint3f& insidePoint) const
 {
-	// go on if nav mesh has been already setup
-	nassertr_always(mNavMeshType, RNConvexVolumeSettings())
-
 	RNConvexVolumeSettings settings;
+
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, settings)
 
 	int convexVolumeID = do_get_convex_volume_from_point(insidePoint);
 	//
@@ -1120,6 +1120,31 @@ RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(const LPoint3f& ins
 	{
 		//mConvexVolumes and mGeom::m_volumes are synchronized
 		settings = mConvexVolumes[convexVolumeID].get_second();
+	}
+	//return settings
+	return settings;
+}
+
+/**
+ * Returns settings of the convex volume given its ref.
+ * Can be get only after RNNavMesh is setup.
+ * Returns RNConvexVolumeSettings() if none is found.
+ */
+RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(int ref) const
+{
+	RNConvexVolumeSettings settings;
+
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, settings)
+
+	pvector<PointListConvexVolumeSettings>::const_iterator iter;
+	for (iter = mConvexVolumes.begin(); iter != mConvexVolumes.end(); ++iter)
+	{
+		if ((*iter).get_second().get_ref() == ref)
+		{
+			settings = (*iter).get_second();
+			break;
+		}
 	}
 	//return settings
 	return settings;
@@ -1152,8 +1177,8 @@ ValueList<LPoint3f> RNNavMesh::get_convex_volume_by_ref(int ref)
  * \note pointPair[0] = begin point, pointPair[1] = end point
  * Returns the off mesh connection's unique reference, or a negative number
  * on error.
- * \note The returned reference is temporary: after setup this off mesh
- * connection may be eliminated, so reference validity should always be
+ * \note The added off mesh connection is temporary: after setup this off mesh
+ * connection can be eliminated, so reference validity should always be
  * verified before use.
  */
 int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points, bool bidirectional)
@@ -1445,12 +1470,12 @@ int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
  * Returns RNOffMeshConnectionSettings() if none is found.
  */
 RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
-	const LPoint3f& beginOrEndPoint)
+	const LPoint3f& beginOrEndPoint) const
 {
-	// go on if nav mesh has been already setup
-	nassertr_always(mNavMeshType, RNOffMeshConnectionSettings())
-
 	RNOffMeshConnectionSettings settings;
+
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, settings)
 
 	int offMeshConnectionID = do_get_off_mesh_connection_from_point(
 			beginOrEndPoint);
@@ -1459,6 +1484,32 @@ RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 	{
 		//mOffMeshConnections and mGeom's off mesh connections are synchronized
 		settings = mOffMeshConnections[offMeshConnectionID].get_second();
+	}
+	//return settings
+	return settings;
+}
+
+
+/**
+ * Returns settings of the off mesh connection given its ref.
+ * Can be get only after RNNavMesh is setup.
+ * Returns RNOffMeshConnectionSettings() if none is found.
+ */
+RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(int ref) const
+{
+	RNOffMeshConnectionSettings settings;
+
+	// go on if nav mesh has been already setup
+	nassertr_always(mNavMeshType, settings)
+
+	pvector<PointPairOffMeshConnectionSettings>::const_iterator iter;
+	for (iter = mOffMeshConnections.begin(); iter != mOffMeshConnections.end(); ++iter)
+	{
+		if ((*iter).get_second().get_ref() == ref)
+		{
+			settings = (*iter).get_second();
+			break;
+		}
 	}
 	//return settings
 	return settings;

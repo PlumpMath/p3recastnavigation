@@ -151,23 +151,24 @@ PUBLISHED:
 	void set_nav_mesh_settings(const RNNavMeshSettings& settings);
 	INLINE RNNavMeshSettings get_nav_mesh_settings() const;
 	INLINE void set_area_flags(int area, int oredFlags);
-	INLINE int get_area_flags(int area);
+	INLINE int get_area_flags(int area) const;
 
 	//CROWD PARAMETERS
 	void set_crowd_area_cost(int area, float cost);
-	INLINE float get_area_cost(int area);
+	INLINE float get_area_cost(int area) const;
 	void set_crowd_include_flags(int oredFlags);
-	INLINE int get_crowd_include_flags();
+	INLINE int get_crowd_include_flags() const;
 	void set_crowd_exclude_flags(int oredFlags);
-	INLINE int get_crowd_exclude_flags();
+	INLINE int get_crowd_exclude_flags() const;
 
 	//CONVEX VOLUME
 	int add_convex_volume(const ValueList<LPoint3f>& points, int area);
 	int remove_convex_volume(const LPoint3f& insidePoint);
 	int set_convex_volume_settings(const LPoint3f& insidePoint,
 		const RNConvexVolumeSettings settings);
-	RNConvexVolumeSettings get_convex_volume_settings(const LPoint3f& insidePoint);
-	ValueList<LPoint3f> get_convex_volume_by_ref(int ref);
+	RNConvexVolumeSettings get_convex_volume_settings(const LPoint3f& insidePoint) const;
+	RNConvexVolumeSettings get_convex_volume_settings(int ref) const;
+	ValueList<LPoint3f> get_convex_volume_by_ref(int ref) const;
 	INLINE int get_convex_volume(int index) const;
 	INLINE int get_num_convex_volumes() const;
 	MAKE_SEQ(get_convex_volumes, get_num_convex_volumes, get_convex_volume);
@@ -179,8 +180,9 @@ PUBLISHED:
 	int set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 		const RNOffMeshConnectionSettings settings);
 	RNOffMeshConnectionSettings get_off_mesh_connection_settings(
-		const LPoint3f& beginOrEndPoint);
-	ValueList<LPoint3f> get_off_mesh_connection_by_ref(int ref);
+		const LPoint3f& beginOrEndPoint) const;
+	RNOffMeshConnectionSettings get_off_mesh_connection_settings(int ref) const;
+	ValueList<LPoint3f> get_off_mesh_connection_by_ref(int ref) const;
 	INLINE int get_off_mesh_connection(int index) const;
 	INLINE int get_num_off_mesh_connections() const;
 	MAKE_SEQ(get_off_mesh_connections, get_num_off_mesh_connections, get_off_mesh_connection);
@@ -200,7 +202,7 @@ PUBLISHED:
 	//OBSTACLE
 	int add_obstacle(NodePath objectNP);
 	int remove_obstacle(NodePath objectNP);
-	NodePath get_obstacle_by_ref(int ref);
+	NodePath get_obstacle_by_ref(int ref) const;
 	INLINE int get_obstacle(int index) const;
 	INLINE int get_num_obstacles() const;
 	MAKE_SEQ(get_obstacles, get_num_obstacles, get_obstacle);
@@ -245,12 +247,12 @@ PUBLISHED:
 
 	///TESTER QUERIES
 	ValueList<LPoint3f> get_path_find_follow(const LPoint3f& startPos,
-		const LPoint3f& endPos);
+		const LPoint3f& endPos) const;
 	typedef ValueList<Pair<LPoint3f, unsigned char> > PointFlagList;
 	PointFlagList get_path_find_straight(const LPoint3f& startPos,
-		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS);
+		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS) const;
 	LPoint3f check_walkability(const LPoint3f& startPos, const LPoint3f& endPos);
-	float get_distance_to_wall(const LPoint3f& pos);
+	float get_distance_to_wall(const LPoint3f& pos) const;
 
 	///OUTPUT
 	void output(ostream &out) const;
@@ -272,8 +274,8 @@ public:
 	inline dtNavMesh* get_recast_nav_mesh() const;
 	inline dtNavMeshQuery* get_recast_nav_mesh_query() const;
 	inline dtCrowd* get_recast_crowd() const;
-	dtTileCache* get_recast_tile_cache();
-	inline rnsup::NavMeshType& get_nav_mesh_type();
+	dtTileCache* get_recast_tile_cache() const;
+	inline rnsup::NavMeshType& get_nav_mesh_type() const;
 	inline operator rnsup::NavMeshType&();
 
 	///Unique ref producer.
@@ -348,13 +350,13 @@ private:
 	void do_set_crowd_agent_other_settings(
 	PT(RNCrowdAgent)crowdAgent, rnsup::CrowdTool* crowdTool);
 
-	int do_get_convex_volume_from_point(const LPoint3f& insidePoint);
+	int do_get_convex_volume_from_point(const LPoint3f& insidePoint) const;
 	int do_find_polys_of_convex_volume(int convexVolumeID, dtQueryFilter& filter,
-			dtPolyRef* polys, int& npolys, const int MAX_POLYS);
+			dtPolyRef* polys, int& npolys, const int MAX_POLYS) const;
 
-	int do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint);
+	int do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint) const;
 	int do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
-			dtPolyRef* poly, dtOffMeshConnection& offmeshlink);
+			dtPolyRef* poly, dtOffMeshConnection& offmeshlink) const;
 
 	int do_add_obstacle_to_recast(NodePath& objectNP, int index);
 	int do_remove_obstacle_from_recast(NodePath& objectNP, int obstacleRef);

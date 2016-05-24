@@ -141,7 +141,6 @@ protected:
 	LVector4f m_quadFirstColor, m_quadThirdColor;
 	LVector2f m_quadFirstUV, m_quadThirdUV;
 
-private:
 	///Helper
 	void doVertex(const LVector3f& vertex, const LVector4f& color,
 			const LVector2f& uv = LVecBase2f::zero());
@@ -208,7 +207,6 @@ protected:
 	LVecBase2f m_quadUV[3];
 	int m_quadIdx;
 
-private:
 	///Helper
 	void doVertex(const LVector3f& vertex, const LVector4f& color,
 			const LVector2f& uv = LVecBase2f::zero());

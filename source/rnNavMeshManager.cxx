@@ -42,6 +42,14 @@ RNNavMeshManager::RNNavMeshManager(const NodePath& root,
 		mCTrav->add_collider(mRoot.attach_new_node(pickerNode),
 				mCollisionHandler);
 	}
+#ifdef RN_DEBUG
+	mDD = NULL;
+	if (!mRoot.is_empty())
+	{
+		//create new DebugDrawer
+		mDD = new DebugDrawPrimitives(mRoot);
+	}
+#endif //RN_DEBUG
 }
 
 /**
@@ -78,9 +86,16 @@ RNNavMeshManager::~RNNavMeshManager()
 	//clear parameters' tables
 	mNavMeshesParameterTable.clear();
 	mCrowdAgentsParameterTable.clear();
-
 	//
 	delete mCTrav;
+
+#ifdef RN_DEBUG
+	if (mDD)
+	{
+		delete mDD;
+		mDD = NULL;
+	}
+#endif //RN_DEBUG
 }
 
 /**
@@ -505,6 +520,51 @@ Pair<bool,float> RNNavMeshManager::get_collision_height(const LPoint3f& rayOrigi
 	}
 	//
 	return Pair<bool,float>(false, 0.0);
+}
+
+/**
+ * Draws the specified primitive, given the points, the color (RGBA) and point's size.
+ */
+void RNNavMeshManager::debug_draw_primitive(RNDebugDrawPrimitives primitive,
+		const ValueList<LPoint3f>& points, const LVecBase4f color, float size)
+{
+#ifdef RN_DEBUG
+	mDD->begin((duDebugDrawPrimitives) primitive, size);
+	// calculate the real point list size
+	unsigned int realSize;
+	switch (primitive)
+	{
+	case POINTS:
+		realSize = points.size();
+		break;
+	case LINES:
+		realSize = points.size() - (points.size() % 2);
+		break;
+	case TRIS:
+		realSize = points.size() - (points.size() % 3);
+		break;
+	case QUADS:
+		realSize = points.size() - (points.size() % 4);
+		break;
+	default:
+		break;
+	}
+	for (unsigned int i = 0; i < realSize; ++i)
+	{
+		mDD->vertex(points[i], color);
+	}
+	mDD->end();
+#endif //RN_DEBUG
+}
+
+/**
+ * Erases all primitives drawn until now.
+ */
+void RNNavMeshManager::debug_draw_reset()
+{
+#ifdef RN_DEBUG
+	mDD->reset();
+#endif //RN_DEBUG
 }
 
 /**

@@ -22,7 +22,7 @@ PT(RNNavMesh)navMesh;
 PT(RNCrowdAgent)crowdAgent;
 NodePath sceneNP;
 bool setupCleanupFlag = true;
-bool toggleDebugFlag = true;
+bool toggleDebugFlag = false;
 bool halfVel = true;
 int query = 0;
 int area = 0;
@@ -34,6 +34,7 @@ void changeSpeed(const Event*, void*);
 void cycleQueries(const Event*, void*);
 void addDoor(const Event*, void*);
 void removeDoor(const Event*, void*);
+void openCloseDoor(const Event*, void* data);
 void toggleDebugDraw(const Event*, void*);
 void toggleSetupCleanup(const Event*, void*);
 PT(CollisionEntry)getCollisionEntryFromCamera();
@@ -255,19 +256,24 @@ void addDoor(const Event*, void* data)
 		LPoint3f point = entry0->get_surface_point(NodePath());
 		if (addPoint)
 		{
+			RNNavMeshManager::get_global_ptr()->debug_draw_reset();
 			// add to list
 			pointList.add_value(point);
+			RNNavMeshManager::get_global_ptr()->debug_draw_primitive(
+					RNNavMeshManager::POINTS, pointList,
+					LVecBase4f(1.0, 0.0, 0.0, 1.0), 4.0);
 			cout << point << endl;
 		}
 		else
 		{
+			RNNavMeshManager::get_global_ptr()->debug_draw_reset();
 			// add last point to list
 			pointList.add_value(point);
 			cout << point << endl;
 			// add convex volume (door)
 			int ref = navMesh->add_convex_volume(pointList,
 					RNNavMesh::POLYAREA_DOOR);
-			cout << "Added door with (temporary) ref: " << ref << endl;
+			cout << "Added (temporary) door with ref: " << ref << endl;
 			doorRefs.push_back(ref);
 			// reset list
 			pointList.clear();
@@ -291,6 +297,11 @@ void removeDoor(const Event*, void* data)
 			cout << "Removed door with ref: " << ref << endl;
 		}
 	}
+}
+
+void openCloseDoor(const Event*, void* data)
+{
+
 }
 
 // throws a ray and returns the first collision entry or nullptr
@@ -350,6 +361,32 @@ void toggleSetupCleanup(const Event* e, void* data)
 		navMesh->set_owner_node_path(sceneNP);
 		navMesh->setup();
 		navMesh->enable_debug_drawing(window->get_camera_group());
+		// show debug draw
+		navMesh->toggle_debug_drawing(true);
+		toggleDebugFlag = false;
+//		// show doors
+//		vector<int>::iterator iter = doorRefs.begin();
+//		while(iter != doorRefs.end())
+//		{
+//			ValueList<LPoint3f> points = navMesh->get_convex_volume_by_ref((*iter)).size();
+//			if (points.size() == 0)
+//			{
+//				cout << "Door's invalid ref: " <<  (*iter) << " ...removing" << endl;
+//				doorRefs.erase(iter);
+//				continue;
+//			}
+//			LPoint3f centroid;
+//			for (unsigned int i = 0; i < points.size(); ++i)
+//			{
+//				centroid += points[i];
+//			}
+//			centroid /= points.size();
+//			RNConvexVolumeSettings settings = navMesh->get_convex_volume_settings(centroid);
+//			cout << "Door n. " << (iter - doorRefs.begin()) << endl;
+//			cout << "\tref: " << settings.get_ref() << " | "
+//					"area: " << settings.get_area() << " | "
+//					"flags: " << settings.get_flags() << endl
+//		}
 	}
 	else
 	{
@@ -368,8 +405,6 @@ void toggleSetupCleanup(const Event* e, void* data)
 			int ref = navMesh->get_obstacle(i);
 			navMesh->get_obstacle_by_ref(ref).reparent_to(window->get_render());
 		}
-		//reset debug draw flag
-		toggleDebugFlag = true;
 	}
 	*setupCleanupFlag = not *setupCleanupFlag;
 }

@@ -82,6 +82,24 @@ PUBLISHED:
 	bool write_to_bam_file(const string& fileName);
 	bool read_from_bam_file(const string& fileName);
 
+	// debug draw (low level)
+	///Equivalent to duDebugDrawPrimitives.
+	enum RNDebugDrawPrimitives
+	{
+#ifndef CPPPARSER
+		POINTS = DU_DRAW_POINTS,
+		LINES = DU_DRAW_LINES,
+		TRIS = DU_DRAW_TRIS,
+		QUADS = DU_DRAW_QUADS,
+#else
+		POINTS,LINES,TRIS,QUADS
+#endif //CPPPARSER
+	};
+	void debug_draw_primitive(RNDebugDrawPrimitives primitive,
+			const ValueList<LPoint3f>& points, const LVecBase4f color = LVecBase4f::zero(), float size =
+					1.0f);
+	void debug_draw_reset();
+
 private:
 	///List of RNNavMeshes handled by this template.
 	typedef pvector<PT(RNNavMesh)> NavMeshList;
@@ -107,6 +125,22 @@ private:
 	CollisionTraverser* mCTrav;
 	CollisionHandlerQueue* mCollisionHandler;
 	CollisionRay* mPickerRay;
+
+#ifdef RN_DEBUG
+	class DebugDrawPrimitives: public rnsup::DebugDrawPanda3d
+	{
+	public:
+		DebugDrawPrimitives(NodePath render): rnsup::DebugDrawPanda3d(render)
+		{
+		}
+		void vertex(const LVector3f& vertex, const LVector4f& color)
+		{
+			doVertex(vertex, color);
+		}
+	};
+	/// DebugDrawers.
+	DebugDrawPrimitives* mDD;
+#endif //RN_DEBUG
 
 	///TypedObject semantics: hardcoded
 public:
