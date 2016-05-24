@@ -124,7 +124,7 @@ void ThrowEventData::read_datagram(DatagramIterator &scan)
 /**
  *
  */
-RNNavMeshSettings::RNNavMeshSettings()
+RNNavMeshSettings::RNNavMeshSettings(): _navMeshSettings()
 {
 }
 /**
@@ -173,7 +173,8 @@ void RNNavMeshSettings::read_datagram(DatagramIterator &scan)
 /**
  *
  */
-RNNavMeshTileSettings::RNNavMeshTileSettings()
+RNNavMeshTileSettings::RNNavMeshTileSettings() :
+		_navMeshTileSettings()
 {
 }
 /**
@@ -201,7 +202,8 @@ void RNNavMeshTileSettings::read_datagram(DatagramIterator &scan)
 /**
  *
  */
-RNConvexVolumeSettings::RNConvexVolumeSettings()
+RNConvexVolumeSettings::RNConvexVolumeSettings() :
+		_area(0), _flags(0), _ref(0)
 {
 }
 /**
@@ -225,7 +227,8 @@ void RNConvexVolumeSettings::read_datagram(DatagramIterator &scan)
 /**
  *
  */
-RNOffMeshConnectionSettings::RNOffMeshConnectionSettings()
+RNOffMeshConnectionSettings::RNOffMeshConnectionSettings() :
+		_area(0), _bidir(false), _flags(0), _rad(0.0), _ref(0)
 {
 }
 /**
@@ -253,7 +256,7 @@ void RNOffMeshConnectionSettings::read_datagram(DatagramIterator &scan)
 /**
  *
  */
-RNCrowdAgentParams::RNCrowdAgentParams()
+RNCrowdAgentParams::RNCrowdAgentParams(): _dtCrowdAgentParams()
 {
 }
 

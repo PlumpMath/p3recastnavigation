@@ -25,7 +25,6 @@ bool setupCleanupFlag = true;
 bool toggleDebugFlag = false;
 bool halfVel = true;
 int query = 0;
-int area = 0;
 ValueList<LPoint3f> pointList;
 vector<int> doorRefs;
 
@@ -88,19 +87,19 @@ int main(int argc, char *argv[])
 	// setup the nav mesh with scene as its owner object
 //	navMesh->setup();
 
-	// get the agent model
+// get the agent model
 //	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");
 //	agentNP.set_scale(0.40);
 
-	// create the crowd agent and set the position
+// create the crowd agent and set the position
 //	NodePath crowdAgentNP = navMesMgr->create_crowd_agent("crowdAgent");
 //	crowdAgent = DCAST(RNCrowdAgent, crowdAgentNP.node());
 //	crowdAgentNP.set_pos(24.0, -20.4, -2.37);
 
-	// attach the agent model to crowdAgent
+// attach the agent model to crowdAgent
 //	agentNP.reparent_to(crowdAgentNP);
 
-	// attach the crowd agent to the nav mesh
+// attach the crowd agent to the nav mesh
 //	navMesh->add_crowd_agent(crowdAgentNP);
 
 // start the path finding default update task
@@ -109,10 +108,10 @@ int main(int argc, char *argv[])
 	// enable debug draw
 //	navMesh->enable_debug_drawing(window->get_camera_group());
 
-	// toggle debug draw
+// toggle debug draw
 //	navMesh->toggle_debug_drawing(true);
 
-	// toggle setup (true) and cleanup (false)
+// toggle setup (true) and cleanup (false)
 	framework.define_key("s", "toggleSetupCleanup", &toggleSetupCleanup,
 			(void*) &setupCleanupFlag);
 
@@ -123,7 +122,7 @@ int main(int argc, char *argv[])
 	// set crowd agent move target on scene surface
 //	crowdAgent->set_move_target(LPoint3f(-20.5, 5.2, -2.36));
 
-	// add doors
+// add doors
 	bool TRUE = true, FALSE = false;
 	framework.define_key("a", "addDoor", &addDoor, (void*) &TRUE);
 	framework.define_key("shift-a", "addDoorLast", &addDoor, (void*) &FALSE);
@@ -178,7 +177,7 @@ void cycleQueries(const Event*, void*)
 	case 0:
 	{
 		cout << "get path find to follow" << endl;
-		ValueList<LPoint3f> pointList = navMesh->get_path_find_follow(
+		ValueList<LPoint3f> pointList = navMesh->path_find_follow(
 				crowdAgentNP.get_pos(), crowdAgent->get_move_target());
 		for (int i = 0; i < pointList.size(); ++i)
 		{
@@ -190,7 +189,7 @@ void cycleQueries(const Event*, void*)
 	{
 		cout << "get path find to follow straight" << endl;
 		ValueList<Pair<LPoint3f, unsigned char> > pointFlagList =
-				navMesh->get_path_find_straight(crowdAgentNP.get_pos(),
+				navMesh->path_find_straight(crowdAgentNP.get_pos(),
 						crowdAgent->get_move_target(),
 						RNNavMesh::NONE_CROSSINGS);
 		for (int i = 0; i < pointFlagList.size(); ++i)
@@ -218,7 +217,7 @@ void cycleQueries(const Event*, void*)
 	case 2:
 	{
 		cout << "check walkability" << endl;
-		LPoint3f hitPoint = navMesh->check_walkability(crowdAgentNP.get_pos(),
+		LPoint3f hitPoint = navMesh->ray_cast(crowdAgentNP.get_pos(),
 				crowdAgent->get_move_target());
 		if (hitPoint == crowdAgent->get_move_target())
 		{
@@ -233,7 +232,7 @@ void cycleQueries(const Event*, void*)
 	case 3:
 	{
 		cout << "get distance to wall" << endl;
-		float distance = navMesh->get_distance_to_wall(crowdAgentNP.get_pos());
+		float distance = navMesh->distance_to_wall(crowdAgentNP.get_pos());
 		cout << "\t" << distance << endl;
 	}
 		break;
@@ -364,29 +363,38 @@ void toggleSetupCleanup(const Event* e, void* data)
 		// show debug draw
 		navMesh->toggle_debug_drawing(true);
 		toggleDebugFlag = false;
-//		// show doors
-//		vector<int>::iterator iter = doorRefs.begin();
-//		while(iter != doorRefs.end())
-//		{
-//			ValueList<LPoint3f> points = navMesh->get_convex_volume_by_ref((*iter)).size();
-//			if (points.size() == 0)
-//			{
-//				cout << "Door's invalid ref: " <<  (*iter) << " ...removing" << endl;
-//				doorRefs.erase(iter);
-//				continue;
-//			}
-//			LPoint3f centroid;
-//			for (unsigned int i = 0; i < points.size(); ++i)
-//			{
-//				centroid += points[i];
-//			}
-//			centroid /= points.size();
-//			RNConvexVolumeSettings settings = navMesh->get_convex_volume_settings(centroid);
-//			cout << "Door n. " << (iter - doorRefs.begin()) << endl;
-//			cout << "\tref: " << settings.get_ref() << " | "
-//					"area: " << settings.get_area() << " | "
-//					"flags: " << settings.get_flags() << endl
-//		}
+		// show doors
+		vector<int>::iterator refI = doorRefs.begin();
+		while (refI != doorRefs.end())
+		{
+			ValueList<LPoint3f> points = navMesh->get_convex_volume_by_ref(
+					(*refI));
+			if (points.size() == 0)
+			{
+				cout << "Door's invalid ref: " << (*refI) << " ...removing"
+						<< endl;
+				doorRefs.erase(refI);
+				continue;
+			}
+			LPoint3f centroid = LPoint3f::zero();
+			for (int p = 0; p < points.size(); ++p)
+			{
+				centroid += points[p];
+			}
+			centroid /= points.size();
+			RNConvexVolumeSettings settings =
+					navMesh->get_convex_volume_settings(centroid);
+
+			nassertv_always(settings ==
+					navMesh->get_convex_volume_settings((*refI)));
+
+			cout << "Door n. " << (refI - doorRefs.begin()) << endl;
+			cout << "\tref: " << settings.get_ref() << " | "
+					"area: " << settings.get_area() << " | "
+					"flags: " << settings.get_flags() << endl;
+			//
+			++refI;
+		}
 	}
 	else
 	{

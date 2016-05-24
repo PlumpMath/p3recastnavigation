@@ -27,16 +27,6 @@ INLINE ValueList<Type>::ValueList(const ValueList &copy) :
 {
 }
 
-
-/**
- *
- */
-template<typename Type>
-INLINE ValueList<Type>::ValueList(ValueList&& copy)
-{
-	_values = copy._values;
-}
-
 /**
  *
  */
@@ -59,15 +49,6 @@ INLINE void ValueList<Type>::add_value(const Type& value)
  */
 template<typename Type>
 INLINE void ValueList<Type>::operator =(const ValueList &copy)
-{
-	_values = copy._values;
-}
-
-/**
- *
- */
-template<typename Type>
-INLINE void ValueList<Type>::operator =(ValueList&& copy)
 {
 	_values = copy._values;
 }
@@ -383,6 +364,19 @@ INLINE void RNNavMeshTileSettings::set_tileSize(float value)
 }
 
 ///Convex volume settings.
+INLINE void RNConvexVolumeSettings::operator =(
+		const RNConvexVolumeSettings &copy)
+{
+	_area = copy._area;
+	_flags = copy._flags;
+	_ref = copy._ref;
+}
+INLINE bool RNConvexVolumeSettings::operator==(
+		const RNConvexVolumeSettings &other) const
+{
+	return (_area == other._area) && (_flags == other._flags)
+			&& (_ref == other._ref);
+}
 INLINE int RNConvexVolumeSettings::get_area() const
 {
 	return _area;
@@ -409,6 +403,22 @@ INLINE void RNConvexVolumeSettings::set_ref(int value)
 }
 
 ///Off mesh connection settings.
+INLINE void RNOffMeshConnectionSettings::operator =(
+		const RNOffMeshConnectionSettings &copy)
+{
+	_rad = copy._rad;
+	_bidir = copy._bidir;
+	_area = copy._area;
+	_flags = copy._flags;
+	_ref = copy._ref;
+}
+INLINE bool RNOffMeshConnectionSettings::operator==(
+		const RNOffMeshConnectionSettings &other) const
+{
+	return (_rad == other._rad) && (_bidir == other._bidir)
+			&& (_area == other._area) && (_flags == other._flags)
+			&& (_ref == other._ref);
+}
 INLINE float RNOffMeshConnectionSettings::get_rad() const
 {
 	return _rad;

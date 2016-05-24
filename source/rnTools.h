@@ -379,6 +379,8 @@ struct EXPORT_CLASS RNConvexVolumeSettings
 PUBLISHED:
 	RNConvexVolumeSettings();
 
+	INLINE void operator =(const RNConvexVolumeSettings &copy);
+	INLINE bool operator== (const RNConvexVolumeSettings &other) const;
 	INLINE int get_area() const;
 	INLINE void set_area(int value);
 	INLINE int get_flags() const;
@@ -401,6 +403,9 @@ struct EXPORT_CLASS RNOffMeshConnectionSettings
 PUBLISHED:
 	RNOffMeshConnectionSettings();
 
+	INLINE void operator =(const RNOffMeshConnectionSettings &copy);
+	INLINE bool operator==(
+			const RNOffMeshConnectionSettings &other) const;
 	INLINE float get_rad() const;
 	INLINE void set_rad(float value);
 	INLINE bool get_bidir() const;
@@ -476,11 +481,9 @@ class ValueList
 PUBLISHED:
 	ValueList(unsigned int size=0);
 	ValueList(const ValueList &copy);
-	ValueList(ValueList&& copy);
 	INLINE ~ValueList();
 
 	INLINE void operator =(const ValueList &copy);
-	INLINE void operator =(ValueList&& copy);
 	INLINE bool operator== (const ValueList &other) const;
 	INLINE void add_value(const Type& value);
 	bool remove_value(const Type& value);

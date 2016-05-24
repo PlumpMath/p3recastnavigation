@@ -466,7 +466,7 @@ void placeCrowdAgents(const Event* e, void* data)
 		navMesh->add_crowd_agent(NodePath::any_path(crowdAgent[i]));
 	}
 	//just for debug draw the last agent's straight path
-	navMesh->get_path_find_straight(
+	navMesh->path_find_straight(
 			NodePath::any_path((*navMesh)[i - 1]).get_pos(),
 			(*navMesh)[i - 1]->get_move_target());
 }
@@ -522,7 +522,7 @@ void setMoveTarget(const Event* e, void* data)
 			(*navMesh)[i]->set_move_target(target);
 		}
 		//just for debug draw the last agent's straight path
-		navMesh->get_path_find_straight(
+		navMesh->path_find_straight(
 				NodePath::any_path((*navMesh)[i-1]).get_pos(), target);
 	}
 }

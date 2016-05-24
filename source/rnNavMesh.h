@@ -246,13 +246,13 @@ PUBLISHED:
 	};
 
 	///TESTER QUERIES
-	ValueList<LPoint3f> get_path_find_follow(const LPoint3f& startPos,
-		const LPoint3f& endPos) const;
+	ValueList<LPoint3f> path_find_follow(const LPoint3f& startPos,
+		const LPoint3f& endPos);
 	typedef ValueList<Pair<LPoint3f, unsigned char> > PointFlagList;
-	PointFlagList get_path_find_straight(const LPoint3f& startPos,
-		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS) const;
-	LPoint3f check_walkability(const LPoint3f& startPos, const LPoint3f& endPos);
-	float get_distance_to_wall(const LPoint3f& pos) const;
+	PointFlagList path_find_straight(const LPoint3f& startPos,
+		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS);
+	LPoint3f ray_cast(const LPoint3f& startPos, const LPoint3f& endPos);
+	float distance_to_wall(const LPoint3f& pos);
 
 	///OUTPUT
 	void output(ostream &out) const;

@@ -20,7 +20,6 @@ setupCleanupFlag = True
 toggleDebugFlag = False
 halfVel = True
 query = 0
-area = 0
 pointList = ValueList_LPoint3f()
 doorRefs = []
 
@@ -81,7 +80,7 @@ def cycleQueries():
     query = query % 4
 
 def addDoor(data):
-    global pointList, doorRefs, navMesh, area
+    global pointList, doorRefs, navMesh
     if not navMesh:
         return
     
@@ -110,7 +109,7 @@ def addDoor(data):
             pointList[:] = []
 
 def removeDoor():
-    global pointList, doorRefs, navMesh, area
+    global navMesh
     if not navMesh:
         return
 
@@ -170,6 +169,26 @@ def toggleSetupCleanup():
         # show debug draw
         navMesh.toggle_debug_drawing(True)
         toggleDebugFlag = False
+        # show doors
+        for ref in list(doorRefs):
+            points = navMesh.get_convex_volume_by_ref(ref);
+            if points.size() == 0:
+                print("Door's invalid ref: " + str(ref) + " ...removing")
+                doorRefs.remove(ref)
+                continue
+            centroid = LPoint3f.zero()
+            for p in points:
+                centroid += p
+            centroid /= points.size()
+            settings = navMesh.get_convex_volume_settings(centroid)
+ 
+            if not (settings == navMesh.get_convex_volume_settings(ref)):
+                print("assertion failed: settings == navMesh.get_convex_volume_settings(ref)")
+ 
+            print("Door n. " + str(doorRefs.index(ref)))
+            print("\tref: " + str(settings.get_ref()) + " | "
+                    "area: " + str(settings.get_area()) + " | "
+                    "flags: " + str(settings.get_flags()))
     else:
         # false: cleanup
         navMesh.cleanup()

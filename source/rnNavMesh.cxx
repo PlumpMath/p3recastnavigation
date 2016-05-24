@@ -969,7 +969,8 @@ int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) cons
  * Finds polygons of a convex volume.
  */
 int RNNavMesh::do_find_polys_of_convex_volume(int convexVolumeID,
-		dtQueryFilter& filter, dtPolyRef* polys, int& npolys, const int MAX_POLYS)
+		dtQueryFilter& filter, dtPolyRef* polys, int& npolys,
+		const int MAX_POLYS) const
 {
 	///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
 	const float *queryPolyPtr =
@@ -1105,11 +1106,13 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 /**
  * Returns settings of the convex volume given a point inside.
  * Can be get only after RNNavMesh is setup.
- * Returns RNConvexVolumeSettings() if none is found.
+ * Returns RNConvexVolumeSettings::ref = -1 on error.
  */
-RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(const LPoint3f& insidePoint) const
+RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(
+		const LPoint3f& insidePoint) const
 {
 	RNConvexVolumeSettings settings;
+	settings.set_ref(-1);
 
 	// go on if nav mesh has been already setup
 	nassertr_always(mNavMeshType, settings)
@@ -1128,11 +1131,12 @@ RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(const LPoint3f& ins
 /**
  * Returns settings of the convex volume given its ref.
  * Can be get only after RNNavMesh is setup.
- * Returns RNConvexVolumeSettings() if none is found.
+ * Returns RNConvexVolumeSettings::ref = -1 on error.
  */
 RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(int ref) const
 {
 	RNConvexVolumeSettings settings;
+	settings.set_ref(-1);
 
 	// go on if nav mesh has been already setup
 	nassertr_always(mNavMeshType, settings)
@@ -1154,17 +1158,17 @@ RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(int ref) const
  * Gets a convex volume's point list given its unique reference (>0).
  * Returns an empty list on error.
  */
-ValueList<LPoint3f> RNNavMesh::get_convex_volume_by_ref(int ref)
+ValueList<LPoint3f> RNNavMesh::get_convex_volume_by_ref(int ref) const
 {
 	ValueList<LPoint3f> pointList;
 
-	pvector<PointListConvexVolumeSettings>::iterator iter;
+	pvector<PointListConvexVolumeSettings>::const_iterator iter;
 	for (iter = mConvexVolumes.begin(); iter != mConvexVolumes.end(); ++iter)
 	{
-		if ((*iter).second().get_ref() == ref)
+		if ((*iter).get_second().get_ref() == ref)
 		{
 			// break: LPoint3f by ref is present
-			pointList = (*iter).first();
+			pointList = (*iter).get_first();
 			break;
 		}
 	}
@@ -1181,7 +1185,8 @@ ValueList<LPoint3f> RNNavMesh::get_convex_volume_by_ref(int ref)
  * connection can be eliminated, so reference validity should always be
  * verified before use.
  */
-int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points, bool bidirectional)
+int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points,
+		bool bidirectional)
 {
 	// go on if nav mesh has not been already setup
 	nassertr_always((!mNavMeshType) && (points.size() >= 2), RN_ERROR)
@@ -1271,7 +1276,8 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
  * Gets the off mesh connection given the begin or end point.
  * Returns the index of the convex volume, or -1 if none is found.
  */
-int RNNavMesh::do_get_off_mesh_connection_from_point(const LPoint3f& startEndPoint)
+int RNNavMesh::do_get_off_mesh_connection_from_point(
+		const LPoint3f& startEndPoint) const
 {
 	//get hit point
 	float hitPos[3];
@@ -1298,7 +1304,7 @@ int RNNavMesh::do_get_off_mesh_connection_from_point(const LPoint3f& startEndPoi
 	// If end point close enough, got it.
 	if (nearestIndex != -1
 			&& sqrtf(nearestDist)
-					< mOffMeshConnections[nearestIndex].second().get_rad())
+					< mOffMeshConnections[nearestIndex].get_second().get_rad())
 	{
 		offMeshConnectionID = nearestIndex;
 	}
@@ -1307,7 +1313,7 @@ int RNNavMesh::do_get_off_mesh_connection_from_point(const LPoint3f& startEndPoi
 
 
 int RNNavMesh::do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
-		dtPolyRef* poly, dtOffMeshConnection& offmeshlink)// XXX
+		dtPolyRef* poly, dtOffMeshConnection& offmeshlink) const// XXX
 {
 	//get the start pos
 	const float* pos =
@@ -1467,12 +1473,13 @@ int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 /**
  * Returns settings of the off mesh connection given the begin or end point.
  * Can be get only after RNNavMesh is setup.
- * Returns RNOffMeshConnectionSettings() if none is found.
+ * Returns RNOffMeshConnectionSettings::ref = -1 on error.
  */
 RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 	const LPoint3f& beginOrEndPoint) const
 {
 	RNOffMeshConnectionSettings settings;
+	settings.set_ref(-1);
 
 	// go on if nav mesh has been already setup
 	nassertr_always(mNavMeshType, settings)
@@ -1493,11 +1500,13 @@ RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 /**
  * Returns settings of the off mesh connection given its ref.
  * Can be get only after RNNavMesh is setup.
- * Returns RNOffMeshConnectionSettings() if none is found.
+ * Returns RNOffMeshConnectionSettings::ref = -1 on error.
  */
-RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(int ref) const
+RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
+		int ref) const
 {
 	RNOffMeshConnectionSettings settings;
+	settings.set_ref(-1);
 
 	// go on if nav mesh has been already setup
 	nassertr_always(mNavMeshType, settings)
@@ -1519,18 +1528,18 @@ RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(int ref)
  * Gets an off mesh connection's point list given its unique reference (>0).
  * Returns an empty list on error.
  */
-ValueList<LPoint3f> RNNavMesh::get_off_mesh_connection_by_ref(int ref)
+ValueList<LPoint3f> RNNavMesh::get_off_mesh_connection_by_ref(int ref) const
 {
 	ValueList<LPoint3f> pointList;
 
-	pvector<PointPairOffMeshConnectionSettings>::iterator iter;
+	pvector<PointPairOffMeshConnectionSettings>::const_iterator iter;
 	for (iter = mOffMeshConnections.begin(); iter != mOffMeshConnections.end();
 			++iter)
 	{
-		if ((*iter).second().get_ref() == ref)
+		if ((*iter).get_second().get_ref() == ref)
 		{
 			// break: LPoint3f by ref is present
-			pointList = (*iter).first();
+			pointList = (*iter).get_first();
 			break;
 		}
 	}
@@ -1884,7 +1893,8 @@ int RNNavMesh::remove_obstacle(NodePath objectNP)
 /**
  * Removes obstacle from recast.
  */
-int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP, int obstacleRef)
+int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP,
+		int obstacleRef)
 {
 	//remove recast obstacle
 	dtTileCache* tileCache =
@@ -1916,18 +1926,18 @@ int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP, int obstacleRe
  * Gets an obstacle's NodePath by its unique reference (>0).
  * Return an empty NodePath on error.
  */
-NodePath RNNavMesh::get_obstacle_by_ref(int ref)
+NodePath RNNavMesh::get_obstacle_by_ref(int ref) const
 {
 	NodePath obstacleNP;
 	nassertr_always((mNavMeshTypeEnum == OBSTACLE) && (ref > 0), obstacleNP);
 
-	pvector<Obstacle>::iterator iter;
+	pvector<Obstacle>::const_iterator iter;
 	for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
 	{
-		if ((*iter).first() == ref)
+		if ((*iter).get_first() == ref)
 		{
 			// break: obstacleNP by ref is present
-			obstacleNP = (*iter).second();
+			obstacleNP = (*iter).get_second();
 			break;
 		}
 	}
@@ -2169,7 +2179,7 @@ const RNCrowdAgentParams& params)
  * Gets the underlying dtTileCache (OBSTACLE).
  * Can be get only after RNNavMesh is setup.
  */
-dtTileCache* RNNavMesh::get_recast_tile_cache()
+dtTileCache* RNNavMesh::get_recast_tile_cache() const
 {
 	// go on if nav mesh has been already setup and is of type OBSTACLE
 	nassertr_always(mNavMeshType && (mNavMeshTypeEnum == OBSTACLE), NULL)
@@ -2409,7 +2419,7 @@ void RNNavMesh::update(float dt)
  * Can be get only after RNNavMesh is setup.
  * Returns a list of points, empty on error.
  */
-ValueList<LPoint3f> RNNavMesh::get_path_find_follow(const LPoint3f& startPos,
+ValueList<LPoint3f> RNNavMesh::path_find_follow(const LPoint3f& startPos,
 		const LPoint3f& endPos)
 {
 	// go on if nav mesh has been already setup
@@ -2450,7 +2460,7 @@ ValueList<LPoint3f> RNNavMesh::get_path_find_follow(const LPoint3f& startPos,
  * Can be get only after RNNavMesh is setup.
  * Returns a list of points, empty on error.
  */
-RNNavMesh::PointFlagList RNNavMesh::get_path_find_straight(
+RNNavMesh::PointFlagList RNNavMesh::path_find_straight(
 		const LPoint3f& startPos, const LPoint3f& endPos,
 		RNStraightPathOptions crossingOptions)
 {
@@ -2499,7 +2509,7 @@ RNNavMesh::PointFlagList RNNavMesh::get_path_find_straight(
  * Returns the first hit point if not walkable, or the end point if walkable.
  * This method is meant only for short distance checks.
  */
-LPoint3f RNNavMesh::check_walkability(const LPoint3f& startPos,
+LPoint3f RNNavMesh::ray_cast(const LPoint3f& startPos,
 		const LPoint3f& endPos)
 {
 	// go on if nav mesh has been already setup
@@ -2537,7 +2547,7 @@ LPoint3f RNNavMesh::check_walkability(const LPoint3f& startPos,
  * Finds the distance from the specified position to the nearest polygon wall.
  * Can be found only after RNNavMesh is setup.
  */
-float RNNavMesh::get_distance_to_wall(const LPoint3f& pos)
+float RNNavMesh::distance_to_wall(const LPoint3f& pos)
 {
 	// go on if nav mesh has been already setup
 	nassertr_always(mNavMeshType, FLT_MAX)
