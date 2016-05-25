@@ -53,11 +53,11 @@ PUBLISHED:
 		CROWDAGENT
 	};
 
-	ValueList<string> get_parameter_name_list(RNType type);
+	ValueList<string> get_parameter_name_list(RNType type) const;
 	void set_parameter_values(RNType type, const string& paramName, const ValueList<string>& paramValues);
-	ValueList<string> get_parameter_values(RNType type, const string& paramName);
+	ValueList<string> get_parameter_values(RNType type, const string& paramName) const;
 	void set_parameter_value(RNType type, const string& paramName, const string& value);
-	string get_parameter_value(RNType type, const string& paramName);
+	string get_parameter_value(RNType type, const string& paramName) const;
 	void set_parameters_defaults(RNType type);
 
 	AsyncTask::DoneStatus update(GenericAsyncTask* task);
@@ -69,14 +69,14 @@ PUBLISHED:
 
 	//Utilities
 	float get_bounding_dimensions(NodePath modelNP, LVecBase3f& modelDims,
-			LVector3f& modelDeltaCenter);
+			LVector3f& modelDeltaCenter) const;
 	Pair<bool,float> get_collision_height(const LPoint3f& origin,
-			const NodePath& space = NodePath());
-	INLINE CollideMask get_collide_mask();
-	INLINE NodePath get_collision_root();
-	INLINE CollisionTraverser* get_collision_traverser();
-	INLINE CollisionHandlerQueue* get_collision_handler();
-	INLINE CollisionRay* get_collision_ray();
+			const NodePath& space = NodePath()) const;
+	INLINE CollideMask get_collide_mask() const;
+	INLINE NodePath get_collision_root() const;
+	INLINE CollisionTraverser* get_collision_traverser() const;
+	INLINE CollisionHandlerQueue* get_collision_handler() const;
+	INLINE CollisionRay* get_collision_ray() const;
 
 	//serialization
 	bool write_to_bam_file(const string& fileName);

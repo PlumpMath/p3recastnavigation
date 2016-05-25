@@ -70,7 +70,7 @@ INLINE RNNavMeshSettings RNNavMesh::get_nav_mesh_settings() const
  */
 INLINE void RNNavMesh::set_area_flags(int area, int oredFlags)
 {
-	nassertv_always(! mNavMeshType)
+	CONTINUE_IF_ELSE_V(! mNavMeshType)
 
 	//add area with corresponding ored ability flags
 	mPolyAreaFlags[area] = oredFlags;
@@ -149,7 +149,7 @@ INLINE int RNNavMesh::get_num_off_mesh_connections() const
  */
 INLINE int RNNavMesh::get_obstacle(int index) const
 {
-	nassertr_always(mNavMeshTypeEnum == OBSTACLE, RN_ERROR)
+	CONTINUE_IF_ELSE_R(mNavMeshTypeEnum == OBSTACLE, RN_ERROR)
 
 	return (int) mObstacles[index].get_first();
 }
@@ -159,7 +159,7 @@ INLINE int RNNavMesh::get_obstacle(int index) const
  */
 INLINE int RNNavMesh::get_num_obstacles() const
 {
-	nassertr_always(mNavMeshTypeEnum == OBSTACLE, RN_ERROR)
+	CONTINUE_IF_ELSE_R(mNavMeshTypeEnum == OBSTACLE, RN_ERROR)
 
 	return (int)mObstacles.size();
 }
@@ -177,7 +177,7 @@ INLINE RNNavMeshTileSettings RNNavMesh::get_nav_mesh_tile_settings() const
  */
 INLINE PT(RNCrowdAgent) RNNavMesh::get_crowd_agent(int index) const
 {
-	nassertr_always((index >= 0) && (index < (int)mCrowdAgents.size()), NULL)
+	CONTINUE_IF_ELSE_R((index >= 0) && (index < (int)mCrowdAgents.size()), NULL)
 
 	return mCrowdAgents[index];
 }

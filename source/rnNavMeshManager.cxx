@@ -120,13 +120,13 @@ NodePath RNNavMeshManager::create_nav_mesh()
  */
 bool RNNavMeshManager::destroy_nav_mesh(NodePath navMeshNP)
 {
-	nassertr_always(navMeshNP.node()->is_of_type(RNNavMesh::get_class_type()),
+	CONTINUE_IF_ELSE_R(navMeshNP.node()->is_of_type(RNNavMesh::get_class_type()),
 			false)
 
 	PT(RNNavMesh) navMesh = DCAST(RNNavMesh, navMeshNP.node());
 	NavMeshList::iterator iter = find(mNavMeshes.begin(), mNavMeshes.end(),
 			navMesh);
-	nassertr_always(iter != mNavMeshes.end(), false)
+	CONTINUE_IF_ELSE_R(iter != mNavMeshes.end(), false)
 
 	//give a chance to NavMesh to cleanup itself before being destroyed.
 	navMesh->do_finalize();
@@ -171,14 +171,14 @@ NodePath RNNavMeshManager::create_crowd_agent(const string& name)
  */
 bool RNNavMeshManager::destroy_crowd_agent(NodePath crowdAgentNP)
 {
-	nassertr_always(
+	CONTINUE_IF_ELSE_R(
 			crowdAgentNP.node()->is_of_type(RNCrowdAgent::get_class_type()),
 			false)
 
 	PT(RNCrowdAgent)crowdAgent = DCAST(RNCrowdAgent, crowdAgentNP.node());
 	CrowdAgentList::iterator iter = find(mCrowdAgents.begin(),
 			mCrowdAgents.end(), crowdAgent);
-	nassertr_always(iter != mCrowdAgents.end(), false)
+	CONTINUE_IF_ELSE_R(iter != mCrowdAgents.end(), false)
 
 	//give a chance to CrowdAgent to cleanup itself before being destroyed.
 	crowdAgent->do_finalize();
@@ -236,11 +236,11 @@ void RNNavMeshManager::set_parameter_values(RNType type, const string& paramName
 /**
  * Gets the multiple values of a (actually set) parameter.
  */
-ValueList<string> RNNavMeshManager::get_parameter_values(RNType type, const string& paramName)
+ValueList<string> RNNavMeshManager::get_parameter_values(RNType type, const string& paramName) const
 {
 	ValueList<string> strList;
-	ParameterTableIter iter;
-	pair<ParameterTableIter, ParameterTableIter> iterRange;
+	ParameterTableConstIter iter;
+	pair<ParameterTableConstIter, ParameterTableConstIter> iterRange;
 	if (type == NAVMESH)
 	{
 		iterRange = mNavMeshesParameterTable.equal_range(paramName);
@@ -280,7 +280,7 @@ void RNNavMeshManager::set_parameter_value(RNType type, const string& paramName,
 /**
  * Gets a single value (i.e. the first one) of a parameter.
  */
-string RNNavMeshManager::get_parameter_value(RNType type, const string& paramName)
+string RNNavMeshManager::get_parameter_value(RNType type, const string& paramName) const
 {
 	ValueList<string> valueList = get_parameter_values(type, paramName);
 	return (valueList.size() != 0 ? valueList[0] : string(""));
@@ -289,17 +289,18 @@ string RNNavMeshManager::get_parameter_value(RNType type, const string& paramNam
 /**
  * Gets a list of the names of the parameters actually set.
  */
-ValueList<string> RNNavMeshManager::get_parameter_name_list(RNType type)
+ValueList<string> RNNavMeshManager::get_parameter_name_list(RNType type) const
 {
 	ValueList<string> strList;
 	ParameterTableIter iter;
+	ParameterTable tempTable;
 	if (type == NAVMESH)
 	{
-		for (iter = mNavMeshesParameterTable.begin();
-				iter != mNavMeshesParameterTable.end(); ++iter)
+		tempTable = mNavMeshesParameterTable;
+		for (iter = tempTable.begin(); iter != tempTable.end(); ++iter)
 		{
 			string name = (*iter).first;
-			if (! strList.has_value(name))
+			if (!strList.has_value(name))
 			{
 				strList.add_value(name);
 			}
@@ -307,11 +308,11 @@ ValueList<string> RNNavMeshManager::get_parameter_name_list(RNType type)
 	}
 	else if (type == CROWDAGENT)
 	{
-		for (iter = mCrowdAgentsParameterTable.begin();
-				iter != mCrowdAgentsParameterTable.end(); ++iter)
+		tempTable = mCrowdAgentsParameterTable;
+		for (iter = tempTable.begin(); iter != tempTable.end(); ++iter)
 		{
 			string name = (*iter).first;
-			if (! strList.has_value(name))
+			if (!strList.has_value(name))
 			{
 				strList.add_value(name);
 			}
@@ -479,7 +480,7 @@ void RNNavMeshManager::stop_default_update()
  * - modelRadius = radius of the containing sphere
  */
 float RNNavMeshManager::get_bounding_dimensions(NodePath modelNP,
-		LVecBase3f& modelDims, LVector3f& modelDeltaCenter)
+		LVecBase3f& modelDims, LVector3f& modelDeltaCenter) const
 {
 	//get "tight" dimensions of model
 	LPoint3f minP, maxP;
@@ -503,7 +504,7 @@ float RNNavMeshManager::get_bounding_dimensions(NodePath modelNP,
  * If collisions are not found returns a Pair<bool,float> == (false, 0.0).
  */
 Pair<bool,float> RNNavMeshManager::get_collision_height(const LPoint3f& rayOrigin,
-		const NodePath& space)
+		const NodePath& space) const
 {
 	//traverse downward starting at rayOrigin
 	mPickerRay->set_direction(LVecBase3f(0.0, 0.0, -1.0));

@@ -114,16 +114,16 @@ PUBLISHED:
 	virtual ~RNCrowdAgent();
 
 	int set_params(const RNCrowdAgentParams& agentParams);
-	INLINE RNCrowdAgentParams get_params();
+	INLINE RNCrowdAgentParams get_params() const;
 	int set_move_target(const LPoint3f& pos);
-	INLINE LPoint3f get_move_target();
+	INLINE LPoint3f get_move_target() const;
 	int set_move_velocity(const LVector3f& vel);
-	INLINE LVector3f get_move_velocity();
+	INLINE LVector3f get_move_velocity() const;
 	void set_mov_type(RNCrowdAgentMovType movType);
 	INLINE RNCrowdAgentMovType get_mov_type() const;
 
-	LVector3f get_actual_velocity();
-	RNCrowdAgentState get_traversing_state();
+	LVector3f get_actual_velocity() const;
+	RNCrowdAgentState get_traversing_state() const;
 	INLINE PT(RNNavMesh) get_nav_mesh() const;
 
 	INLINE void enable_throw_event(RNEventThrown event, ThrowEventData eventData);

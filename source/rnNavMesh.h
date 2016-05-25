@@ -165,8 +165,10 @@ PUBLISHED:
 	int add_convex_volume(const ValueList<LPoint3f>& points, int area);
 	int remove_convex_volume(const LPoint3f& insidePoint);
 	int set_convex_volume_settings(const LPoint3f& insidePoint,
-		const RNConvexVolumeSettings settings);
-	RNConvexVolumeSettings get_convex_volume_settings(const LPoint3f& insidePoint) const;
+		const RNConvexVolumeSettings& settings);
+	int set_convex_volume_settings(int ref, const RNConvexVolumeSettings& settings);
+	RNConvexVolumeSettings get_convex_volume_settings(
+		const LPoint3f& insidePoint) const;
 	RNConvexVolumeSettings get_convex_volume_settings(int ref) const;
 	ValueList<LPoint3f> get_convex_volume_by_ref(int ref) const;
 	INLINE int get_convex_volume(int index) const;
@@ -178,7 +180,9 @@ PUBLISHED:
 		bool bidirectional);
 	int remove_off_mesh_connection(const LPoint3f& beginOrEndPoint);
 	int set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
-		const RNOffMeshConnectionSettings settings);
+		const RNOffMeshConnectionSettings& settings);
+	int set_off_mesh_connection_settings(int ref,
+		const RNOffMeshConnectionSettings& settings);
 	RNOffMeshConnectionSettings get_off_mesh_connection_settings(
 		const LPoint3f& beginOrEndPoint) const;
 	RNOffMeshConnectionSettings get_off_mesh_connection_settings(int ref) const;

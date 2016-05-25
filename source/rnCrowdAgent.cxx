@@ -31,8 +31,8 @@ RNCrowdAgent::~RNCrowdAgent()
  */
 int RNCrowdAgent::set_params(const RNCrowdAgentParams& agentParams)
 {
-	//return if crowdAgent doesn't belong to any mesh
-	nassertr_always(mNavMesh, RN_NAVMESH_NULL)
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
 	//request RNNavMesh to update move target for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_params(this, agentParams);
@@ -43,8 +43,8 @@ int RNCrowdAgent::set_params(const RNCrowdAgentParams& agentParams)
  */
 int RNCrowdAgent::set_move_target(const LPoint3f& pos)
 {
-	//return if crowdAgent doesn't belong to any mesh
-	nassertr_always(mNavMesh, RN_NAVMESH_NULL)
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
 	//request RNNavMesh to update move target for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_target(this, pos);
@@ -55,8 +55,8 @@ int RNCrowdAgent::set_move_target(const LPoint3f& pos)
  */
 int RNCrowdAgent::set_move_velocity(const LVector3f& vel)
 {
-	//return if crowdAgent doesn't belong to any mesh
-	nassertr_always(mNavMesh, RN_NAVMESH_NULL)
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
 	//request RNNavMesh to update move target for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_velocity(this, vel);
@@ -75,10 +75,10 @@ void RNCrowdAgent::set_mov_type(RNCrowdAgentMovType movType)
 /**
  * Gets RNCrowdAgent actual velocity.
  */
-LVector3f RNCrowdAgent::get_actual_velocity()
+LVector3f RNCrowdAgent::get_actual_velocity() const
 {
-	//return vector 0 if crowd agent doesn't belong to any mesh
-	nassertr_always(mNavMesh, LVector3f::zero())
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, LVector3f::zero())
 
 	return rnsup::RecastToLVecBase3f(
 			mNavMesh->get_recast_crowd()->getAgent(mAgentIdx)->vel);
@@ -87,10 +87,10 @@ LVector3f RNCrowdAgent::get_actual_velocity()
 /**
  * Gets RNCrowdAgent traversing state.
  */
-RNCrowdAgent::RNCrowdAgentState RNCrowdAgent::get_traversing_state()
+RNCrowdAgent::RNCrowdAgentState RNCrowdAgent::get_traversing_state() const
 {
-	//return if crowdAgent doesn't belong to any mesh
-	nassertr_always(mNavMesh, STATE_INVALID)
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, STATE_INVALID)
 
 	return static_cast<RNCrowdAgentState>(mNavMesh->get_recast_crowd()->getAgent(
 			mAgentIdx)->state);
@@ -367,7 +367,7 @@ void RNCrowdAgent::do_enable_crowd_agent_event(RNEventThrown event,
 		ThrowEventData eventData)
 {
 	//some checks
-	nassertv_always(! eventData.mEventName.empty())
+	CONTINUE_IF_ELSE_V(! eventData.mEventName.empty())
 
 	if (eventData.mFrequency <= 0.0)
 	{

@@ -24,6 +24,21 @@
 #include "support/NavMeshType.h"
 #endif //CPPPARSER
 
+//continue if condition is true else return a value
+#define CONTINUE_IF_ELSE_R(condition, return_value) \
+  { \
+    if (!(condition)) { \
+      return return_value; \
+    } \
+  }
+//continue if condition is true else return (void)
+#define CONTINUE_IF_ELSE_V(condition) \
+  { \
+    if (!(condition)) { \
+      return; \
+    } \
+  }
+
 /**
  * \brief An automatic Singleton Utility.
  *
@@ -379,7 +394,6 @@ struct EXPORT_CLASS RNConvexVolumeSettings
 PUBLISHED:
 	RNConvexVolumeSettings();
 
-	INLINE void operator =(const RNConvexVolumeSettings &copy);
 	INLINE bool operator== (const RNConvexVolumeSettings &other) const;
 	INLINE int get_area() const;
 	INLINE void set_area(int value);
@@ -403,7 +417,6 @@ struct EXPORT_CLASS RNOffMeshConnectionSettings
 PUBLISHED:
 	RNOffMeshConnectionSettings();
 
-	INLINE void operator =(const RNOffMeshConnectionSettings &copy);
 	INLINE bool operator==(
 			const RNOffMeshConnectionSettings &other) const;
 	INLINE float get_rad() const;
@@ -512,7 +525,6 @@ private:
 ///Result values
 #define RN_SUCCESS 0
 #define RN_ERROR -1
-#define RN_NAVMESH_NULL -2
 
 ///inline
 #include "rnTools.I"

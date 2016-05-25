@@ -7,7 +7,8 @@ Created on Mar 24, 2016
 # from direct.actor.Actor import Actor
 import panda3d.core
 from p3recastnavigation import RNNavMeshManager, RNNavMesh, ValueList_LPoint3f
-from panda3d.core import load_prc_file_data, LPoint3f
+from panda3d.core import load_prc_file_data, LPoint3f, BitMask32, NodePath, \
+                LVecBase4f
 from direct.showbase.ShowBase import ShowBase
 
 dataDir = "../data"
@@ -25,7 +26,7 @@ doorRefs = []
 
 def changeSpeed():
     global crowdAgent, halfVel
-    if not crowdAgent:
+    if crowdAgent == None:
         return
     
     ap = crowdAgent.get_params()
@@ -39,7 +40,7 @@ def changeSpeed():
 
 def cycleQueries():
     global query, navMesh, crowdAgent
-    if not (crowdAgent and navMesh):
+    if (crowdAgent == None) or (navMesh == None):
         return
     
     if query == 0:
@@ -81,14 +82,14 @@ def cycleQueries():
 
 def addDoor(data):
     global pointList, doorRefs, navMesh
-    if not navMesh:
+    if navMesh == None:
         return
     
     entry0 = getCollisionEntryFromCamera()
     if entry0:
         addPoint = data
         point = entry0.get_surface_point(NodePath())
-        if not addPoint:
+        if addPoint:
             RNNavMeshManager.get_global_ptr().debug_draw_reset()
             # add to list
             pointList.add_value(point)
@@ -106,11 +107,11 @@ def addDoor(data):
             print("Added (temporary) door with ref: " + str(ref))
             doorRefs.append(ref)
             # reset list
-            pointList[:] = []
+            pointList.clear()
 
 def removeDoor():
     global navMesh
-    if not navMesh:
+    if navMesh == None:
         return
 
     # get the collision entry, if any
@@ -123,7 +124,30 @@ def removeDoor():
             print("Removed door with ref: " + str(ref))
 
 def openCloseDoor():
-    pass
+    global navMesh
+    if navMesh == None:
+        return
+
+#     # get the collision entry, if any
+#     entry0 = getCollisionEntryFromCamera()
+#     if entry0:
+#         point = entry0.get_surface_point(NodePath())
+#         # try to get door'settings by inside point
+#         settings = navMesh.get_convex_volume_settings(point)        
+#         if settings.ref >= 0:                    
+#             #assert
+#             if settings.ref 
+# 
+#             
+#             
+#             #found a door: check if open or closed
+#             if settings.flags & RNNavMesh.POLYFLAGS_DISABLED:
+#                 # door closed (convex volume disabled): open it
+#                 settings.flags = settings.flags ^ RNNavMesh.POLYFLAGS_DISABLED
+#                 navMesh.set
+#             
+#             print("Removed door with ref: " + str(ref))
+    
 
 # throws a ray and returns the first collision entry or nullptr
 def getCollisionEntryFromCamera():
@@ -172,14 +196,14 @@ def toggleSetupCleanup():
         # show doors
         for ref in list(doorRefs):
             points = navMesh.get_convex_volume_by_ref(ref);
-            if points.size() == 0:
+            if points.get_num_values() == 0:
                 print("Door's invalid ref: " + str(ref) + " ...removing")
                 doorRefs.remove(ref)
                 continue
-            centroid = LPoint3f.zero()
+            centroid = LPoint3f(0,0,0)
             for p in points:
                 centroid += p
-            centroid /= points.size()
+            centroid /= points.get_num_values()
             settings = navMesh.get_convex_volume_settings(centroid)
  
             if not (settings == navMesh.get_convex_volume_settings(ref)):
@@ -192,7 +216,7 @@ def toggleSetupCleanup():
     else:
         # false: cleanup
         navMesh.cleanup()
-        pointList[:] = []
+        pointList.clear()
         # now crowd agents and obstacles are detached:
         # prevent to make them disappear from the scene
         for agent in navMesh:
@@ -231,6 +255,11 @@ if __name__ == '__main__':
     
     # reparent navMeshNP to a reference NodePath
     navMeshNP.reparent_to(app.render)
+    
+    # set nav mesh type
+    navMesh.set_nav_mesh_type_enum(RNNavMesh.SOLO)
+#     navMesh.set_nav_mesh_type_enum(RNNavMesh.TILE);
+#     navMesh.set_nav_mesh_type_enum(RNNavMesh.OBSTACLE)
     
     # setup the nav mesh with scene as its owner object
 #     navMesh.setup()
@@ -271,9 +300,12 @@ if __name__ == '__main__':
     # add doors
     app.accept("a", addDoor, [True])
     app.accept("shift-a", addDoor, [False])
-    
+
     # remove doors
     app.accept("r", removeDoor)
+
+    # open/close door
+    app.accept("o", openCloseDoor)
     
     # handle change speed
     app.accept("v", changeSpeed)
@@ -283,8 +315,8 @@ if __name__ == '__main__':
 
     # place camera
     trackball = app.trackball.node()
-    trackball.set_pos(-10.0, 90.0, -2.0);
-    trackball.set_hpr(0.0, 15.0, 0.0);
+    trackball.set_pos(-10.0, 90.0, -12.0);
+    trackball.set_hpr(0.0, 35.0, 0.0);
    
     # app.run(), equals to do the main loop in C++
     app.run()

@@ -84,34 +84,39 @@ int main(int argc, char *argv[])
 	// reparent navMeshNP to a reference NodePath
 	navMeshNP.reparent_to(window->get_render());
 
+	// set nav mesh type
+//	navMesh->set_nav_mesh_type_enum(RNNavMesh::SOLO);
+//	navMesh->set_nav_mesh_type_enum(RNNavMesh::TILE);
+	navMesh->set_nav_mesh_type_enum(RNNavMesh::OBSTACLE);
+
 	// setup the nav mesh with scene as its owner object
 //	navMesh->setup();
 
-// get the agent model
+	// get the agent model
 //	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");
 //	agentNP.set_scale(0.40);
 
-// create the crowd agent and set the position
+	// create the crowd agent and set the position
 //	NodePath crowdAgentNP = navMesMgr->create_crowd_agent("crowdAgent");
 //	crowdAgent = DCAST(RNCrowdAgent, crowdAgentNP.node());
 //	crowdAgentNP.set_pos(24.0, -20.4, -2.37);
 
-// attach the agent model to crowdAgent
+	// attach the agent model to crowdAgent
 //	agentNP.reparent_to(crowdAgentNP);
 
-// attach the crowd agent to the nav mesh
+	// attach the crowd agent to the nav mesh
 //	navMesh->add_crowd_agent(crowdAgentNP);
 
-// start the path finding default update task
+	// start the path finding default update task
 	navMesMgr->start_default_update();
 
 	// enable debug draw
 //	navMesh->enable_debug_drawing(window->get_camera_group());
 
-// toggle debug draw
+	// toggle debug draw
 //	navMesh->toggle_debug_drawing(true);
 
-// toggle setup (true) and cleanup (false)
+	// toggle setup (true) and cleanup (false)
 	framework.define_key("s", "toggleSetupCleanup", &toggleSetupCleanup,
 			(void*) &setupCleanupFlag);
 
@@ -122,13 +127,16 @@ int main(int argc, char *argv[])
 	// set crowd agent move target on scene surface
 //	crowdAgent->set_move_target(LPoint3f(-20.5, 5.2, -2.36));
 
-// add doors
+	// add doors
 	bool TRUE = true, FALSE = false;
 	framework.define_key("a", "addDoor", &addDoor, (void*) &TRUE);
 	framework.define_key("shift-a", "addDoorLast", &addDoor, (void*) &FALSE);
 
 	// remove doors
 	framework.define_key("r", "removeDoor", &removeDoor, NULL);
+
+	// open/close door
+	framework.define_key("o", "openCloseDoor", &openCloseDoor, NULL);
 
 	// handle change speed
 	framework.define_key("v", "changeSpeed", &changeSpeed, NULL);
@@ -300,7 +308,42 @@ void removeDoor(const Event*, void* data)
 
 void openCloseDoor(const Event*, void* data)
 {
+	nassertv_always(navMesh)
 
+	// get the collision entry, if any
+	PT(CollisionEntry)entry0 = getCollisionEntryFromCamera();
+	if (entry0)
+	{
+		LPoint3f point = entry0->get_surface_point(NodePath());
+		// try to get door'settings by inside point
+		RNConvexVolumeSettings settings = navMesh->get_convex_volume_settings(
+				point);
+		if (settings.get_ref() >= 0)
+		{
+			nassertv_always(
+					navMesh->get_convex_volume_settings(settings.get_ref())
+							== settings)
+			// found a door: check if open or closed
+			if (settings.get_flags() & RNNavMesh::POLYFLAGS_DISABLED)
+			{
+				// door is closed (convex volume disabled): open
+				cout << "Open the door: " << endl;
+			}
+			else
+			{
+				// door is open (convex volume disabled): close
+				cout << "Close the door: " << endl;
+			}
+			// switch door open/close
+			settings.set_flags(
+					settings.get_flags() ^ RNNavMesh::POLYFLAGS_DISABLED);
+			// update settings
+			navMesh->set_convex_volume_settings(settings.get_ref(), settings);
+			cout << "\tref: " << settings.get_ref() << " | "
+					"area: " << settings.get_area() << " | "
+					"flags: " << settings.get_flags() << endl;
+		}
+	}
 }
 
 // throws a ray and returns the first collision entry or nullptr
@@ -369,7 +412,7 @@ void toggleSetupCleanup(const Event* e, void* data)
 		{
 			ValueList<LPoint3f> points = navMesh->get_convex_volume_by_ref(
 					(*refI));
-			if (points.size() == 0)
+			if (points.get_num_values() == 0)
 			{
 				cout << "Door's invalid ref: " << (*refI) << " ...removing"
 						<< endl;
@@ -381,7 +424,7 @@ void toggleSetupCleanup(const Event* e, void* data)
 			{
 				centroid += points[p];
 			}
-			centroid /= points.size();
+			centroid /= points.get_num_values();
 			RNConvexVolumeSettings settings =
 					navMesh->get_convex_volume_settings(centroid);
 

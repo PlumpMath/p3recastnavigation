@@ -13,7 +13,7 @@
 /**
  * Gets RNCrowdAgent parameters.
  */
-INLINE RNCrowdAgentParams RNCrowdAgent::get_params()
+INLINE RNCrowdAgentParams RNCrowdAgent::get_params() const
 {
 	return mAgentParams;
 }
@@ -21,7 +21,7 @@ INLINE RNCrowdAgentParams RNCrowdAgent::get_params()
 /**
  * Gets RNCrowdAgent move target.
  */
-INLINE LPoint3f RNCrowdAgent::get_move_target()
+INLINE LPoint3f RNCrowdAgent::get_move_target() const
 {
 	return mMoveTarget;
 }
@@ -29,7 +29,7 @@ INLINE LPoint3f RNCrowdAgent::get_move_target()
 /**
  * Gets RNCrowdAgent move velocity.
  */
-INLINE LVector3f RNCrowdAgent::get_move_velocity()
+INLINE LVector3f RNCrowdAgent::get_move_velocity() const
 {
 	return mMoveVelocity;
 }
