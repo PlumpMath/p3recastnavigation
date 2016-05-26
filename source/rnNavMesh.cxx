@@ -968,7 +968,7 @@ int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) cons
 /**
  * Finds polygons of a convex volume.
  */
-int RNNavMesh::do_find_polys_of_convex_volume(int convexVolumeID,
+int RNNavMesh::do_find_polys_in_convex_volume(int convexVolumeID,
 		dtQueryFilter& filter, dtPolyRef* polys, int& npolys,
 		const int MAX_POLYS) const
 {
@@ -1045,7 +1045,7 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 		dtStatus status, status2;
 
 		CONTINUE_IF_ELSE_R(
-				do_find_polys_of_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
+				do_find_polys_in_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
 				RN_ERROR)
 
 		int area = (

@@ -27,6 +27,7 @@ bool halfVel = true;
 int query = 0;
 ValueList<LPoint3f> pointList;
 vector<int> doorRefs;
+bool firstSetup = true;
 
 ///functions' declarations
 void changeSpeed(const Event*, void*);
@@ -36,6 +37,8 @@ void removeDoor(const Event*, void*);
 void openCloseDoor(const Event*, void* data);
 void toggleDebugDraw(const Event*, void*);
 void toggleSetupCleanup(const Event*, void*);
+void placeCrowdAgent(const Event*, void*);
+void setMoveTarget(const Event*, void*);
 PT(CollisionEntry)getCollisionEntryFromCamera();
 
 int main(int argc, char *argv[])
@@ -89,32 +92,19 @@ int main(int argc, char *argv[])
 //	navMesh->set_nav_mesh_type_enum(RNNavMesh::TILE);
 	navMesh->set_nav_mesh_type_enum(RNNavMesh::OBSTACLE);
 
-	// setup the nav mesh with scene as its owner object
-//	navMesh->setup();
-
 	// get the agent model
-//	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");
-//	agentNP.set_scale(0.40);
+	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");
+	agentNP.set_scale(0.40);
 
 	// create the crowd agent and set the position
-//	NodePath crowdAgentNP = navMesMgr->create_crowd_agent("crowdAgent");
-//	crowdAgent = DCAST(RNCrowdAgent, crowdAgentNP.node());
-//	crowdAgentNP.set_pos(24.0, -20.4, -2.37);
+	NodePath crowdAgentNP = navMesMgr->create_crowd_agent("crowdAgent");
+	crowdAgent = DCAST(RNCrowdAgent, crowdAgentNP.node());
 
 	// attach the agent model to crowdAgent
-//	agentNP.reparent_to(crowdAgentNP);
-
-	// attach the crowd agent to the nav mesh
-//	navMesh->add_crowd_agent(crowdAgentNP);
+	agentNP.reparent_to(crowdAgentNP);
 
 	// start the path finding default update task
 	navMesMgr->start_default_update();
-
-	// enable debug draw
-//	navMesh->enable_debug_drawing(window->get_camera_group());
-
-	// toggle debug draw
-//	navMesh->toggle_debug_drawing(true);
 
 	// toggle setup (true) and cleanup (false)
 	framework.define_key("s", "toggleSetupCleanup", &toggleSetupCleanup,
@@ -124,8 +114,13 @@ int main(int argc, char *argv[])
 	framework.define_key("d", "toggleDebugDraw", &toggleDebugDraw,
 			(void*) &toggleDebugFlag);
 
-	// set crowd agent move target on scene surface
-//	crowdAgent->set_move_target(LPoint3f(-20.5, 5.2, -2.36));
+	// place crowd agent
+	framework.define_key("p", "placeCrowdAgent", &placeCrowdAgent,
+			nullptr);
+
+	// handle move target on scene surface
+	framework.define_key("t", "setMoveTarget", &setMoveTarget,
+			nullptr);
 
 	// add doors
 	bool TRUE = true, FALSE = false;
@@ -403,6 +398,17 @@ void toggleSetupCleanup(const Event* e, void* data)
 		navMesh->set_owner_node_path(sceneNP);
 		navMesh->setup();
 		navMesh->enable_debug_drawing(window->get_camera_group());
+		//
+		if (firstSetup)
+		{
+			// first set initial position and target
+			NodePath::any_path(crowdAgent).set_pos(LPoint3f(0.0, 15.0, 10.0));
+			// then attach the crowd agent to the nav mesh
+			navMesh->add_crowd_agent(NodePath::any_path(crowdAgent));
+			crowdAgent->set_move_target(LPoint3f(0.0, 20.0, 10.0));
+			firstSetup = false;
+		}
+
 		// show debug draw
 		navMesh->toggle_debug_drawing(true);
 		toggleDebugFlag = false;
@@ -458,4 +464,41 @@ void toggleSetupCleanup(const Event* e, void* data)
 		}
 	}
 	*setupCleanupFlag = not *setupCleanupFlag;
+}
+
+// place crowd agent
+void placeCrowdAgent(const Event* e, void* data)
+{
+	nassertv_always(navMesh and crowdAgent)
+
+	// get the collision entry, if any
+	PT(CollisionEntry)entry0 = getCollisionEntryFromCamera();
+	if (entry0)
+	{
+		// remove agent from nav mesh
+		navMesh->remove_crowd_agent(NodePath::any_path(crowdAgent));
+		LPoint3f point = entry0->get_surface_point(NodePath());
+		NodePath::any_path(crowdAgent).set_pos(point);
+		// re-add agent to nav mesh
+		navMesh->add_crowd_agent(NodePath::any_path(crowdAgent));
+		// just for debug draw the agent's found path
+		navMesh->path_find_follow(point, crowdAgent->get_move_target());
+	}
+}
+
+// handle set move target
+void setMoveTarget(const Event* e, void* data)
+{
+	nassertv_always(navMesh and crowdAgent)
+
+	// get the collision entry, if any
+	PT(CollisionEntry)entry0 = getCollisionEntryFromCamera();
+	if (entry0)
+	{
+		LPoint3f target = entry0->get_surface_point(NodePath());
+		crowdAgent->set_move_target(target);
+		// just for debug draw the agent's found path
+		navMesh->path_find_follow(
+				NodePath::any_path(crowdAgent).get_pos(), target);
+	}
 }

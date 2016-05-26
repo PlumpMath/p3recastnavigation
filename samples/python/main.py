@@ -251,7 +251,7 @@ def placeCrowdAgents():
         # re-add agent to nav mesh
         navMesh.add_crowd_agent(NodePath.any_path(crowdAgent[i]))
     #just for debug draw the last agent's straight path
-    navMesh.get_path_find_straight(
+    navMesh.path_find_straight(
             NodePath.any_path(navMesh[i]).get_pos(),
             navMesh[i].get_move_target());
 
@@ -293,7 +293,7 @@ def setMoveTarget():
         for agent in navMesh:
             agent.set_move_target(target)
         #just for debug draw the last agent's straight path
-        navMesh.get_path_find_straight(
+        navMesh.path_find_straight(
                 NodePath.any_path(agent).get_pos(), target);
 
 # handle add/remove obstacles

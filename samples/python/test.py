@@ -23,6 +23,7 @@ halfVel = True
 query = 0
 pointList = ValueList_LPoint3f()
 doorRefs = []
+firstSetup = True
 
 def changeSpeed():
     global crowdAgent, halfVel
@@ -128,26 +129,30 @@ def openCloseDoor():
     if navMesh == None:
         return
 
-#     # get the collision entry, if any
-#     entry0 = getCollisionEntryFromCamera()
-#     if entry0:
-#         point = entry0.get_surface_point(NodePath())
-#         # try to get door'settings by inside point
-#         settings = navMesh.get_convex_volume_settings(point)        
-#         if settings.ref >= 0:                    
-#             #assert
-#             if settings.ref 
-# 
-#             
-#             
-#             #found a door: check if open or closed
-#             if settings.flags & RNNavMesh.POLYFLAGS_DISABLED:
-#                 # door closed (convex volume disabled): open it
-#                 settings.flags = settings.flags ^ RNNavMesh.POLYFLAGS_DISABLED
-#                 navMesh.set
-#             
-#             print("Removed door with ref: " + str(ref))
-    
+    # get the collision entry, if any
+    entry0 = getCollisionEntryFromCamera()
+    if entry0:
+        point = entry0.get_surface_point(NodePath())
+        # try to get door'settings by inside point
+        settings = navMesh.get_convex_volume_settings(point)
+        if settings.get_ref() >= 0:
+            if not (navMesh.get_convex_volume_settings(settings.get_ref()) == settings):
+                return
+            
+            # found a door: check if open or closed
+            if settings.get_flags() & RNNavMesh.POLYFLAGS_DISABLED:
+                # door is closed (convex volume disabled): open
+                print("Open the door: ")
+            else:
+                # door is open (convex volume disabled): close
+                print("Close the door: ")
+            # switch door open/close
+            settings.set_flags(settings.get_flags() ^ RNNavMesh.POLYFLAGS_DISABLED)
+            # update settings
+            navMesh.set_convex_volume_settings(settings.get_ref(), settings)
+            print("\tref: " + str(settings.get_ref()) + " | "
+                    "area: " + str(settings.get_area()) + " | "
+                    "flags: " + str(settings.get_flags()))   
 
 # throws a ray and returns the first collision entry or nullptr
 def getCollisionEntryFromCamera():
@@ -184,12 +189,21 @@ def toggleDebugDraw():
 
 # toggle setup/cleanup
 def toggleSetupCleanup():
-    global navMesh, app, setupCleanupFlag, toggleDebugFlag
+    global navMesh, app, setupCleanupFlag, toggleDebugFlag, firstSetup
     if setupCleanupFlag:
         # true: setup
         navMesh.set_owner_node_path(sceneNP)
         navMesh.setup()
         navMesh.enable_debug_drawing(app.camera)
+        #
+        if firstSetup:
+            # first set initial position and target
+            NodePath.any_path(crowdAgent).set_pos(LPoint3f(0.0, 15.0, 10.0))
+            # then attach the crowd agent to the nav mesh
+            navMesh.add_crowd_agent(NodePath.any_path(crowdAgent))
+            crowdAgent.set_move_target(LPoint3f(0.0, 20.0, 10.0))
+            firstSetup = False
+
         # show debug draw
         navMesh.toggle_debug_drawing(True)
         toggleDebugFlag = False
@@ -227,6 +241,39 @@ def toggleSetupCleanup():
         
     setupCleanupFlag = not setupCleanupFlag
 
+# place crowd agent
+def placeCrowdAgent():
+    global navMesh, crowdAgent
+    if navMesh == None or crowdAgent == None:
+        return
+
+    # get the collision entry, if any
+    entry0 = getCollisionEntryFromCamera()
+    if entry0:
+        # remove agent from nav mesh
+        navMesh.remove_crowd_agent(NodePath.any_path(crowdAgent))
+        point = entry0.get_surface_point(NodePath())
+        NodePath.any_path(crowdAgent).set_pos(point)
+        # re-add agent to nav mesh
+        navMesh.add_crowd_agent(NodePath.any_path(crowdAgent))
+        # just for debug draw the agent's found path
+        navMesh.path_find_follow(point, crowdAgent.get_move_target())
+
+# handle set move target
+def setMoveTarget():
+    global navMesh, crowdAgent
+    if navMesh == None or crowdAgent == None:
+        return
+
+    # get the collision entry, if any
+    entry0 = getCollisionEntryFromCamera()
+    if entry0:
+        target = entry0.get_surface_point(NodePath())
+        crowdAgent.set_move_target(target)
+        # just for debug draw the agent's found path
+        navMesh.path_find_follow(
+                NodePath.any_path(crowdAgent).get_pos(), target)
+
 if __name__ == '__main__':
     # Load your application's configuration
     load_prc_file_data("", "model-path " + dataDir)
@@ -261,41 +308,31 @@ if __name__ == '__main__':
 #     navMesh.set_nav_mesh_type_enum(RNNavMesh.TILE);
 #     navMesh.set_nav_mesh_type_enum(RNNavMesh.OBSTACLE)
     
-    # setup the nav mesh with scene as its owner object
-#     navMesh.setup()
-    
     # get the agent model
-#     agentNP = app.loader.load_model("eve.egg")
-#     agentNP.set_scale(0.40)
+    agentNP = app.loader.load_model("eve.egg")
+    agentNP.set_scale(0.40)
 
     # create the crowd agent and set the position
-#     crowdAgentNP = navMesMgr.create_crowd_agent("crowdAgent")
-#     crowdAgent = crowdAgentNP.node()
-#     crowdAgentNP.set_pos(24.0, -20.4, -2.37)
+    crowdAgentNP = navMesMgr.create_crowd_agent("crowdAgent")
+    crowdAgent = crowdAgentNP.node()
     
     # attach the agent model to crowdAgent
-#     agentNP.reparent_to(crowdAgentNP)
-    
-    # attach the crowd agent to the nav mesh
-#     navMesh.add_crowd_agent(crowdAgentNP)
+    agentNP.reparent_to(crowdAgentNP)
 
     # start the path finding default update task
     navMesMgr.start_default_update()
-
-    # enable debug draw
-#     navMesh.enable_debug_drawing(app.camera)
-
-    # toggle debug draw
-#     navMesh.toggle_debug_drawing(True)
 
     # toggle setup (true) and cleanup (false)
     app.accept("s", toggleSetupCleanup)
 
     # toggle debug draw
     app.accept("d", toggleDebugDraw)
-    
-    # set crowd agent move target on scene surface
-#     crowdAgent.set_move_target(LPoint3f(-20.5, 5.2, -2.36))
+
+    # place crowd agent
+    app.accept("p", placeCrowdAgent)
+
+    # handle move target on scene surface
+    app.accept("t", setMoveTarget)
 
     # add doors
     app.accept("a", addDoor, [True])

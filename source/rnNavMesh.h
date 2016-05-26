@@ -89,15 +89,16 @@ PUBLISHED:
 	};
 
 	///Equivalent to default rnsup::NavMeshPolyAreasEnum.
+	/// \note You can add more area type values. Don't redefine these ones.
 	enum RNNavMeshPolyAreasEnum
 	{
 #ifndef CPPPARSER
-		POLYAREA_GROUND = rnsup::NAVMESH_POLYAREA_GROUND, ///used by all walkable polys: DON'T REDEFINE
+		POLYAREA_GROUND = rnsup::NAVMESH_POLYAREA_GROUND, //used by all walkable polys.
 		POLYAREA_WATER = rnsup::NAVMESH_POLYAREA_WATER,
 		POLYAREA_ROAD = rnsup::NAVMESH_POLYAREA_ROAD,
 		POLYAREA_DOOR = rnsup::NAVMESH_POLYAREA_DOOR,
 		POLYAREA_GRASS = rnsup::NAVMESH_POLYAREA_GRASS,
-		POLYAREA_JUMP = rnsup::NAVMESH_POLYAREA_JUMP, ///used by off mesh connections too: DON'T REDEFINE
+		POLYAREA_JUMP = rnsup::NAVMESH_POLYAREA_JUMP, //used by off mesh connections.
 #else
 		POLYAREA_GROUND,POLYAREA_WATER,POLYAREA_ROAD,
 		POLYAREA_DOOR,POLYAREA_GRASS,POLYAREA_JUMP,
@@ -105,14 +106,15 @@ PUBLISHED:
 	};
 
 	///Equivalent to default rnsup::NavMeshPolyFlagsEnum.
+	/// \note You can add more flag values. Don't redefine these ones.
 	enum RNNavMeshPolyFlagsEnum
 	{
 #ifndef CPPPARSER
 		POLYFLAGS_WALK		= rnsup::NAVMESH_POLYFLAGS_WALK, // Ability to walk (ground, grass, road)
 		POLYFLAGS_SWIM		= rnsup::NAVMESH_POLYFLAGS_SWIM, // Ability to swim (water).
 		POLYFLAGS_DOOR		= rnsup::NAVMESH_POLYFLAGS_DOOR, // Ability to move through doors.
-		POLYFLAGS_JUMP		= rnsup::NAVMESH_POLYFLAGS_JUMP, /// Ability to jump. Used by off mesh connections too: DON'T REDEFINE
-		POLYFLAGS_DISABLED	= rnsup::NAVMESH_POLYFLAGS_DISABLED, // Disabled polygon
+		POLYFLAGS_JUMP		= rnsup::NAVMESH_POLYFLAGS_JUMP, // Ability to jump. Used by off mesh connections too.
+		POLYFLAGS_DISABLED	= rnsup::NAVMESH_POLYFLAGS_DISABLED, // Disabled polygon.
 		POLYFLAGS_ALL		= rnsup::NAVMESH_POLYFLAGS_ALL // All abilities.
 #else
 		POLYFLAGS_WALK,POLYFLAGS_SWIM,POLYFLAGS_DOOR,
@@ -355,7 +357,7 @@ private:
 	PT(RNCrowdAgent)crowdAgent, rnsup::CrowdTool* crowdTool);
 
 	int do_get_convex_volume_from_point(const LPoint3f& insidePoint) const;
-	int do_find_polys_of_convex_volume(int convexVolumeID, dtQueryFilter& filter,
+	int do_find_polys_in_convex_volume(int convexVolumeID, dtQueryFilter& filter,
 			dtPolyRef* polys, int& npolys, const int MAX_POLYS) const;
 
 	int do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint) const;
