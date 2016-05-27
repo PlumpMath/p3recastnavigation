@@ -666,7 +666,7 @@ int RNNavMesh::setup()
 						RN_ERROR)
 				nassertr_always((iter - mConvexVolumes.begin()) == idx,
 						RN_ERROR)
-
+				//
 				mConvexVolumes[idx].set_first(points);
 			}
 			else
@@ -718,7 +718,8 @@ int RNNavMesh::setup()
 				//inserted
 				//now make sure mOffMeshConnections and mGeom's off mesh connections are synchronized
 				pointPair.clear();
-				const float* v = &(mGeom->getOffMeshConnectionVerts()[idx * 3 * 2]);
+				const float* v = &(mGeom->getOffMeshConnectionVerts()[idx * 3
+						* 2]);
 				//spos
 				pointPair.add_value(rnsup::RecastToLVecBase3f(&v[0]));
 				//epos
@@ -730,6 +731,12 @@ int RNNavMesh::setup()
 						RN_ERROR)
 
 				mOffMeshConnections[idx].set_first(pointPair);
+				// update hard coded parameters: rad, bidir, userId
+				mOffMeshConnections[idx].get_second().set_rad(
+						mGeom->getOffMeshConnectionRads()[idx]);
+				mOffMeshConnections[idx].get_second().set_rad(bidir);
+				mOffMeshConnections[idx].get_second().set_rad(
+						mGeom->getOffMeshConnectionId()[idx]);
 			}
 			else
 			{
@@ -1339,13 +1346,13 @@ int RNNavMesh::do_get_off_mesh_connection_from_point(
 
 
 int RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
-		dtPolyRef* poly, dtOffMeshConnection& offmeshlink) const// XXX
+		dtPolyRef* poly) const
 {
 	//get the start pos
 	const float* pos =
 			&(mNavMeshType->getInputGeom()->getOffMeshConnectionVerts()[offMeshConnectionID
 					* 3]);
-//	//or get the end pos
+	//or get the end pos
 //	float* pos =
 //			&(mNavMeshType->getInputGeom()->getOffMeshConnectionVerts()[offMeshConnectionID
 //					* 3 + 3]);
@@ -1355,7 +1362,6 @@ int RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
 	int ctx = 0, cty = 0;
 	mesh.calcTileLoc(pos, &ctx, &cty);
 
-//	for (int i = 0; i < mNavMeshType->getNavMesh()->getMaxTiles(); ++i) //XXX
 	for (int ty = cty - 1; ty <= cty + 1; ty++)
 	{
 		for (int tx = ctx - 1; tx <= ctx + 1; tx++)
@@ -1367,15 +1373,9 @@ int RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
 				continue;
 			}
 			// Handle tile...
-//		const dtMeshTile* tile = mesh.getTile(i); //XXX
-//		if (!tile->header)
-//		{
-//			continue;
-//		}
 			for (int j = 0; j < tile->header->offMeshConCount; ++j)
 			{
-
-				/*dtOffMeshConnection& */offmeshlink = tile->offMeshCons[j];// XXX
+				dtOffMeshConnection& offmeshlink = tile->offMeshCons[j];
 				const float* startpos = offmeshlink.pos;
 				const float* endpos = &offmeshlink.pos[3];
 				float radius = offmeshlink.rad;
@@ -1387,40 +1387,10 @@ int RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
 
 				dtPolyRef base = mNavMeshType->getNavMesh()->getPolyRefBase(
 						tile);
-				/*dtPolyRef*/*poly = base | (dtPolyRef) offmeshlink.poly; //XXX
-
-//				bool enable;//fake //XXX
-//				unsigned short flags;
-//				dtStatus status = mNavMeshType->getNavMesh()->getPolyFlags(
-//						*poly, &flags);
-//				if (dtStatusSucceed(status))
-//				{
-//					if (enable)
-//						flags &= ~POLYFLAGS_DISABLED;
-//					else
-//						flags |= POLYFLAGS_DISABLED;
-//					mNavMeshType->getNavMesh()->setPolyFlags(*poly, flags);
-//				}
+				*poly = base | (dtPolyRef) offmeshlink.poly;
 			}
 		}
 	}
-
-	/////////////////////////////////////////////////// XXX
-//	int ctx = 0, cty = 0;
-//	mesh.calcTileLoc(pos, &ctx, &cty);
-//
-//	for (int ty = cty - 1; ty <= cty + 1; ty++)
-//	{
-//		for (int tx = ctx - 1; tx <= ctx + 1; tx++)
-//		{
-//			// If using tile cache, use the one which returns multiple tiles.
-//			const dtMeshTile* tile = mesh.getTileAt(tx, ty, 0);
-//			if (!tile)
-//				continue;
-//			// Handle tile...
-//		}
-//	}
-
 	return RN_SUCCESS;
 }
 
@@ -1442,24 +1412,16 @@ int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 	if (offMeshConnectionID != -1)
 	{
 		dtPolyRef poly;
-		dtOffMeshConnection offmeshlink;	/// XXX
 		dtStatus status, status2;
 
 		CONTINUE_IF_ELSE_R(
-				do_find_off_mesh_connection_poly(offMeshConnectionID, &poly, offmeshlink) == RN_SUCCESS,
+				do_find_off_mesh_connection_poly(offMeshConnectionID, &poly) == RN_SUCCESS,
 				RN_ERROR)
 
 		int area = (
 				settings.get_area() >= 0 ?
 						settings.get_area() : -settings.get_area());
 
-		// XXX rad dynamically changeable ? test!
-		// if not possible remove parameter dtOffMeshConnection& offmeshlink
-		// from do_find_poly_of_off_mesh_connection()
-		int rad = (
-				settings.get_rad() >= 0 ?
-						settings.get_rad() : -settings.get_rad());// XXX
-		offmeshlink.rad = rad; // XXX
 		status = mNavMeshType->getNavMesh()->setPolyArea(poly, area);
 		status2 = mNavMeshType->getNavMesh()->setPolyFlags(poly,
 				settings.get_flags());
@@ -1472,13 +1434,10 @@ int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 		else
 		{
 			//errors: reset to previous values
-			int oldRad =
-					mOffMeshConnections[offMeshConnectionID].get_second().get_rad(); // XXX
 			int oldArea =
 					mOffMeshConnections[offMeshConnectionID].get_second().get_area();
 			int oldFlags =
 					mOffMeshConnections[offMeshConnectionID].get_second().get_flags();
-			offmeshlink.rad = oldRad; // XXX
 			mNavMeshType->getNavMesh()->setPolyArea(poly, oldArea);
 			mNavMeshType->getNavMesh()->setPolyFlags(poly, oldFlags);
 			offMeshConnectionID = -1;
@@ -1509,16 +1468,8 @@ int RNNavMesh::set_off_mesh_connection_settings(int ref,
 	// continue if off mesh connection found
 	CONTINUE_IF_ELSE_R(points.size() > 0, RN_ERROR)
 
-	// compute the centroid
-	LPoint3f centroid = LPoint3f::zero();
-	for (int p = 0; p < points.size(); ++p)
-	{
-		centroid += points[p];
-	}
-	centroid /= points.size();
-
-	// set by point
-	return set_off_mesh_connection_settings(centroid, settings);
+	// set by start point
+	return set_off_mesh_connection_settings(points[0], settings);
 }
 
 /**

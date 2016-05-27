@@ -39,6 +39,7 @@ void removeArea(const Event*, void*);
 void addLink(const Event*, void*);
 void removeLink(const Event*, void*);
 void enableDisableArea(const Event*, void* data);
+void enableDisableLink(const Event*, void* data);
 void toggleDebugDraw(const Event*, void*);
 void toggleSetupCleanup(const Event*, void*);
 void placeCrowdAgent(const Event*, void*);
@@ -78,9 +79,13 @@ int main(int argc, char *argv[])
 	text->set_text(
             "Press \"s\" to toggle setup/cleanup\n"
             "When nav mesh is not set up:\n"
-            "\t- press \"a\" to add points of an area (convex volume)  under mouse cursor\n"
+            "\t- press \"a\" to add points (under mouse cursor) of an area (convex volume)\n"
             " \t(\"shift-a\" for last point)\n"
-            "\t- press \"r\" to remove area under mouse cursor\n\n"
+            "\t- press \"r\" to remove area under mouse cursor\n"
+			"\t- press \"o\" to enable/disable area under mouse cursor\n"
+            "\t- press \"l\" to add points (under mouse cursor) of an link (off mesh connection)\n"
+            "\t- press \"k\" to remove link having one of its points under mouse cursor\n"
+			"\t- press \"i\" to enable/disable link having one of its points under mouse cursor\n\n"
             "When nav mesh is set up:\n"
             "\t- press \"d\" to toggle debug drawing\n"
             "\t- press \"p\" to place agent under mouse cursor\n"
@@ -156,8 +161,10 @@ int main(int argc, char *argv[])
 	// remove links
 	framework.define_key("k", "removeLink", &removeLink, NULL);
 
-	// open/close area
+	// enable/disable area
 	framework.define_key("o", "enableDisableArea", &enableDisableArea, NULL);
+	// enable/disable link
+	framework.define_key("i", "enableDisableLink", &enableDisableLink, NULL);
 
 	// handle change speed
 	framework.define_key("v", "changeSpeed", &changeSpeed, NULL);
@@ -403,22 +410,69 @@ void enableDisableArea(const Event*, void* data)
 			nassertv_always(
 					navMesh->get_convex_volume_settings(settings.get_ref())
 							== settings)
-			// found a area: check if open or closed
+
+			// found a area: check if enabled or disabled
 			if (settings.get_flags() & RNNavMesh::POLYFLAGS_DISABLED)
 			{
-				// area is closed (convex volume disabled): open
-				cout << "Open the area: " << endl;
+				// area is disabled (convex volume disabled): enable
+				cout << "Enable the area: " << endl;
 			}
 			else
 			{
-				// area is open (convex volume disabled): close
-				cout << "Close the area: " << endl;
+				// area is enabled (convex volume disabled): disable
+				cout << "Disable the area: " << endl;
 			}
-			// switch area open/close
+			// switch area enable/disable
 			settings.set_flags(
 					settings.get_flags() ^ RNNavMesh::POLYFLAGS_DISABLED);
 			// update settings
 			navMesh->set_convex_volume_settings(settings.get_ref(), settings);
+			cout << "\tref: " << settings.get_ref() << " | "
+					"area: " << settings.get_area() << " | "
+					"flags: " << settings.get_flags() << endl;
+			// just for debug draw the agent's found path
+			navMesh->path_find_follow(NodePath::any_path(crowdAgent).get_pos(),
+					crowdAgent->get_move_target());
+		}
+	}
+}
+
+// enable disable link (off mesh connection)
+void enableDisableLink(const Event*, void* data)
+{
+	nassertv_always(navMesh)
+
+	// get the collision entry, if any
+	PT(CollisionEntry)entry0 = getCollisionEntryFromCamera();
+	if (entry0)
+	{
+		LPoint3f point = entry0->get_surface_point(NodePath());
+		// try to get link'settings by start/end point
+		RNOffMeshConnectionSettings settings =
+				navMesh->get_off_mesh_connection_settings(point);
+		if (settings.get_ref() >= 0)
+		{
+			nassertv_always(
+					navMesh->get_off_mesh_connection_settings(
+							settings.get_ref()) == settings)
+
+			// found a link: check if enabled or disabled
+			if (settings.get_flags() & RNNavMesh::POLYFLAGS_DISABLED)
+			{
+				// link is disabled (convex volume disabled): enable
+				cout << "Enable the link: " << endl;
+			}
+			else
+			{
+				// link is enabled (convex volume disabled): disable
+				cout << "Disable the link: " << endl;
+			}
+			// switch link enable/disable
+			settings.set_flags(
+					settings.get_flags() ^ RNNavMesh::POLYFLAGS_DISABLED);
+			// update settings
+			navMesh->set_off_mesh_connection_settings(settings.get_ref(),
+					settings);
 			cout << "\tref: " << settings.get_ref() << " | "
 					"area: " << settings.get_area() << " | "
 					"flags: " << settings.get_flags() << endl;
@@ -536,39 +590,35 @@ void toggleSetupCleanup(const Event* e, void* data)
 			}
 		}
 		{
-//			// show links
-//			vector<int>::iterator refI = areaRefs.begin();
-//			while (refI != areaRefs.end())
-//			{
-//				ValueList<LPoint3f> points = navMesh->get_convex_volume_by_ref(
-//						(*refI));
-//				if (points.get_num_values() == 0)
-//				{
-//					cout << "Area's invalid ref: " << (*refI) << " ...removing"
-//							<< endl;
-//					areaRefs.erase(refI);
-//					continue;
-//				}
-//				LPoint3f centroid = LPoint3f::zero();
-//				for (int p = 0; p < points.size(); ++p)
-//				{
-//					centroid += points[p];
-//				}
-//				centroid /= points.get_num_values();
-//				RNConvexVolumeSettings settings =
-//						navMesh->get_convex_volume_settings(centroid);
-//
-//				nassertv_always(
-//						settings
-//								== navMesh->get_convex_volume_settings((*refI)));
-//
-//				cout << "Area n. " << (refI - areaRefs.begin()) << endl;
-//				cout << "\tref: " << settings.get_ref() << " | "
-//						"area: " << settings.get_area() << " | "
-//						"flags: " << settings.get_flags() << endl;
-//				//
-//				++refI;
-//			}
+			// show links
+			vector<int>::iterator refI = linkRefs.begin();
+			while (refI != linkRefs.end())
+			{
+				ValueList<LPoint3f> points = navMesh->get_off_mesh_connection_by_ref(
+						(*refI));
+				if (points.get_num_values() == 0)
+				{
+					cout << "Link's invalid ref: " << (*refI) << " ...removing"
+							<< endl;
+					linkRefs.erase(refI);
+					continue;
+				}
+				RNOffMeshConnectionSettings settings =
+						navMesh->get_off_mesh_connection_settings(points[0]);
+
+				nassertv_always(
+						settings
+								== navMesh->get_off_mesh_connection_settings((*refI)));
+
+				cout << "Link n. " << (refI - linkRefs.begin()) << endl;
+				cout << "\tref: " << settings.get_ref() << " | "
+						"rad: " << settings.get_rad() << " | "
+						"bidir: " << settings.get_bidir() << " | "
+						"area: " << settings.get_area() << " | "
+						"flags: " << settings.get_flags() << endl;
+				//
+				++refI;
+			}
 		}
 	}
 	else

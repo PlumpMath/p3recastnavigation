@@ -228,7 +228,7 @@ void RNConvexVolumeSettings::read_datagram(DatagramIterator &scan)
  *
  */
 RNOffMeshConnectionSettings::RNOffMeshConnectionSettings() :
-		_area(0), _bidir(false), _flags(0), _rad(0.0), _ref(0)
+		_area(0), _bidir(false), _userId(0), _flags(0), _rad(0.0), _ref(0)
 {
 }
 /**
@@ -238,6 +238,7 @@ void RNOffMeshConnectionSettings::write_datagram(Datagram &dg) const
 {
 	dg.add_stdfloat(get_rad());
 	dg.add_bool(get_bidir());
+	dg.add_uint32(get_userId());
 	dg.add_int32(get_area());
 	dg.add_int32(get_flags());
 }
@@ -248,6 +249,7 @@ void RNOffMeshConnectionSettings::read_datagram(DatagramIterator &scan)
 {
 	set_rad(scan.get_stdfloat());
 	set_bidir(scan.get_bool());
+	set_userId(scan.get_uint32());
 	set_area(scan.get_int32());
 	set_flags(scan.get_int32());
 }

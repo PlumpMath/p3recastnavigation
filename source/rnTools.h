@@ -423,6 +423,8 @@ PUBLISHED:
 	INLINE void set_rad(float value);
 	INLINE bool get_bidir() const;
 	INLINE void set_bidir(bool value);
+	INLINE unsigned int get_userId() const;
+	INLINE void set_userId(unsigned int value);
 	INLINE int get_area() const;
 	INLINE void set_area(int value);
 	INLINE int get_flags() const;
@@ -432,6 +434,7 @@ PUBLISHED:
 private:
 	float _rad;
 	bool _bidir;
+	unsigned int _userId;
 	int _area;
 	int _flags;
 	int _ref;

@@ -419,6 +419,14 @@ INLINE void RNOffMeshConnectionSettings::set_bidir(bool value)
 {
 	_bidir = value;
 }
+INLINE unsigned int RNOffMeshConnectionSettings::get_userId() const
+{
+	return _userId;
+}
+INLINE void RNOffMeshConnectionSettings::set_userId(unsigned int value)
+{
+	_userId = value;
+}
 INLINE int RNOffMeshConnectionSettings::get_area() const
 {
 	return _area;

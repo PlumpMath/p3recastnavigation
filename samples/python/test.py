@@ -197,17 +197,52 @@ def enableDisableArea():
             if not (navMesh.get_convex_volume_settings(settings.get_ref()) == settings):
                 return
             
-            # found a area: check if open or closed
+            # found a area: check if enabled or disabled
             if settings.get_flags() & RNNavMesh.POLYFLAGS_DISABLED:
-                # area is closed (convex volume disabled): open
+                # area is disabled (convex volume disabled): enable
                 print("Open the area: ")
             else:
-                # area is open (convex volume disabled): close
+                # area is enabled (convex volume disabled): disable
                 print("Close the area: ")
-            # switch area open/close
+            # switch area enable/disable
             settings.set_flags(settings.get_flags() ^ RNNavMesh.POLYFLAGS_DISABLED)
             # update settings
             navMesh.set_convex_volume_settings(settings.get_ref(), settings)
+            print("\tref: " + str(settings.get_ref()) + " | "
+                    "area: " + str(settings.get_area()) + " | "
+                    "flags: " + str(settings.get_flags()))   
+            # just for debug draw the agent's found path
+            navMesh.path_find_follow(NodePath.any_path(crowdAgent).get_pos(),
+                    crowdAgent.get_move_target())
+
+def enableDisableLink():
+    """enable disable link (off mesh connection)"""
+
+    global navMesh
+    if navMesh == None:
+        return
+
+    # get the collision entry, if any
+    entry0 = getCollisionEntryFromCamera()
+    if entry0:
+        point = entry0.get_surface_point(NodePath())
+        # try to get link'settings by start/end point
+        settings = navMesh.get_off_mesh_connection_settings(point)
+        if settings.get_ref() >= 0:
+            if not (navMesh.get_off_mesh_connection_settings(settings.get_ref()) == settings):
+                return
+
+            # found a link: check if enabled or disabled
+            if settings.get_flags() & RNNavMesh.POLYFLAGS_DISABLED:
+                # link is disabled (convex volume disabled): enable
+                print("Enable the link: ")
+            else:
+                # link is enabled (convex volume disabled): disable
+                print("Disable the link: ")
+            # switch link enable/disable
+            settings.set_flags(settings.get_flags() ^ RNNavMesh.POLYFLAGS_DISABLED)
+            # update settings
+            navMesh.set_off_mesh_connection_settings(settings.get_ref(), settings);
             print("\tref: " + str(settings.get_ref()) + " | "
                     "area: " + str(settings.get_area()) + " | "
                     "flags: " + str(settings.get_flags()))   
@@ -292,25 +327,23 @@ def toggleSetupCleanup():
                     "area: " + str(settings.get_area()) + " | "
                     "flags: " + str(settings.get_flags()))
         # show links
-#         for ref in list(areaRefs):
-#             points = navMesh.get_convex_volume_by_ref(ref);
-#             if points.get_num_values() == 0:
-#                 print("Area's invalid ref: " + str(ref) + " ...removing")
-#                 areaRefs.remove(ref)
-#                 continue
-#             centroid = LPoint3f(0,0,0)
-#             for p in points:
-#                 centroid += p
-#             centroid /= points.get_num_values()
-#             settings = navMesh.get_convex_volume_settings(centroid)
-#  
-#             if not (settings == navMesh.get_convex_volume_settings(ref)):
-#                 print("assertion failed: settings == navMesh.get_convex_volume_settings(ref)")
-#  
-#             print("Area n. " + str(areaRefs.index(ref)))
-#             print("\tref: " + str(settings.get_ref()) + " | "
-#                     "area: " + str(settings.get_area()) + " | "
-#                     "flags: " + str(settings.get_flags()))
+        for ref in list(linkRefs):
+            points = navMesh.get_off_mesh_connection_by_ref(ref)
+            if points.get_num_values() == 0:
+                print("Link's invalid ref: " + str(ref) + " ...removing")
+                linkRefs.remove(ref)
+                continue
+            settings = navMesh.get_off_mesh_connection_settings(points[0])
+
+            if not (settings == navMesh.get_off_mesh_connection_settings(ref)):
+                print("assertion failed: settings == navMesh.get_off_mesh_connection_settings(ref)")
+
+            print("Link n. " + str(linkRefs.index(ref)))
+            print("\tref: " + str(settings.get_ref()) + " | "
+                    "rad: " + str(settings.get_rad()) + " | "
+                    "bidir: " + str(settings.get_bidir()) + " | "
+                    "area: " + str(settings.get_area() + " | "
+                    "flags: " + str(settings.get_flags())))
     else:
         # false: cleanup
         navMesh.cleanup()
@@ -374,15 +407,19 @@ if __name__ == '__main__':
     text.set_text(
             "Press \"s\" to toggle setup/cleanup\n"
             "When nav mesh is not set up:\n"
-            "\t- press \"a\" to add points of an area (convex volume)  under mouse cursor\n"
+            "\t- press \"a\" to add points (under mouse cursor) of an area (convex volume)\n"
             " \t(\"shift-a\" for last point)\n"
-            "\t- press \"r\" to remove area under mouse cursor\n\n"
+            "\t- press \"r\" to remove area under mouse cursor\n"
+            "\t- press \"o\" to enable/disable area under mouse cursor\n"
+            "\t- press \"l\" to add points (under mouse cursor) of an link (off mesh connection)\n"
+            "\t- press \"k\" to remove link having one of its points under mouse cursor\n"
+            "\t- press \"i\" to enable/disable link having one of its points under mouse cursor\n\n"
             "When nav mesh is set up:\n"
             "\t- press \"d\" to toggle debug drawing\n"
             "\t- press \"p\" to place agent under mouse cursor\n"
             "\t- press \"t\" to set agent's target under mouse cursor\n"
             "\t- press \"v\" to change agent's speed\n"
-            "\t- press \"q\" to cycle queries\n")
+            "\t- press \"q\" to cycle queries\n");
     textNodePath = app.aspect2d.attach_new_node(text)
     textNodePath.set_pos(-0.2, 0.0, -0.4)
     textNodePath.set_scale(0.035)
@@ -446,6 +483,11 @@ if __name__ == '__main__':
     app.accept("l", addLink)
     # remove links
     app.accept("k", removeLink)
+
+    # enable/disable area
+    app.accept("o", enableDisableArea)
+    # enable/disable link
+    app.accept("i", enableDisableLink)
 
     # open/close area
     app.accept("o", enableDisableArea)

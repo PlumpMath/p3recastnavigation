@@ -362,7 +362,7 @@ private:
 
 	int do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint) const;
 	int do_find_off_mesh_connection_poly(int offMeshConnectionID,
-			dtPolyRef* poly, dtOffMeshConnection& offmeshlink) const;
+			dtPolyRef* poly) const;
 
 	int do_add_obstacle_to_recast(NodePath& objectNP, int index);
 	int do_remove_obstacle_from_recast(NodePath& objectNP, int obstacleRef);
