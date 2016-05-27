@@ -77,21 +77,21 @@ INLINE void RNNavMesh::set_area_flags(int area, int oredFlags)
 }
 
 /**
- * Returns the Recast area's ored flags, -1 on error.
+ * Returns the Recast area's ored flags, a negative number on error.
  */
 INLINE int RNNavMesh::get_area_flags(int area) const
 {
 	map<int, int>::const_iterator iter = mPolyAreaFlags.find(area);
-	return iter != mPolyAreaFlags.end() ? (*iter).second : -1;
+	return iter != mPolyAreaFlags.end() ? (*iter).second : RN_ERROR;
 }
 
 /**
- * Returns the Recast area's traversal cost, -1 on error.
+ * Returns the Recast area's traversal cost, a negative number on error.
  */
 INLINE float RNNavMesh::get_area_cost(int area) const
 {
 	map<int, float>::const_iterator iter = mPolyAreaCost.find(area);
-	return iter != mPolyAreaCost.end() ? (*iter).second : -1;;
+	return iter != mPolyAreaCost.end() ? (*iter).second : RN_ERROR;
 }
 
 /**

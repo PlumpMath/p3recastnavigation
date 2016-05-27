@@ -34,8 +34,10 @@ obstacleFile = "plants2.egg"
 bamFileName = "nav_mesh.boo"
 
 # # functions' declarations and definitions
-# load all scene stuff
+ 
 def loadAllScene():
+    """load all scene stuff"""
+    
     global app, navMesh, crowdAgent, sceneNP, agentNP
     navMesMgr = RNNavMeshManager.get_global_ptr()
     # get a sceneNP as owner model
@@ -76,8 +78,9 @@ def loadAllScene():
         # attach the crowd agent to the sceneNP's nav mesh
         navMesh.add_crowd_agent(crowdAgentNP)
         
-# restore all scene stuff 
 def restoreAllScene():
+    """restore all scene stuff """
+    
     global navMesh, crowdAgent, sceneNP, agentAnimCtls
     navMesMgr = RNNavMeshManager.get_global_ptr()
     # restore nav mesh
@@ -97,8 +100,9 @@ def restoreAllScene():
         for j in range(tmpAnims.get_num_anims()):
             agentAnimCtls[i][j] = tmpAnims.get_anim(j)
 
-# loads the owner model
 def getOwnerModel():
+    """loads the owner model"""
+    
     global app, sceneNP, sceneFile, mask
     # get a model to use as nav mesh' owner object
     sceneNP = app.loader.load_model(sceneFile)
@@ -107,8 +111,9 @@ def getOwnerModel():
 #     sceneNP.set_h(30.0)
 #     sceneNP.set_scale(2.0)
 
-# load the agents' models and anims
 def getAgentModelAnims():
+    """load the agents' models and anims"""
+    
     global app, agentNP, agentFile
     # get some models, with animations, to attach to crowd agents
     for i in range(NUMAGENTS):
@@ -138,17 +143,20 @@ def getAgentModelAnims():
         agentAnimNP[0].reparent_to(agentNP[i])
         agentAnimNP[1].reparent_to(agentNP[i])
 
-# read nav mesh from a file
 def readFromBamFile(fileName):
+    """read nav mesh from a file"""
+    
     return RNNavMeshManager.get_global_ptr().read_from_bam_file(fileName)
 
-# write nav mesh to a file (and exit)
 def writeToBamFileAndExit(fileName):
+    """write nav mesh to a file (and exit)"""
+    
     RNNavMeshManager.get_global_ptr().write_to_bam_file(fileName)
     sys.exit(0)
 
-# print creation parameters
 def printCreationParameters():
+    """print creation parameters"""
+    
     navMesMgr = RNNavMeshManager.get_global_ptr()
     #
     valueList = navMesMgr.get_parameter_name_list(RNNavMeshManager.NAVMESH)
@@ -163,8 +171,9 @@ def printCreationParameters():
         print ("\t" + name + " = " + 
                navMesMgr.get_parameter_value(RNNavMeshManager.CROWDAGENT, name))
 
-# set parameters as strings before nav meshes/crowd agents creation
 def setParametersBeforeCreation():
+    """set parameters as strings before nav meshes/crowd agents creation"""
+    
     navMesMgr = RNNavMeshManager.get_global_ptr()
     # tweak some nav mesh parameter
     navMesMgr.set_parameter_value(RNNavMeshManager.NAVMESH, "navmesh_type",
@@ -205,14 +214,16 @@ def setParametersBeforeCreation():
     #
     printCreationParameters()
 
-# toggle debug draw
 def toggleDebugDraw():
+    """toggle debug draw"""
+    
     global toggleDebugFlag, navMesh
     toggleDebugFlag = not toggleDebugFlag
     navMesh.toggle_debug_drawing(toggleDebugFlag)
 
-# toggle setup/cleanup
 def toggleSetupCleanup():
+    """toggle setup/cleanup"""
+    
     global navMesh, app, setupCleanupFlag
     if setupCleanupFlag:
         # true: setup
@@ -234,13 +245,15 @@ def toggleSetupCleanup():
             navMesh.get_obstacle_by_ref(ref).reparent_to(app.render)
     setupCleanupFlag = not setupCleanupFlag
 
-# handle crowd agent's events
 def handleCrowdAgentEvent(crowAgent):
+    """handle crowd agent's events"""
+    
     agent = NodePath.any_path(crowAgent)
     print ("move-event - " + agent.get_name() + " - " + str(agent.get_pos()))
 
-# place crowd agents randomly
 def placeCrowdAgents():
+    """place crowd agents randomly"""
+    
     global navMesh, sceneNP, crowdAgent
     for i in range(NUMAGENTS):
         # remove agent from nav mesh
@@ -255,9 +268,9 @@ def placeCrowdAgents():
             NodePath.any_path(navMesh[i]).get_pos(),
             navMesh[i].get_move_target());
 
-
-# throws a ray and returns the first collision entry or nullptr
 def getCollisionEntryFromCamera():
+    """throws a ray and returns the first collision entry or nullptr"""    
+    
     global app
     # get nav mesh manager
     navMeshMgr = RNNavMeshManager.get_global_ptr()
@@ -283,8 +296,9 @@ def getCollisionEntryFromCamera():
                 return navMeshMgr.get_collision_handler().get_entry(0)
     return None
 
-# handle set move target
 def setMoveTarget():
+    """handle set move target"""
+    
     global navMesh
     # get the collision entry, if any
     entry0 = getCollisionEntryFromCamera()
@@ -296,8 +310,9 @@ def setMoveTarget():
         navMesh.path_find_straight(
                 NodePath.any_path(agent).get_pos(), target);
 
-# handle add/remove obstacles
 def handleObstacles(data):
+    """handle add/remove obstacles"""
+    
     global navMesh, app, mask
     addObstacle = data
     # get the collision entry, if any
@@ -344,8 +359,9 @@ def handleObstacles(data):
                         hitObject.remove_node();
                         break;
 
-# custom path finding update task to correct panda's Z to stay on floor
 def updateNavMesh(navMesh, task):
+    """custom path finding update task to correct panda's Z to stay on floor"""
+    
     global crowdAgent
     # call update for navMesh
     dt = ClockObject.get_global_clock().get_dt()
@@ -372,8 +388,9 @@ def updateNavMesh(navMesh, task):
     #
     return task.cont
 
-# return a random point on the facing upwards surface of the model
 def getRandomPos(modelNP):
+    """return a random point on the facing upwards surface of the model"""
+    
     # collisions are made wrt render
     navMeshMgr = RNNavMeshManager.get_global_ptr()
     # get the bounding box of scene

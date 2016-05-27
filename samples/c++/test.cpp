@@ -25,16 +25,20 @@ bool setupCleanupFlag = true;
 bool toggleDebugFlag = false;
 bool halfVel = true;
 int query = 0;
-ValueList<LPoint3f> pointList;
-vector<int> doorRefs;
+ValueList<LPoint3f> areaPointList;
+vector<int> areaRefs;
+ValueList<LPoint3f> linkPointPair;
+vector<int> linkRefs;
 bool firstSetup = true;
 
 ///functions' declarations
 void changeSpeed(const Event*, void*);
 void cycleQueries(const Event*, void*);
-void addDoor(const Event*, void*);
-void removeDoor(const Event*, void*);
-void openCloseDoor(const Event*, void* data);
+void addArea(const Event*, void*);
+void removeArea(const Event*, void*);
+void addLink(const Event*, void*);
+void removeLink(const Event*, void*);
+void enableDisableArea(const Event*, void* data);
 void toggleDebugDraw(const Event*, void*);
 void toggleSetupCleanup(const Event*, void*);
 void placeCrowdAgent(const Event*, void*);
@@ -68,6 +72,24 @@ int main(int argc, char *argv[])
 	RNNavMesh::register_with_read_factory();
 	RNCrowdAgent::register_with_read_factory();
 	///
+	// print some help to screen
+	PT(TextNode) text;
+	text = new TextNode("Help");
+	text->set_text(
+            "Press \"s\" to toggle setup/cleanup\n"
+            "When nav mesh is not set up:\n"
+            "\t- press \"a\" to add points of an area (convex volume)  under mouse cursor\n"
+            " \t(\"shift-a\" for last point)\n"
+            "\t- press \"r\" to remove area under mouse cursor\n\n"
+            "When nav mesh is set up:\n"
+            "\t- press \"d\" to toggle debug drawing\n"
+            "\t- press \"p\" to place agent under mouse cursor\n"
+            "\t- press \"t\" to set agent's target under mouse cursor\n"
+            "\t- press \"v\" to change agent's speed\n"
+            "\t- press \"q\" to cycle queries\n");
+	NodePath textNodePath = window->get_aspect_2d().attach_new_node(text);
+	textNodePath.set_pos(-0.2, 0.0, -0.4);
+	textNodePath.set_scale(0.035);
 
 	// create a nav mesh manager
 	WPT(RNNavMeshManager)navMesMgr = new RNNavMeshManager(window->get_render(), mask);
@@ -88,9 +110,9 @@ int main(int argc, char *argv[])
 	navMeshNP.reparent_to(window->get_render());
 
 	// set nav mesh type
-//	navMesh->set_nav_mesh_type_enum(RNNavMesh::SOLO);
+	navMesh->set_nav_mesh_type_enum(RNNavMesh::SOLO);
 //	navMesh->set_nav_mesh_type_enum(RNNavMesh::TILE);
-	navMesh->set_nav_mesh_type_enum(RNNavMesh::OBSTACLE);
+//	navMesh->set_nav_mesh_type_enum(RNNavMesh::OBSTACLE);
 
 	// get the agent model
 	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");
@@ -122,16 +144,20 @@ int main(int argc, char *argv[])
 	framework.define_key("t", "setMoveTarget", &setMoveTarget,
 			nullptr);
 
-	// add doors
+	// add areas
 	bool TRUE = true, FALSE = false;
-	framework.define_key("a", "addDoor", &addDoor, (void*) &TRUE);
-	framework.define_key("shift-a", "addDoorLast", &addDoor, (void*) &FALSE);
+	framework.define_key("a", "addArea", &addArea, (void*) &TRUE);
+	framework.define_key("shift-a", "addAreaLast", &addArea, (void*) &FALSE);
+	// remove areas
+	framework.define_key("r", "removeArea", &removeArea, NULL);
 
-	// remove doors
-	framework.define_key("r", "removeDoor", &removeDoor, NULL);
+	// add links
+	framework.define_key("l", "addLink", &addLink, NULL);
+	// remove links
+	framework.define_key("k", "removeLink", &removeLink, NULL);
 
-	// open/close door
-	framework.define_key("o", "openCloseDoor", &openCloseDoor, NULL);
+	// open/close area
+	framework.define_key("o", "enableDisableArea", &enableDisableArea, NULL);
 
 	// handle change speed
 	framework.define_key("v", "changeSpeed", &changeSpeed, NULL);
@@ -170,6 +196,7 @@ void changeSpeed(const Event* e, void* data)
 	halfVel = not halfVel;
 }
 
+// cycle over queries
 void cycleQueries(const Event*, void*)
 {
 	nassertv_always(crowdAgent and navMesh)
@@ -180,11 +207,11 @@ void cycleQueries(const Event*, void*)
 	case 0:
 	{
 		cout << "get path find to follow" << endl;
-		ValueList<LPoint3f> pointList = navMesh->path_find_follow(
+		ValueList<LPoint3f> areaPointList = navMesh->path_find_follow(
 				crowdAgentNP.get_pos(), crowdAgent->get_move_target());
-		for (int i = 0; i < pointList.size(); ++i)
+		for (int i = 0; i < areaPointList.size(); ++i)
 		{
-			cout << "\t" << pointList[i] << endl;
+			cout << "\t" << areaPointList[i] << endl;
 		}
 	}
 		break;
@@ -246,7 +273,8 @@ void cycleQueries(const Event*, void*)
 	query = query % 4;
 }
 
-void addDoor(const Event*, void* data)
+// add area's (convex volume) points
+void addArea(const Event*, void* data)
 {
 	nassertv_always(navMesh)
 
@@ -260,9 +288,9 @@ void addDoor(const Event*, void* data)
 		{
 			RNNavMeshManager::get_global_ptr()->debug_draw_reset();
 			// add to list
-			pointList.add_value(point);
+			areaPointList.add_value(point);
 			RNNavMeshManager::get_global_ptr()->debug_draw_primitive(
-					RNNavMeshManager::POINTS, pointList,
+					RNNavMeshManager::POINTS, areaPointList,
 					LVecBase4f(1.0, 0.0, 0.0, 1.0), 4.0);
 			cout << point << endl;
 		}
@@ -270,20 +298,21 @@ void addDoor(const Event*, void* data)
 		{
 			RNNavMeshManager::get_global_ptr()->debug_draw_reset();
 			// add last point to list
-			pointList.add_value(point);
+			areaPointList.add_value(point);
 			cout << point << endl;
-			// add convex volume (door)
-			int ref = navMesh->add_convex_volume(pointList,
+			// add convex volume (area)
+			int ref = navMesh->add_convex_volume(areaPointList,
 					RNNavMesh::POLYAREA_DOOR);
-			cout << "Added (temporary) door with ref: " << ref << endl;
-			doorRefs.push_back(ref);
+			cout << "Added (temporary) area with ref: " << ref << endl;
+			areaRefs.push_back(ref);
 			// reset list
-			pointList.clear();
+			areaPointList.clear();
 		}
 	}
 }
 
-void removeDoor(const Event*, void* data)
+// remove an area (convex volume)
+void removeArea(const Event*, void* data)
 {
 	nassertv_always(navMesh)
 
@@ -292,16 +321,17 @@ void removeDoor(const Event*, void* data)
 	if (entry0)
 	{
 		LPoint3f point = entry0->get_surface_point(NodePath());
-		// try to remove door
+		// try to remove area
 		int ref = navMesh->remove_convex_volume(point);
 		if (ref >= 0)
 		{
-			cout << "Removed door with ref: " << ref << endl;
+			cout << "Removed area with ref: " << ref << endl;
 		}
 	}
 }
 
-void openCloseDoor(const Event*, void* data)
+// add a link's (off mesh connection) point pair
+void addLink(const Event*, void* data)
 {
 	nassertv_always(navMesh)
 
@@ -310,7 +340,62 @@ void openCloseDoor(const Event*, void* data)
 	if (entry0)
 	{
 		LPoint3f point = entry0->get_surface_point(NodePath());
-		// try to get door'settings by inside point
+		if (linkPointPair.get_num_values() == 0)
+		{
+			RNNavMeshManager::get_global_ptr()->debug_draw_reset();
+			// add start point to list
+			linkPointPair.add_value(point);
+			RNNavMeshManager::get_global_ptr()->debug_draw_primitive(
+					RNNavMeshManager::POINTS, linkPointPair,
+					LVecBase4f(0.0, 0.0, 1.0, 1.0), 4.0);
+			cout << point << endl;
+		}
+		else
+		{
+			RNNavMeshManager::get_global_ptr()->debug_draw_reset();
+			// add end point to list
+			linkPointPair.add_value(point);
+			cout << point << endl;
+			// add off mesh connection (link)
+			int ref = navMesh->add_off_mesh_connection(linkPointPair, true);
+			cout << "Added (temporary) bidirectional link with ref: " << ref << endl;
+			linkRefs.push_back(ref);
+			// reset list
+			linkPointPair.clear();
+		}
+	}
+}
+
+// remove a link (off mesh connection)
+void removeLink(const Event*, void* data)
+{
+	nassertv_always(navMesh)
+
+	// get the collision entry, if any
+	PT(CollisionEntry)entry0 = getCollisionEntryFromCamera();
+	if (entry0)
+	{
+		LPoint3f point = entry0->get_surface_point(NodePath());
+		// try to remove link
+		int ref = navMesh->remove_off_mesh_connection(point);
+		if (ref >= 0)
+		{
+			cout << "Removed link with ref: " << ref << endl;
+		}
+	}
+}
+
+// enable disable area (convex volume)
+void enableDisableArea(const Event*, void* data)
+{
+	nassertv_always(navMesh)
+
+	// get the collision entry, if any
+	PT(CollisionEntry)entry0 = getCollisionEntryFromCamera();
+	if (entry0)
+	{
+		LPoint3f point = entry0->get_surface_point(NodePath());
+		// try to get area'settings by inside point
 		RNConvexVolumeSettings settings = navMesh->get_convex_volume_settings(
 				point);
 		if (settings.get_ref() >= 0)
@@ -318,18 +403,18 @@ void openCloseDoor(const Event*, void* data)
 			nassertv_always(
 					navMesh->get_convex_volume_settings(settings.get_ref())
 							== settings)
-			// found a door: check if open or closed
+			// found a area: check if open or closed
 			if (settings.get_flags() & RNNavMesh::POLYFLAGS_DISABLED)
 			{
-				// door is closed (convex volume disabled): open
-				cout << "Open the door: " << endl;
+				// area is closed (convex volume disabled): open
+				cout << "Open the area: " << endl;
 			}
 			else
 			{
-				// door is open (convex volume disabled): close
-				cout << "Close the door: " << endl;
+				// area is open (convex volume disabled): close
+				cout << "Close the area: " << endl;
 			}
-			// switch door open/close
+			// switch area open/close
 			settings.set_flags(
 					settings.get_flags() ^ RNNavMesh::POLYFLAGS_DISABLED);
 			// update settings
@@ -337,6 +422,9 @@ void openCloseDoor(const Event*, void* data)
 			cout << "\tref: " << settings.get_ref() << " | "
 					"area: " << settings.get_area() << " | "
 					"flags: " << settings.get_flags() << endl;
+			// just for debug draw the agent's found path
+			navMesh->path_find_follow(NodePath::any_path(crowdAgent).get_pos(),
+					crowdAgent->get_move_target());
 		}
 	}
 }
@@ -412,55 +500,89 @@ void toggleSetupCleanup(const Event* e, void* data)
 		// show debug draw
 		navMesh->toggle_debug_drawing(true);
 		toggleDebugFlag = false;
-		// show doors
-		vector<int>::iterator refI = doorRefs.begin();
-		while (refI != doorRefs.end())
 		{
-			ValueList<LPoint3f> points = navMesh->get_convex_volume_by_ref(
-					(*refI));
-			if (points.get_num_values() == 0)
+			// show areas
+			vector<int>::iterator refI = areaRefs.begin();
+			while (refI != areaRefs.end())
 			{
-				cout << "Door's invalid ref: " << (*refI) << " ...removing"
-						<< endl;
-				doorRefs.erase(refI);
-				continue;
-			}
-			LPoint3f centroid = LPoint3f::zero();
-			for (int p = 0; p < points.size(); ++p)
-			{
-				centroid += points[p];
-			}
-			centroid /= points.get_num_values();
-			RNConvexVolumeSettings settings =
-					navMesh->get_convex_volume_settings(centroid);
+				ValueList<LPoint3f> points = navMesh->get_convex_volume_by_ref(
+						(*refI));
+				if (points.get_num_values() == 0)
+				{
+					cout << "Area's invalid ref: " << (*refI) << " ...removing"
+							<< endl;
+					areaRefs.erase(refI);
+					continue;
+				}
+				LPoint3f centroid = LPoint3f::zero();
+				for (int p = 0; p < points.size(); ++p)
+				{
+					centroid += points[p];
+				}
+				centroid /= points.get_num_values();
+				RNConvexVolumeSettings settings =
+						navMesh->get_convex_volume_settings(centroid);
 
-			nassertv_always(settings ==
-					navMesh->get_convex_volume_settings((*refI)));
+				nassertv_always(
+						settings
+								== navMesh->get_convex_volume_settings((*refI)));
 
-			cout << "Door n. " << (refI - doorRefs.begin()) << endl;
-			cout << "\tref: " << settings.get_ref() << " | "
-					"area: " << settings.get_area() << " | "
-					"flags: " << settings.get_flags() << endl;
-			//
-			++refI;
+				cout << "Area n. " << (refI - areaRefs.begin()) << endl;
+				cout << "\tref: " << settings.get_ref() << " | "
+						"area: " << settings.get_area() << " | "
+						"flags: " << settings.get_flags() << endl;
+				//
+				++refI;
+			}
+		}
+		{
+//			// show links
+//			vector<int>::iterator refI = areaRefs.begin();
+//			while (refI != areaRefs.end())
+//			{
+//				ValueList<LPoint3f> points = navMesh->get_convex_volume_by_ref(
+//						(*refI));
+//				if (points.get_num_values() == 0)
+//				{
+//					cout << "Area's invalid ref: " << (*refI) << " ...removing"
+//							<< endl;
+//					areaRefs.erase(refI);
+//					continue;
+//				}
+//				LPoint3f centroid = LPoint3f::zero();
+//				for (int p = 0; p < points.size(); ++p)
+//				{
+//					centroid += points[p];
+//				}
+//				centroid /= points.get_num_values();
+//				RNConvexVolumeSettings settings =
+//						navMesh->get_convex_volume_settings(centroid);
+//
+//				nassertv_always(
+//						settings
+//								== navMesh->get_convex_volume_settings((*refI)));
+//
+//				cout << "Area n. " << (refI - areaRefs.begin()) << endl;
+//				cout << "\tref: " << settings.get_ref() << " | "
+//						"area: " << settings.get_area() << " | "
+//						"flags: " << settings.get_flags() << endl;
+//				//
+//				++refI;
+//			}
 		}
 	}
 	else
 	{
 		// false: cleanup
 		navMesh->cleanup();
-		pointList.clear();
+		areaPointList.clear();
+		linkPointPair.clear();
 		// now crowd agents and obstacles are detached:
 		// prevent to make them disappear from the scene
 		for (int i = 0; i < navMesh->get_num_crowd_agents(); ++i)
 		{
 			NodePath::any_path(navMesh->get_crowd_agent(i)).reparent_to(
 					window->get_render());
-		}
-		for (int i = 0; i < navMesh->get_num_obstacles(); ++i)
-		{
-			int ref = navMesh->get_obstacle(i);
-			navMesh->get_obstacle_by_ref(ref).reparent_to(window->get_render());
 		}
 	}
 	*setupCleanupFlag = not *setupCleanupFlag;

@@ -883,8 +883,8 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 	// continue if nav mesh has not been already setup
 	CONTINUE_IF_ELSE_R(!mNavMeshType, RN_ERROR)
 
-	//set oldRef=-1 in case of error
-	int oldRef = -1;
+	//set oldRef=RN_ERROR in case of error
+	int oldRef = RN_ERROR;
 	///HACK: use support functionality to remove convex volumes
 	//create fake InputGeom, NavMeshType and ConvexVolumeTool
 	rnsup::InputGeom* geom = new rnsup::InputGeom;
@@ -941,7 +941,7 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 
 /**
  * Gets the convex volume with the point inside.
- * Returns the index of the convex volume, or -1 if none is found.
+ * Returns the index of the convex volume, or a negative number if none is found.
  */
 int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) const
 {
@@ -949,7 +949,7 @@ int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) cons
 	float hitPos[3];
 	rnsup::LVecBase3fToRecast(insidePoint, hitPos);
 	//check if a convex volume was hit (see: Delete case of ConvexVolumeTool::handleClick)
-	int convexVolumeID = -1;
+	int convexVolumeID = RN_ERROR;
 	const rnsup::ConvexVolume* vols =
 			mNavMeshType->getInputGeom()->getConvexVolumes();
 	for (int i = 0; i < mNavMeshType->getInputGeom()->getConvexVolumeCount();
@@ -968,7 +968,7 @@ int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) cons
 /**
  * Finds polygons of a convex volume.
  */
-int RNNavMesh::do_find_polys_in_convex_volume(int convexVolumeID,
+int RNNavMesh::do_find_convex_volume_polys(int convexVolumeID,
 		dtQueryFilter& filter, dtPolyRef* polys, int& npolys,
 		const int MAX_POLYS) const
 {
@@ -1025,7 +1025,7 @@ int RNNavMesh::do_find_polys_in_convex_volume(int convexVolumeID,
 /**
  * Updates settings of the convex volume given a point inside.
  * Can be set only after RNNavMesh is setup.
- * Returns the index of the convex volume, or -1 if none if not found or on error.
+ * Returns the index of the convex volume, or a negative number if none if not found or on error.
  */
 int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 		const RNConvexVolumeSettings& settings)
@@ -1045,7 +1045,7 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 		dtStatus status, status2;
 
 		CONTINUE_IF_ELSE_R(
-				do_find_polys_in_convex_volume(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
+				do_find_convex_volume_polys(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
 				RN_ERROR)
 
 		int area = (
@@ -1106,7 +1106,7 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 /**
  * Updates settings of the convex volume given its reference.
  * Can be set only after RNNavMesh is setup.
- * Returns the index of the convex volume, or -1 if none if not found or on error.
+ * Returns the index of the convex volume, or a negative number if none if not found or on error.
  */
 int RNNavMesh::set_convex_volume_settings(int ref,
 		const RNConvexVolumeSettings& settings)
@@ -1132,13 +1132,13 @@ int RNNavMesh::set_convex_volume_settings(int ref,
 /**
  * Returns settings of the convex volume given a point inside.
  * Can be get only after RNNavMesh is setup.
- * Returns RNConvexVolumeSettings::ref = -1 on error.
+ * Returns RNConvexVolumeSettings::ref = a negative number on error.
  */
 RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(
 		const LPoint3f& insidePoint) const
 {
 	RNConvexVolumeSettings settings;
-	settings.set_ref(-1);
+	settings.set_ref(RN_ERROR);
 
 	// continue if nav mesh has been already setup
 	CONTINUE_IF_ELSE_R(mNavMeshType, settings)
@@ -1157,12 +1157,12 @@ RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(
 /**
  * Returns settings of the convex volume given its ref.
  * Can be get only after RNNavMesh is setup.
- * Returns RNConvexVolumeSettings::ref = -1 on error.
+ * Returns RNConvexVolumeSettings::ref = a negative number on error.
  */
 RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(int ref) const
 {
 	RNConvexVolumeSettings settings;
-	settings.set_ref(-1);
+	settings.set_ref(RN_ERROR);
 
 	// continue if nav mesh has been already setup
 	CONTINUE_IF_ELSE_R(mNavMeshType, settings)
@@ -1243,8 +1243,8 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 	// continue if nav mesh has not been already setup
 	CONTINUE_IF_ELSE_R(!mNavMeshType, RN_ERROR)
 
-	//set oldRef=-1 in case of error
-	int oldRef = -1;
+	//set oldRef=RN_ERROR in case of error
+	int oldRef = RN_ERROR;
 	///HACK: use support functionality to remove off mesh connections
 	//create fake InputGeom, NavMeshType and OffMeshConnectionTool
 	rnsup::InputGeom* geom = new rnsup::InputGeom;
@@ -1275,7 +1275,7 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 		rnsup::LVecBase3fToRecast(beginOrEndPoint, recastPos);
 		omcTool->handleClick(NULL, recastPos, true);
 		//check if the off mesh connection has been removed
-		if (omcTool->getOffMeshConnectionIdx() == -1)
+		if (omcTool->getOffMeshConnectionIdx() != -1)
 		{
 			//this off mesh connection has been removed, so
 			//calculate oldRef (>=0), remove the off mesh
@@ -1294,13 +1294,13 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 #ifdef RN_DEBUG
 	do_debug_static_render_unsetup();
 #endif //RN_DEBUG
-	//return oldRef or -1
+	//return oldRef or a negative number
 	return oldRef;
 }
 
 /**
  * Gets the off mesh connection given the begin or end point.
- * Returns the index of the convex volume, or -1 if none is found.
+ * Returns the index of the convex volume, or a negative number if none is found.
  */
 int RNNavMesh::do_get_off_mesh_connection_from_point(
 		const LPoint3f& startEndPoint) const
@@ -1309,7 +1309,7 @@ int RNNavMesh::do_get_off_mesh_connection_from_point(
 	float hitPos[3];
 	rnsup::LVecBase3fToRecast(startEndPoint, hitPos);
 	//check if a off mesh connection was hit (see: Delete case of OffMeshConnectionTool::handleClick)
-	int offMeshConnectionID = -1;
+	int offMeshConnectionID = RN_ERROR;
 	// Find nearest link end-point
 	float nearestDist = FLT_MAX;
 	int nearestIndex = -1;
@@ -1338,7 +1338,7 @@ int RNNavMesh::do_get_off_mesh_connection_from_point(
 }
 
 
-int RNNavMesh::do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
+int RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
 		dtPolyRef* poly, dtOffMeshConnection& offmeshlink) const// XXX
 {
 	//get the start pos
@@ -1355,7 +1355,7 @@ int RNNavMesh::do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
 	int ctx = 0, cty = 0;
 	mesh.calcTileLoc(pos, &ctx, &cty);
 
-//	for (int i = 0; i < mNavMeshType->getNavMesh()->getMaxTiles(); ++i)
+//	for (int i = 0; i < mNavMeshType->getNavMesh()->getMaxTiles(); ++i) //XXX
 	for (int ty = cty - 1; ty <= cty + 1; ty++)
 	{
 		for (int tx = ctx - 1; tx <= ctx + 1; tx++)
@@ -1367,7 +1367,7 @@ int RNNavMesh::do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
 				continue;
 			}
 			// Handle tile...
-//		const dtMeshTile* tile = mesh.getTile(i);
+//		const dtMeshTile* tile = mesh.getTile(i); //XXX
 //		if (!tile->header)
 //		{
 //			continue;
@@ -1387,9 +1387,9 @@ int RNNavMesh::do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
 
 				dtPolyRef base = mNavMeshType->getNavMesh()->getPolyRefBase(
 						tile);
-				/*dtPolyRef*/*poly = base | (dtPolyRef) offmeshlink.poly;
+				/*dtPolyRef*/*poly = base | (dtPolyRef) offmeshlink.poly; //XXX
 
-//				bool enable;//fake
+//				bool enable;//fake //XXX
 //				unsigned short flags;
 //				dtStatus status = mNavMeshType->getNavMesh()->getPolyFlags(
 //						*poly, &flags);
@@ -1405,7 +1405,7 @@ int RNNavMesh::do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
 		}
 	}
 
-	///////////////////////////////////////////////////
+	/////////////////////////////////////////////////// XXX
 //	int ctx = 0, cty = 0;
 //	mesh.calcTileLoc(pos, &ctx, &cty);
 //
@@ -1427,7 +1427,7 @@ int RNNavMesh::do_find_poly_of_off_mesh_connection(int offMeshConnectionID,
 /**
  * Updates settings of the off mesh connection given the begin or end point.
  * Can be set only after RNNavMesh is setup.
- * Returns the index of the off mesh connection, or -1 if none is found or on error.
+ * Returns the index of the off mesh connection, or a negative number if none is found or on error.
  */
 int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 	const RNOffMeshConnectionSettings& settings)
@@ -1446,7 +1446,7 @@ int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 		dtStatus status, status2;
 
 		CONTINUE_IF_ELSE_R(
-				do_find_poly_of_off_mesh_connection(offMeshConnectionID, &poly, offmeshlink) == RN_SUCCESS,
+				do_find_off_mesh_connection_poly(offMeshConnectionID, &poly, offmeshlink) == RN_SUCCESS,
 				RN_ERROR)
 
 		int area = (
@@ -1498,7 +1498,7 @@ int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 /**
  * Updates settings of the off mesh connection given its reference.
  * Can be set only after RNNavMesh is setup.
- * Returns the index of the off mesh connection, or -1 if none is found or on error.
+ * Returns the index of the off mesh connection, or a negative number if none is found or on error.
  */
 int RNNavMesh::set_off_mesh_connection_settings(int ref,
 	const RNOffMeshConnectionSettings& settings)
@@ -1524,13 +1524,13 @@ int RNNavMesh::set_off_mesh_connection_settings(int ref,
 /**
  * Returns settings of the off mesh connection given the begin or end point.
  * Can be get only after RNNavMesh is setup.
- * Returns RNOffMeshConnectionSettings::ref = -1 on error.
+ * Returns RNOffMeshConnectionSettings::ref = a negative number on error.
  */
 RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 	const LPoint3f& beginOrEndPoint) const
 {
 	RNOffMeshConnectionSettings settings;
-	settings.set_ref(-1);
+	settings.set_ref(RN_ERROR);
 
 	// continue if nav mesh has been already setup
 	CONTINUE_IF_ELSE_R(mNavMeshType, settings)
@@ -1551,13 +1551,13 @@ RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 /**
  * Returns settings of the off mesh connection given its ref.
  * Can be get only after RNNavMesh is setup.
- * Returns RNOffMeshConnectionSettings::ref = -1 on error.
+ * Returns RNOffMeshConnectionSettings::ref = a negative number on error.
  */
 RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 		int ref) const
 {
 	RNOffMeshConnectionSettings settings;
-	settings.set_ref(-1);
+	settings.set_ref(RN_ERROR);
 
 	// continue if nav mesh has been already setup
 	CONTINUE_IF_ELSE_R(mNavMeshType, settings)
@@ -1849,7 +1849,7 @@ int RNNavMesh::add_obstacle(NodePath objectNP)
 	CONTINUE_IF_ELSE_R(iterO == mObstacles.end(), RN_ERROR)
 
 	// insert obstacle with invalid ref: later will be corrected
-	mObstacles.push_back(Obstacle(-1, objectNP));
+	mObstacles.push_back(Obstacle(RN_ERROR, objectNP));
 
 	// continue if nav mesh has been already setup
 	CONTINUE_IF_ELSE_R(mNavMeshType, RN_ERROR)
@@ -2883,7 +2883,7 @@ int RNNavMesh::complete_pointers(TypedWritable **p_list, BamReader *manager)
 		for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
 		{
 			PT(PandaNode)realPandaNode = DCAST(PandaNode, p_list[pi++]);
-			(*iter) = Obstacle(-1, NodePath::any_path(realPandaNode));
+			(*iter) = Obstacle(RN_ERROR, NodePath::any_path(realPandaNode));
 		}
 	}
 
