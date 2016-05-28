@@ -342,8 +342,8 @@ def toggleSetupCleanup():
             print("\tref: " + str(settings.get_ref()) + " | "
                     "rad: " + str(settings.get_rad()) + " | "
                     "bidir: " + str(settings.get_bidir()) + " | "
-                    "area: " + str(settings.get_area() + " | "
-                    "flags: " + str(settings.get_flags())))
+                    "area: " + str(settings.get_area()) + " | "
+                    "flags: " + str(settings.get_flags()))
     else:
         # false: cleanup
         navMesh.cleanup()
@@ -405,23 +405,23 @@ if __name__ == '__main__':
     # print some help to screen
     text = TextNode("Help")
     text.set_text(
-            "Press \"s\" to toggle setup/cleanup\n"
+            "Press \"s\" to switch setup/cleanup\n\n"
             "When nav mesh is not set up:\n"
-            "\t- press \"a\" to add points (under mouse cursor) of an area (convex volume)\n"
+            "\t- press \"a\" to add area (convex volume) points under mouse cursor\n"
             " \t(\"shift-a\" for last point)\n"
             "\t- press \"r\" to remove area under mouse cursor\n"
             "\t- press \"o\" to enable/disable area under mouse cursor\n"
-            "\t- press \"l\" to add points (under mouse cursor) of an link (off mesh connection)\n"
-            "\t- press \"k\" to remove link having one of its points under mouse cursor\n"
-            "\t- press \"i\" to enable/disable link having one of its points under mouse cursor\n\n"
+            "\t- press \"l\" to add link (off mesh connection) points under mouse cursor)\n"
+            "\t- press \"k\" to remove link with one of its points under mouse cursor\n"
+            "\t- press \"i\" to enable/disable link with one of its points under mouse cursor\n\n"
             "When nav mesh is set up:\n"
-            "\t- press \"d\" to toggle debug drawing\n"
+            "\t- press \"d\" to switch debug drawing\n"
             "\t- press \"p\" to place agent under mouse cursor\n"
             "\t- press \"t\" to set agent's target under mouse cursor\n"
             "\t- press \"v\" to change agent's speed\n"
-            "\t- press \"q\" to cycle queries\n");
+            "\t- press \"q\" to cycle queries\n")
     textNodePath = app.aspect2d.attach_new_node(text)
-    textNodePath.set_pos(-0.2, 0.0, -0.4)
+    textNodePath.set_pos(-0.1, 0.0, -0.42)
     textNodePath.set_scale(0.035)
 
     # create a nav mesh manager
