@@ -452,6 +452,38 @@ INLINE void RNOffMeshConnectionSettings::set_ref(int value)
 	_ref = value;
 }
 
+///Obstacle settings.
+INLINE bool RNObstacleSettings::operator==(
+		const RNObstacleSettings &other) const
+{
+	return (_radius == other._radius) && (_dims == other._dims)
+			&& (_ref == other._ref);
+}
+INLINE float RNObstacleSettings::get_radius() const
+{
+	return _radius;
+}
+INLINE void RNObstacleSettings::set_radius(float value)
+{
+	_radius = value;
+}
+INLINE LVecBase3f RNObstacleSettings::get_dims() const
+{
+	return _dims;
+}
+INLINE void RNObstacleSettings::set_dims(const LVecBase3f& value)
+{
+	_dims = value;
+}
+INLINE unsigned int RNObstacleSettings::get_ref() const
+{
+	return _ref;
+}
+INLINE void RNObstacleSettings::set_ref(unsigned int value)
+{
+	_ref = value;
+}
+
 ///CrowdAgentParams
 INLINE float RNCrowdAgentParams::get_radius() const
 {

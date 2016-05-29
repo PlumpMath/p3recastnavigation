@@ -274,6 +274,8 @@ public:
 	typedef Pair<ValueList<LPoint3f>,RNConvexVolumeSettings> PointListConvexVolumeSettings;
 	//off mesh connection
 	typedef Pair<ValueList<LPoint3f>,RNOffMeshConnectionSettings> PointPairOffMeshConnectionSettings;
+	//obstacles.
+	typedef Pair<int, NodePath> Obstacle;
 
 	///Library & support low level related methods (C++ only).
 	inline rnsup::InputGeom* get_recast_input_geom() const;
@@ -322,8 +324,7 @@ private:
 	pvector<PointListConvexVolumeSettings> mConvexVolumes;
 	///Off mesh connections (see support/OffMeshConnectionTool.h).
 	pvector<PointPairOffMeshConnectionSettings> mOffMeshConnections;
-	/// Obstacles.
-	typedef Pair<int, NodePath> Obstacle;
+	///Obstacles.
 	pvector<Obstacle> mObstacles;
 	///Crowd related data.
 	//The RNCrowdAgents added to and handled by this RNNavMesh.
@@ -335,6 +336,9 @@ private:
 	int do_set_crowd_agent_velocity(PT(RNCrowdAgent)crowdAgent,
 			const LVector3f& moveVelocity);
 
+	///Used for saving underlying geometry (see TypedWritable API).
+	rnsup::rcMeshLoaderObj mMeshLoader;
+
 	///Tester tool.
 	rnsup::NavMeshTesterTool mTesterTool;
 
@@ -345,7 +349,8 @@ private:
 	void do_initialize();
 	void do_finalize();
 
-	bool do_load_model_mesh(NodePath model);
+	bool do_load_model_mesh(NodePath model,
+		rnsup::rcMeshLoaderObj* meshLoader = NULL);
 	void do_create_nav_mesh_type(rnsup::NavMeshType* navMeshType);
 	bool do_build_navMesh();
 
@@ -394,6 +399,7 @@ public:
 	static void register_with_read_factory();
 	virtual void write_datagram (BamWriter *manager, Datagram &dg) override;
 	virtual int complete_pointers(TypedWritable **p_list, BamReader *manager) override;
+	virtual void finalize(BamReader *manager);
 
 protected:
 	static TypedWritable *make_from_bam(const FactoryParams &params);

@@ -531,9 +531,6 @@ int RNNavMesh::setup()
 		children[i].detach_node();
 	}
 
-	//reparent mOwnerObject to the reference node path
-	mOwnerObject.reparent_to(mReferenceNP);
-
 	//setup the build context
 	mCtx = new rnsup::BuildContext;
 
@@ -542,11 +539,20 @@ int RNNavMesh::setup()
 	//operations must be performed by program.
 	PRINT_DEBUG("RNNavMesh::setup");
 
-	//don't load model mesh more than once
+	//load model mesh
 	if (!mGeom)
 	{
 		//load the mesh from the owner node path
 		if (!do_load_model_mesh(mOwnerObject))
+		{
+			cleanup();
+			return RN_ERROR;
+		}
+	}
+	else
+	{
+		//load the mesh from a bam file
+		if (!do_load_model_mesh(mOwnerObject, &mMeshLoader))
 		{
 			cleanup();
 			return RN_ERROR;
@@ -1555,17 +1561,23 @@ ValueList<LPoint3f> RNNavMesh::get_off_mesh_connection_by_ref(int ref) const
  */
 void RNNavMesh::do_finalize()
 {
+	//cleanup RNNavMesh
+	cleanup();
+
 	//remove all handled CrowdAgents (if any)
 	PTA(PT(RNCrowdAgent))::iterator iter = mCrowdAgents.begin();
 	while (iter != mCrowdAgents.end())
 	{
 		//\see http://stackoverflow.com/questions/596162/can-you-remove-elements-from-a-stdlist-while-iterating-through-it
 		do_remove_crowd_agent_from_update_list(*iter);
-		do_remove_crowd_agent_from_recast_update(*iter);
 	}
 
-	//cleanup RNNavMesh
-	cleanup();
+	//detach any old child node path: owner, crowd agents, obstacles
+	NodePathCollection children = NodePath::any_path(this).get_children();
+	for (int i; i < children.size(); ++i)
+	{
+		children[i].detach_node();
+	}
 
 	//remove this NodePath
 	NodePath::any_path(this).remove_node();
@@ -2334,13 +2346,19 @@ void RNNavMesh::do_debug_static_render_unsetup()
 /**
  * Loads the mesh from a model NodePath.
  */
-bool RNNavMesh::do_load_model_mesh(NodePath model)
+bool RNNavMesh::do_load_model_mesh(NodePath model,
+		rnsup::rcMeshLoaderObj* meshLoader)
 {
 	bool result = true;
-	mGeom = new rnsup::InputGeom;
+	if(!meshLoader)
+	{
+		mGeom = new rnsup::InputGeom;
+	}
 	mMeshName = model.get_name();
 	//
-	if ((!mGeom) || (!mGeom->loadMesh(mCtx, string(), model, mReferenceNP)))
+	if ((!mGeom)
+			|| (!mGeom->loadMesh(mCtx, string(), model, mReferenceNP,
+					meshLoader)))
 	{
 		delete mGeom;
 		mGeom = NULL;
@@ -2776,6 +2794,16 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 		}
 	}
 
+	///Current underlying NavMeshType: saved as a flag.
+	mNavMeshType ? dg.add_bool(true) : dg.add_bool(false);
+
+	///Used for saving underlying geometry (see TypedWritable API).
+	if(mNavMeshType)
+	{
+		mMeshLoader = *(mNavMeshType->getInputGeom()->getMesh());
+		mMeshLoader.write_datagram(dg);
+	}
+
 	///Unique ref.
 	dg.add_uint32(mRef);
 
@@ -2838,10 +2866,30 @@ int RNNavMesh::complete_pointers(TypedWritable **p_list, BamReader *manager)
 		}
 	}
 
-	//reset mNavMeshType: a setup will be needed any way
-	mNavMeshType = NULL;
-
 	return pi;
+}
+
+/**
+ * Called by the BamReader to perform any final actions needed for setting up
+ * the object after all objects have been read and all pointers have been
+ * completed.
+ */
+void RNNavMesh::finalize(BamReader *manager)
+{
+	// check if RNNavMesh was set up
+	if (mNavMeshType)
+	{
+		// RNNavMesh was setup
+		// reset mNavMeshType
+		mNavMeshType = NULL;
+		// create an InputGeom
+		mGeom = new rnsup::InputGeom;
+		if (mGeom)
+		{
+			// call setup()
+			setup();
+		}
+	}
 }
 
 /**
@@ -2865,6 +2913,7 @@ TypedWritable *RNNavMesh::make_from_bam(const FactoryParams &params)
 
 	parse_params(params, scan, manager);
 	node->fillin(scan, manager);
+	manager->register_finalize(node);
 
 	return node;
 }
@@ -2949,6 +2998,16 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 		// insert into mOffMeshConnections
 		mOffMeshConnections.push_back(
 				PointPairOffMeshConnectionSettings(pointPair, settings));
+	}
+
+	///Current underlying NavMeshType: used as a flag.
+	bool flag = scan.get_bool();
+	flag ? mNavMeshType = (rnsup::NavMeshType*) 1 : mNavMeshType = NULL;
+
+	///Used for saving underlying geometry (see TypedWritable API).
+	if(mNavMeshType)
+	{
+		mMeshLoader.read_datagram(scan);
 	}
 
 	///Unique ref.

@@ -127,7 +127,8 @@ InputGeom::~InputGeom()
 }
 		
 bool InputGeom::loadMesh(rcContext* ctx, const std::string& filepath,
-	NodePath model, NodePath referenceNP, float scale, float* translation)
+		NodePath model, NodePath referenceNP, rcMeshLoaderObj* mesh,
+		float scale, float* translation)
 {
 	if (m_mesh)
 	{
@@ -153,7 +154,18 @@ bool InputGeom::loadMesh(rcContext* ctx, const std::string& filepath,
 	}
 	else if (! model.is_empty())
 	{ 
-		loadResult = m_mesh->load(model, referenceNP);
+		if (!mesh)
+		{
+			loadResult = m_mesh->load(model, referenceNP);
+		}
+		else
+		{
+			//rebuild from mesh
+			*m_mesh = *mesh;
+			//HACK:free some unneeded memory (with c++11 we should use move
+			//assignment operator: *m_mesh = std::move(*mesh);
+			mesh->~rcMeshLoaderObj();
+		}
 	}
 	else
 	{ 

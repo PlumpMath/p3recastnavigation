@@ -53,8 +53,9 @@ def loadAllScene():
     # setup the nav mesh with scene as its owner object
     navMesh.setup()
     
-    # reparent navMeshNP to a reference NodePath
-    navMeshNP.reparent_to(app.render)
+    # reparent navMeshNP to sceneNP (or both to a common parent)
+    sceneNP.reparent_to(app.render)
+    navMeshNP.reparent_to(sceneNP)
     
     # get agentNP[] (and agentAnimNP[]) as models for crowd agents
     getAgentModelAnims()
@@ -82,12 +83,10 @@ def restoreAllScene():
     """restore all scene stuff """
     
     global navMesh, crowdAgent, sceneNP, agentAnimCtls
-    navMesMgr = RNNavMeshManager.get_global_ptr()
     # restore nav mesh
     navMeshNP = RNNavMeshManager.get_global_ptr().get_nav_mesh(0)
-    navMeshNP.reparent_to(app.render)
     navMesh = navMeshNP.node()
-    sceneNP = navMesh.get_owner_node_path()
+    navMeshNP.reparent_to(app.render)
     
     # restore crowd agents
     for i in range(NUMAGENTS):
@@ -146,12 +145,54 @@ def getAgentModelAnims():
 def readFromBamFile(fileName):
     """read nav mesh from a file"""
     
-    return RNNavMeshManager.get_global_ptr().read_from_bam_file(fileName)
+    # read from bamFile
+    inBamFile = BamFile()
+    if inBamFile.open_read(Filename(fileName)):
+        print("Current system Bam version: "
+              + inBamFile.get_current_major_ver() + "."
+              + inBamFile.get_current_minor_ver())
+        print("Bam file version: " + inBamFile.get_file_major_ver() + "."
+                + inBamFile.get_file_minor_ver())
+        # read the scene
+        scene = inBamFile.read_object()
+        if scene:
+            # resolve pointers
+            if not inBamFile.resolve():
+                print("Error resolving pointers in " + fileName)
+                return False
+        else:
+            print("Error reading " + fileName)
+            return False
+        # close the file
+        inBamFile.close()
+        print("SUCCESS: all nav meshes and crowd agents were read from "
+                + fileName)
+        # restore sceneNP
+        sceneNP = NodePath.any_path(scene)
+    else:
+        print("Error opening " + fileName)
+        return False
+    return True
 
 def writeToBamFileAndExit(fileName):
     """write nav mesh to a file (and exit)"""
     
     RNNavMeshManager.get_global_ptr().write_to_bam_file(fileName)
+    outBamFile = BamFile()
+    if outBamFile.open_write(Filename(fileName)):
+        print("Current system Bam version: "
+                + outBamFile.get_current_major_ver() + "."
+                + outBamFile.get_current_minor_ver())
+        # write the the scene
+        if not outBamFile.write_object(sceneNP.node()):
+            print("Error writing " + fileName)
+        # close the file
+        outBamFile.close()
+        print("SUCCESS: all nav mesh and crowd agent collections were written to "
+                + fileName)
+    else:
+        print("Error opening " + fileName)
+    #
     sys.exit(0)
 
 def printCreationParameters():

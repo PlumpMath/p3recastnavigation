@@ -288,6 +288,12 @@ void RNCrowdAgent::do_finalize()
 	}
 	//
 	mNavMesh.clear();
+	//detach any child node path: models
+	NodePathCollection children = NodePath::any_path(this).get_children();
+	for (int i; i < children.size(); ++i)
+	{
+		children[i].detach_node();
+	}
 	//remove this NodePath
 	thisNP.remove_node();
 	//

@@ -254,6 +254,34 @@ void RNOffMeshConnectionSettings::read_datagram(DatagramIterator &scan)
 	set_flags(scan.get_int32());
 }
 
+///Obstacle settings.
+/**
+ *
+ */
+RNObstacleSettings::RNObstacleSettings() :
+		_radius(0.0), _dims(LVecBase3f()), _ref(0)
+{
+}
+
+/**
+ * Writes the RNObstacleSettings into a datagram.
+ */
+void RNObstacleSettings::write_datagram(Datagram &dg) const
+{
+	dg.add_stdfloat(get_radius());
+	_dims.write_datagram(dg);
+	dg.add_uint32(get_ref());
+}
+/**
+ * Restores the RNObstacleSettings from the datagram.
+ */
+void RNObstacleSettings::read_datagram(DatagramIterator &scan)
+{
+	set_radius(scan.get_stdfloat());
+	_dims.read_datagram(scan);
+	set_ref(scan.get_uint32());
+}
+
 ///CrowdAgentParams
 /**
  *

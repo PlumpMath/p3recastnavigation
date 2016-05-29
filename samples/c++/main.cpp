@@ -205,8 +205,9 @@ void loadAllScene()
 	// setup the nav mesh with scene as its owner object
 	navMesh->setup();
 
-	// reparent navMeshNP to a reference NodePath
-	navMeshNP.reparent_to(window->get_render());
+	// reparent navMeshNP to sceneNP (or both to a common parent)
+	sceneNP.reparent_to(window->get_render());
+	navMeshNP.reparent_to(sceneNP);
 
 	// get agentNP[] (and agentAnimNP[]) as models for crowd agents
 	getAgentModelAnims();
@@ -239,9 +240,8 @@ void restoreAllScene()
 	// restore nav mesh
 	NodePath navMeshNP = RNNavMeshManager::get_global_ptr()->get_nav_mesh(
 			0);
-	navMeshNP.reparent_to(window->get_render());
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
-	sceneNP = navMesh->get_owner_node_path();
+	sceneNP.reparent_to(window->get_render());
 
 	// restore crowd agents
 	for (int i = 0; i < NUMAGENTS; ++i)
@@ -308,14 +308,71 @@ void getAgentModelAnims()
 // read nav mesh from a file
 bool readFromBamFile(string fileName)
 {
-	return RNNavMeshManager::get_global_ptr()->read_from_bam_file(fileName);
+	// read from bamFile
+	BamFile inBamFile;
+	if (inBamFile.open_read(Filename(fileName)))
+	{
+		cout << "Current system Bam version: "
+				<< inBamFile.get_current_major_ver() << "."
+				<< inBamFile.get_current_minor_ver() << endl;
+		cout << "Bam file version: " << inBamFile.get_file_major_ver() << "."
+				<< inBamFile.get_file_minor_ver() << endl;
+		// read the scene
+		TypedWritable* scene = inBamFile.read_object();
+		if (scene)
+		{
+			// resolve pointers
+			if (!inBamFile.resolve())
+			{
+				cerr << "Error resolving pointers in " << fileName << endl;
+				return false;
+			}
+		}
+		else
+		{
+			cerr << "Error reading " << fileName << endl;
+			return false;
+		}
+		// close the file
+		inBamFile.close();
+		cout << "SUCCESS: all nav meshes and crowd agents were read from "
+				<< fileName << endl;
+		// restore sceneNP
+		sceneNP = NodePath::any_path(DCAST(PandaNode, scene));
+	}
+	else
+	{
+		cerr << "Error opening " << fileName << endl;
+		return false;
+	}
+	return true;
 }
 
 // write nav mesh to a file
 void writeToBamFileAndExit(const Event* e, void* data)
 {
 	string fileName = *reinterpret_cast<string*>(data);
-	RNNavMeshManager::get_global_ptr()->write_to_bam_file(fileName);
+	BamFile outBamFile;
+	if (outBamFile.open_write(Filename(fileName)))
+	{
+		cout << "Current system Bam version: "
+				<< outBamFile.get_current_major_ver() << "."
+				<< outBamFile.get_current_minor_ver() << endl;
+		//write the the scene
+		if (!outBamFile.write_object(sceneNP.node()))
+		{
+			cerr << "Error writing " << fileName << endl;
+		}
+		// close the file
+		outBamFile.close();
+		cout
+				<< "SUCCESS: all nav mesh and crowd agent collections were written to "
+				<< fileName << endl;
+	}
+	else
+	{
+		cerr << "Error opening " << fileName << endl;
+	}
 
 	/// second option: remove custom update updateTask
 	framework.get_task_mgr().remove(updateTask);

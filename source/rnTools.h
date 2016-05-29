@@ -444,6 +444,30 @@ public:
 	void read_datagram(DatagramIterator &scan);
 };
 
+///Obstacle settings.
+struct EXPORT_CLASS RNObstacleSettings
+{
+PUBLISHED:
+	RNObstacleSettings();
+
+	INLINE bool operator==(
+			const RNObstacleSettings &other) const;
+	INLINE float get_radius() const;
+	INLINE void set_radius(float value);
+	INLINE LVecBase3f get_dims() const;
+	INLINE void set_dims(const LVecBase3f& value);
+	INLINE unsigned int get_ref() const;
+	INLINE void set_ref(unsigned int value);
+private:
+	float _radius;
+	LVecBase3f _dims;
+	unsigned int _ref;
+
+public:
+	void write_datagram(Datagram &dg) const;
+	void read_datagram(DatagramIterator &scan);
+};
+
 ///CrowdAgentParams
 struct EXPORT_CLASS RNCrowdAgentParams
 {

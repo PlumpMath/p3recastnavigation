@@ -31,7 +31,7 @@ if __name__ == '__main__':
     print("get a sceneNP as owner model")
     sceneNP = app.loader.load_model("nav_test.egg")
     
-    print("create a nav mesh and attach it to render")
+    print("create a nav mesh")
     navMeshNP = navMesMgr.create_nav_mesh()
     navMesh = navMeshNP.node()
     
@@ -41,8 +41,9 @@ if __name__ == '__main__':
     print("setup the nav mesh with scene as its owner object")
     navMesh.setup()
     
-    print("reparent navMeshNP to a reference NodePath")
-    navMeshNP.reparent_to(app.render)
+    print("reparent navMeshNP to sceneNP (or both to a common parent)")
+    sceneNP.reparent_to(app.render)
+    navMeshNP.reparent_to(sceneNP)
     
     print("get the agent model")
     agentNP = app.loader.load_model("eve.egg")

@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	NodePath sceneNP = window->load_model(framework.get_models(),
 			"nav_test.egg");
 
-	cout << "create a nav mesh and attach it to render" << endl;
+	cout << "create a nav mesh" << endl;
 	NodePath navMeshNP = navMesMgr->create_nav_mesh();
 	PT(RNNavMesh)navMesh = DCAST(RNNavMesh, navMeshNP.node());
 
@@ -63,8 +63,9 @@ int main(int argc, char *argv[])
 	cout << "setup the nav mesh with scene as its owner object" << endl;
 	navMesh->setup();
 
-	cout << "reparent navMeshNP to a reference NodePath" << endl;
-	navMeshNP.reparent_to(window->get_render());
+	cout << "reparent navMeshNP to sceneNP (or both to a common parent)" << endl;
+	sceneNP.reparent_to(window->get_render());
+	navMeshNP.reparent_to(sceneNP);
 
 	cout << "get the agent model" << endl;
 	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");

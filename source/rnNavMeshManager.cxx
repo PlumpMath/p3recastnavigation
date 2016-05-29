@@ -594,11 +594,6 @@ bool RNNavMeshManager::write_to_bam_file(const string& fileName)
 		NavMeshList::iterator iter;
 		for (iter = mNavMeshes.begin(); iter != mNavMeshes.end(); ++iter)
 		{
-			//current underlying NavMeshType: used as flag for setup()
-			dg.clear();
-			&(*iter)->get_nav_mesh_type() != NULL ?
-					dg.add_bool(true) : dg.add_bool(false);
-			dgSink->put_datagram(dg);
 			//write the the nav mesh
 			if (! outBamFile.write_object((*iter)))
 			{
@@ -653,24 +648,12 @@ bool RNNavMeshManager::read_from_bam_file(const string& fileName)
 		//for each nav mesh do:
 		for (unsigned int i = 0; i < navMeshNum; ++i)
 		{
-			//read the flag for setup()
-			dgGenerator->get_datagram(dg);
-			scan.assign(dg);
-			bool setupNavMesh = scan.get_bool();
 			//read the nav mesh
 			TypedWritable* navMesh = inBamFile.read_object();
 			if (navMesh)
 			{
 				//resolve pointers
-				if (inBamFile.resolve())
-				{
-					//setup if requested
-					if (setupNavMesh)
-					{
-						DCAST(RNNavMesh, navMesh)->setup();
-					}
-				}
-				else
+				if (!inBamFile.resolve())
 				{
 					errorReport += string(
 							"Error resolving pointers for nav mesh ") + str(i)
