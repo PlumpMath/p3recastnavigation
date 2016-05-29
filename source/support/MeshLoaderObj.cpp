@@ -54,8 +54,11 @@ rcMeshLoaderObj::rcMeshLoaderObj() :
 rcMeshLoaderObj::~rcMeshLoaderObj()
 {
 	delete [] m_verts;
+	m_verts = NULL;
 	delete [] m_normals;
+	m_normals = NULL;
 	delete [] m_tris;
+	m_tris = NULL;
 }
 		
 void rcMeshLoaderObj::addVertex(float x, float y, float z, int& cap)
@@ -447,8 +450,8 @@ rcMeshLoaderObj& rcMeshLoaderObj::operator=(const rcMeshLoaderObj& copy)
 	m_translation[3] = copy.m_translation[3];
 	//vertices
 	m_vertCount = copy.m_vertCount;
-	m_verts = new float[m_vertCount];
-	for (int v = 0; v < m_vertCount; ++v)
+	m_verts = new float[m_vertCount * 3];
+	for (int v = 0; v < m_vertCount * 3; ++v)
 	{
 		m_verts[v] = copy.m_verts[v];
 	}
@@ -486,7 +489,7 @@ void rcMeshLoaderObj::write_datagram(Datagram &dg) const
 	dg.add_stdfloat(m_translation[3]);
 	//vertices
 	dg.add_int32(m_vertCount);
-	for (int v = 0; v < m_vertCount; ++v)
+	for (int v = 0; v < m_vertCount * 3; ++v)
 	{
 		dg.add_stdfloat(m_verts[v]);
 	}
@@ -514,8 +517,8 @@ void rcMeshLoaderObj::read_datagram(DatagramIterator &scan)
 	m_translation[3] = scan.get_stdfloat();
 	//vertices
 	m_vertCount = scan.get_int32();
-	m_verts = new float[m_vertCount];
-	for (int v = 0; v < m_vertCount; ++v)
+	m_verts = new float[m_vertCount * 3];
+	for (int v = 0; v < m_vertCount * 3; ++v)
 	{
 		m_verts[v] = scan.get_stdfloat();
 	}

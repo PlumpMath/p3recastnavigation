@@ -540,6 +540,7 @@ int RNNavMesh::setup()
 	PRINT_DEBUG("RNNavMesh::setup");
 
 	//load model mesh
+	bool buildFromBam = false;
 	if (!mGeom)
 	{
 		//load the mesh from the owner node path
@@ -552,6 +553,7 @@ int RNNavMesh::setup()
 	else
 	{
 		//load the mesh from a bam file
+		buildFromBam = true;
 		if (!do_load_model_mesh(mOwnerObject, &mMeshLoader))
 		{
 			cleanup();
@@ -794,7 +796,7 @@ int RNNavMesh::setup()
 		{
 			PT(RNCrowdAgent)crowdAgent = *iter;
 			//check if adding to recast was successful
-			if (! do_add_crowd_agent_to_recast_update(crowdAgent))
+			if (! do_add_crowd_agent_to_recast_update(crowdAgent, buildFromBam))
 			{
 				//\see http://stackoverflow.com/questions/596162/can-you-remove-elements-from-a-stdlist-while-iterating-through-it
 				iter = mCrowdAgents.erase(iter);
@@ -815,7 +817,7 @@ int RNNavMesh::setup()
 		{
 			//check if adding to recast was successful
 			if (do_add_obstacle_to_recast((*iter).second(),
-							iter - mObstacles.begin()) < 0)
+							iter - mObstacles.begin(), buildFromBam) < 0)
 			{
 				//\see http://stackoverflow.com/questions/596162/can-you-remove-elements-from-a-stdlist-while-iterating-through-it
 				iter = mObstacles.erase(iter);
@@ -1607,7 +1609,7 @@ int RNNavMesh::cleanup()
 		for (iterO = mObstacles.begin(); iterO != mObstacles.end(); ++iterO)
 		{
 			do_remove_obstacle_from_recast(iterO->second(),
-					iterO->first());
+					iterO->first().get_ref());
 		}
 	}
 
@@ -1812,7 +1814,9 @@ int RNNavMesh::add_obstacle(NodePath objectNP)
 	CONTINUE_IF_ELSE_R(iterO == mObstacles.end(), RN_ERROR)
 
 	// insert obstacle with invalid ref: later will be corrected
-	mObstacles.push_back(Obstacle(RN_ERROR, objectNP));
+	RNObstacleSettings settings;
+	settings.set_ref(RN_ERROR);
+	mObstacles.push_back(Obstacle(settings, objectNP));
 
 	// continue if nav mesh has been already setup
 	CONTINUE_IF_ELSE_R(mNavMeshType, RN_ERROR)
@@ -1824,48 +1828,65 @@ int RNNavMesh::add_obstacle(NodePath objectNP)
 /**
  * Adds obstacle to recast.
  */
-int RNNavMesh::do_add_obstacle_to_recast(NodePath& objectNP, int index)
+int RNNavMesh::do_add_obstacle_to_recast(NodePath& objectNP, int index,
+		bool buildFromBam)
 {
-		//get obstacle dimensions
-		LVecBase3f modelDims;
-		LVector3f modelDeltaCenter;
-		float modelRadius =
+	//get obstacle dimensions
+	LVecBase3f modelDims;
+	LVector3f modelDeltaCenter;
+	float modelRadius;
+	if (!buildFromBam)
+	{
+		//compute new obstacle dimensions
+		modelRadius =
 				RNNavMeshManager::get_global_ptr()->get_bounding_dimensions(
 						objectNP, modelDims, modelDeltaCenter);
+	}
+	else
+	{
+		modelRadius = mObstacles[index].first().get_radius();
+		modelDims = mObstacles[index].first().get_dims();
+	}
 
-		//the obstacle is reparented to the RNNavMesh's reference node path
-		objectNP.wrt_reparent_to(mReferenceNP);
+	//the obstacle is reparented to the RNNavMesh's reference node path
+	objectNP.wrt_reparent_to(mReferenceNP);
 
-		//calculate pos wrt reference node path
-		LPoint3f pos = objectNP.get_pos();
-		//add detour obstacle
-		dtObstacleRef obstacleRef;
-		float recastPos[3];
-		rnsup::LVecBase3fToRecast(pos, recastPos);
-		dtTileCache* tileCache =
-				static_cast<rnsup::NavMeshType_Obstacle*>(mNavMeshType)->getTileCache();
-		// continue if obstacle addition to tile cache is successful
-		CONTINUE_IF_ELSE_R(
-				tileCache->addObstacle(recastPos, modelRadius,
-						modelDims.get_z(), &obstacleRef) == DT_SUCCESS, RN_ERROR)
+	//calculate pos wrt reference node path
+	LPoint3f pos = objectNP.get_pos();
+	//add detour obstacle
+	dtObstacleRef obstacleRef;
+	float recastPos[3];
+	rnsup::LVecBase3fToRecast(pos, recastPos);
+	dtTileCache* tileCache =
+			static_cast<rnsup::NavMeshType_Obstacle*>(mNavMeshType)->getTileCache();
+	// continue if obstacle addition to tile cache is successful
+	CONTINUE_IF_ELSE_R(
+			tileCache->addObstacle(recastPos, modelRadius, modelDims.get_z(),
+					&obstacleRef) == DT_SUCCESS, RN_ERROR)
 
-		//update tiles cache: repeat for all the tiles touched
-		for (int c = 0; c < DT_MAX_TOUCHED_TILES; ++c)
-		{
-			tileCache->update(0, mNavMeshType->getNavMesh());
-		}
-		//correct to the obstacle ref
-		mObstacles[index].set_first(obstacleRef);
-		PRINT_DEBUG(
-				"'" << get_owner_node_path() << "' add_obstacle: '" << objectNP << "' at pos: " << pos);
+	//update tiles cache: repeat for all the tiles touched
+	for (int c = 0; c < DT_MAX_TOUCHED_TILES; ++c)
+	{
+		tileCache->update(0, mNavMeshType->getNavMesh());
+	}
+	//correct to the obstacle settings
+	if (!buildFromBam)
+	{
+		//update new obstacle dimensions
+		mObstacles[index].first().set_radius(modelRadius);
+		mObstacles[index].first().set_dims(modelDims);
+	}
+	mObstacles[index].first().set_ref(obstacleRef);
+	PRINT_DEBUG(
+			"'" << get_owner_node_path() << "' add_obstacle: '" << objectNP << "' at pos: " << pos);
 #ifdef RN_DEBUG
-		if (! mDebugCamera.is_empty())
-		{
-			do_debug_static_render();
-		}
+	if (!mDebugCamera.is_empty())
+	{
+		do_debug_static_render();
+	}
 #endif //RN_DEBUG
-		// obstacle added: return the last index
-		return (int) obstacleRef;
+	// obstacle added: return the last index
+	return (int) obstacleRef;
 }
 
 /**
@@ -1893,7 +1914,7 @@ int RNNavMesh::remove_obstacle(NodePath objectNP)
 	CONTINUE_IF_ELSE_R(iterO != mObstacles.end(), RN_ERROR)
 
 	// remove obstacle: save ref for later removing from recast
-	int obstacleRef = iterO->first();
+	int obstacleRef = iterO->first().get_ref();
 	mObstacles.erase(iterO);
 
 	// continue if nav mesh has been already setup
@@ -1947,7 +1968,7 @@ NodePath RNNavMesh::get_obstacle_by_ref(int ref) const
 	pvector<Obstacle>::const_iterator iter;
 	for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
 	{
-		if ((*iter).get_first() == ref)
+		if ((int)(*iter).get_first().get_ref() == ref)
 		{
 			// break: obstacleNP by ref is present
 			obstacleNP = (*iter).get_second();
@@ -2032,7 +2053,8 @@ void RNNavMesh::do_add_crowd_agent_to_update_list(PT(RNCrowdAgent)crowdAgent)
 /**
  * Adds RNCrowdAgent to recast update.
  */
-bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent)
+bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
+		bool buildFromBam)
 {
 	//there is a crowd tool because the recast nav mesh
 	//has been completely setup
@@ -2054,10 +2076,22 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent)
 		//get crowdAgent dimensions
 		LVecBase3f modelDims;
 		LVector3f modelDeltaCenter;
-		float modelRadius =
+		float modelRadius;
+		if (!buildFromBam)
+		{
+			//compute new agent dimensions
+			modelRadius =
 				RNNavMeshManager::get_global_ptr()->get_bounding_dimensions(
 						NodePath::any_path(crowdAgent), modelDims,
 						modelDeltaCenter);
+		}
+		else
+		{
+			modelRadius = crowdAgent->mAgentParams.get_radius();
+			modelDims.set_x(0.0);
+			modelDims.set_y(0.0);
+			modelDims.set_z(crowdAgent->mAgentParams.get_height());
+		}
 
 		//update RNNavMeshSettings temporarily (mandatory)
 		RNNavMeshSettings settings, oldNavMeshSettings;
@@ -2068,8 +2102,12 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent)
 
 		//update dtCrowdAgentParams
 		dtCrowdAgentParams ap = crowdAgent->mAgentParams;
-		ap.radius = modelRadius;
-		ap.height = modelDims.get_z();
+		if (!buildFromBam)
+		{
+			//update new agent dimensions
+			ap.radius = modelRadius;
+			ap.height = modelDims.get_z();
+		}
 
 		//set height correction
 		crowdAgent->mHeigthCorrection = LVector3f(0.0, 0.0, modelDims.get_z());
@@ -2800,8 +2838,7 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 	///Used for saving underlying geometry (see TypedWritable API).
 	if(mNavMeshType)
 	{
-		mMeshLoader = *(mNavMeshType->getInputGeom()->getMesh());
-		mMeshLoader.write_datagram(dg);
+		mNavMeshType->getInputGeom()->getMesh()->write_datagram(dg);
 	}
 
 	///Unique ref.
@@ -2827,7 +2864,8 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 		pvector<Obstacle>::iterator iter;
 		for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
 		{
-			//obstacle ref will be recomputed in setup: so not saved
+			//obstacle ref will be recomputed in setup
+			(*iter).first().write_datagram(dg);
 			PT(PandaNode)pandaNode = (*iter).second().node();
 			manager->write_pointer(dg, pandaNode);
 		}
@@ -2862,7 +2900,10 @@ int RNNavMesh::complete_pointers(TypedWritable **p_list, BamReader *manager)
 		for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
 		{
 			PT(PandaNode)realPandaNode = DCAST(PandaNode, p_list[pi++]);
-			(*iter) = Obstacle(RN_ERROR, NodePath::any_path(realPandaNode));
+			//replace with an Obstacle with an invalid obstacle ref
+			RNObstacleSettings settings = (*iter).get_first();
+			settings.set_ref(0);
+			(*iter) = Obstacle(settings, NodePath::any_path(realPandaNode));
 		}
 	}
 
@@ -3035,6 +3076,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	{
 		for (unsigned int i = 0; i < mObstacles.size(); ++i)
 		{
+			mObstacles[i].first().read_datagram(scan);
 			manager->read_pointer(scan);
 		}
 	}

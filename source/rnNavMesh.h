@@ -275,7 +275,7 @@ public:
 	//off mesh connection
 	typedef Pair<ValueList<LPoint3f>,RNOffMeshConnectionSettings> PointPairOffMeshConnectionSettings;
 	//obstacles.
-	typedef Pair<int, NodePath> Obstacle;
+	typedef Pair<RNObstacleSettings, NodePath> Obstacle;
 
 	///Library & support low level related methods (C++ only).
 	inline rnsup::InputGeom* get_recast_input_geom() const;
@@ -355,7 +355,8 @@ private:
 	bool do_build_navMesh();
 
 	void do_add_crowd_agent_to_update_list(PT(RNCrowdAgent)crowdAgent);
-	bool do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent);
+	bool do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
+			bool buildFromBam = false);
 	void do_remove_crowd_agent_from_update_list(PT(RNCrowdAgent)crowdAgent);
 	void do_remove_crowd_agent_from_recast_update(PT(RNCrowdAgent)crowdAgent);
 	void do_set_crowd_agent_other_settings(
@@ -369,7 +370,8 @@ private:
 	int do_find_off_mesh_connection_poly(int offMeshConnectionID,
 			dtPolyRef* poly) const;
 
-	int do_add_obstacle_to_recast(NodePath& objectNP, int index);
+	int do_add_obstacle_to_recast(NodePath& objectNP, int index,
+			bool buildFromBam = false);
 	int do_remove_obstacle_from_recast(NodePath& objectNP, int obstacleRef);
 
 #ifdef RN_DEBUG

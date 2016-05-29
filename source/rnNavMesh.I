@@ -151,7 +151,7 @@ INLINE int RNNavMesh::get_obstacle(int index) const
 {
 	CONTINUE_IF_ELSE_R(mNavMeshTypeEnum == OBSTACLE, RN_ERROR)
 
-	return (int) mObstacles[index].get_first();
+	return (int) mObstacles[index].get_first().get_ref();
 }
 
 /**
