@@ -12,16 +12,18 @@
 ///RNNavMesh inline definitions
 
 /**
- * Sets the owner object's NodePath this RNNavMesh is attached to.
- * Should be called before nav mesh setup.
+ * Sets the owner object's NodePath of this RNNavMesh.
+ * Should be called before RNNavMesh setup.
  */
 INLINE void RNNavMesh::set_owner_node_path(const NodePath& ownerObject)
 {
+	CONTINUE_IF_ELSE_V(! mNavMeshType)
+
 	mOwnerObject = ownerObject;
 }
 
 /**
- * Gets the owner object's NodePath this RNNavMesh is attached to.
+ * Returns the owner object's NodePath of this RNNavMesh.
  */
 INLINE NodePath RNNavMesh::get_owner_node_path()const
 {
@@ -29,8 +31,8 @@ INLINE NodePath RNNavMesh::get_owner_node_path()const
 }
 
 /**
- * Gets the owner object's input geometry min bounds.
- * Returns LVecBase3f::zero() before nav mesh setup.
+ * Returns the owner object's input geometry min bounds.
+ * or LVecBase3f::zero() before nav mesh setup.
  */
 INLINE LVecBase3f RNNavMesh::get_recast_bounds_min() const
 {
@@ -40,8 +42,8 @@ INLINE LVecBase3f RNNavMesh::get_recast_bounds_min() const
 }
 
 /**
- * Gets the owner object's input geometry max bounds.
- * Returns LVecBase3f::zero() before nav mesh setup.
+ * Returns the owner object's input geometry max bounds.
+ * or LVecBase3f::zero() before nav mesh setup.
  */
 INLINE LVecBase3f RNNavMesh::get_recast_bounds_max() const
 {
@@ -51,7 +53,7 @@ INLINE LVecBase3f RNNavMesh::get_recast_bounds_max() const
 }
 
 /**
- * Gets the underlying NavMeshType type: SOLO, TILE, OBSTACLES.
+ * Returns the underlying NavMeshType type: SOLO, TILE, OBSTACLES.
  */
 INLINE RNNavMesh::RNNavMeshTypeEnum RNNavMesh::get_nav_mesh_type_enum() const
 {
@@ -59,7 +61,7 @@ INLINE RNNavMesh::RNNavMeshTypeEnum RNNavMesh::get_nav_mesh_type_enum() const
 }
 
 /**
- * Gets the underlying NavMeshType settings.
+ * Returns the underlying NavMeshType settings.
  */
 INLINE RNNavMeshSettings RNNavMesh::get_nav_mesh_settings() const
 {
@@ -67,8 +69,8 @@ INLINE RNNavMeshSettings RNNavMesh::get_nav_mesh_settings() const
 }
 
 /**
- * Sets the Recast area's ored flags.
- * Should be called before nav mesh setup.
+ * Sets the area's 'ored' flags.
+ * Should be called before RNNavMesh setup.
  * \note oredFlags: by default flags as specified in RNNavMeshPolyFlagsEnum.
  */
 INLINE void RNNavMesh::set_area_flags(int area, int oredFlags)
@@ -80,7 +82,7 @@ INLINE void RNNavMesh::set_area_flags(int area, int oredFlags)
 }
 
 /**
- * Returns the Recast area's ored flags, a negative number on error.
+ * Returns the area's 'ored' flags, or a negative number on error.
  */
 INLINE int RNNavMesh::get_area_flags(int area) const
 {
@@ -89,7 +91,7 @@ INLINE int RNNavMesh::get_area_flags(int area) const
 }
 
 /**
- * Returns the Recast area's traversal cost, a negative number on error.
+ * Returns the area's traversal cost, or a negative number on error.
  */
 INLINE float RNNavMesh::get_area_cost(int area) const
 {
@@ -98,7 +100,7 @@ INLINE float RNNavMesh::get_area_cost(int area) const
 }
 
 /**
- * Returns the Recast Crowd include flags.
+ * Returns the RNCrowdAgent include flags.
  */
 INLINE int RNNavMesh::get_crowd_include_flags() const
 {
@@ -106,7 +108,7 @@ INLINE int RNNavMesh::get_crowd_include_flags() const
 }
 
 /**
- * Returns the Recast Crowd exclude flags.
+ * Returns the RNCrowdAgent exclude flags.
  */
 INLINE int RNNavMesh::get_crowd_exclude_flags() const
 {
@@ -159,7 +161,7 @@ INLINE int RNNavMesh::get_obstacle(int index) const
 }
 
 /**
- * Returns the number of obstacles placed on this RNNavMesh.
+ * Returns the number of obstacles added to this RNNavMesh.
  */
 INLINE int RNNavMesh::get_num_obstacles() const
 {
@@ -169,7 +171,7 @@ INLINE int RNNavMesh::get_num_obstacles() const
 }
 
 /**
- * Sets up the underlying NavMeshType tile settings (only TILE and OBSTACLE).
+ * Returns the underlying NavMeshType tile settings (only TILE and OBSTACLE).
  */
 INLINE RNNavMeshTileSettings RNNavMesh::get_nav_mesh_tile_settings() const
 {
@@ -177,7 +179,7 @@ INLINE RNNavMeshTileSettings RNNavMesh::get_nav_mesh_tile_settings() const
 }
 
 /**
- * Gets a RNCrowdAgent by index.
+ * Returns the RNCrowdAgent given its index.
  */
 INLINE PT(RNCrowdAgent) RNNavMesh::get_crowd_agent(int index) const
 {
@@ -187,7 +189,7 @@ INLINE PT(RNCrowdAgent) RNNavMesh::get_crowd_agent(int index) const
 }
 
 /**
- * Returns the number of RNCrowdAgents handled by this RNNavMesh.
+ * Returns the number of RNCrowdAgents added to this RNNavMesh.
  */
 INLINE int RNNavMesh::get_num_crowd_agents() const
 {
@@ -195,7 +197,7 @@ INLINE int RNNavMesh::get_num_crowd_agents() const
 }
 
 /**
- * Gets a RNCrowdAgent by index.
+ * Returns the RNCrowdAgent given its index.
  */
 INLINE PT(RNCrowdAgent) RNNavMesh::operator [](int index) const
 {
@@ -203,7 +205,7 @@ INLINE PT(RNCrowdAgent) RNNavMesh::operator [](int index) const
 }
 
 /**
- * Returns the number of RNCrowdAgents handled by this RNNavMesh.
+ * Returns the number of RNCrowdAgents added to this RNNavMesh.
  */
 INLINE int RNNavMesh::size() const
 {
@@ -244,7 +246,7 @@ inline void RNNavMesh::do_reset()
 }
 
 /**
- * Gets the underlying rnsup::InputGeom.
+ * Returns the underlying rnsup::InputGeom.
  */
 inline rnsup::InputGeom* RNNavMesh::get_recast_input_geom() const
 {
@@ -252,7 +254,7 @@ inline rnsup::InputGeom* RNNavMesh::get_recast_input_geom() const
 }
 
 /**
- * Gets the underlying dtNavMesh.
+ * Returns the underlying dtNavMesh.
  */
 inline dtNavMesh* RNNavMesh::get_recast_nav_mesh() const
 {
@@ -260,7 +262,7 @@ inline dtNavMesh* RNNavMesh::get_recast_nav_mesh() const
 }
 
 /**
- * Gets the underlying dtNavMeshQuery.
+ * Returns the underlying dtNavMeshQuery.
  */
 inline dtNavMeshQuery* RNNavMesh::get_recast_nav_mesh_query() const
 {
@@ -268,7 +270,7 @@ inline dtNavMeshQuery* RNNavMesh::get_recast_nav_mesh_query() const
 }
 
 /**
- * Gets the underlying dtCrowd.
+ * Returns the underlying dtCrowd.
  */
 inline dtCrowd* RNNavMesh::get_recast_crowd() const
 {
@@ -276,7 +278,7 @@ inline dtCrowd* RNNavMesh::get_recast_crowd() const
 }
 
 /**
- * NavMeshType reference getter function.
+ * Returns a reference to underlying NavMeshType.
  */
 inline rnsup::NavMeshType& RNNavMesh::get_nav_mesh_type() const
 {

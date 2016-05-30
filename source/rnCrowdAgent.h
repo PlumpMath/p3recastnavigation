@@ -22,23 +22,20 @@
  * 		- http://digestingduck.blogspot.it
  * 		- https://groups.google.com/forum/?fromgroups#!forum/recastnavigation
  *
- * This object must be added to a RNNavMesh to be driven to its own target.\n
- * A model should be associated to this object.\n
- * This object could be of type:
+ * This PandaNode must be added to a RNNavMesh to be driven to its own target.\n
+ * A model could be reparented to this PandaNode.\n
+ * An RNCrowdAgent could be of type:
  * - "recast" (the default): its movement/orientation follows strictly the
  * path as updated by RecastNavigation library
- * - "kinematic": its movement/orientation is corrected to stand on floor.
- * If specified in "thrown_events", this object can throw events which
- * actually are sent:
+ * - "kinematic": its movement/orientation is corrected to stand on floor.\n
+ * If specified in "thrown_events", this object can throw these events:
  * - on moving (default event name: <OwnerObjectName>_CrowdAgent_Move)
  * - on being steady (default event name: <OwnerObjectName>_CrowdAgent_Steady)
  * Events are thrown continuously at a frequency which is the minimum between
  * the fps and the frequency specified (which defaults to 30 times per seconds).\n
  * The argument of each event is a reference to this component.\n
  *
- * \note the node path of this object will be reparented (if necessary)
- * when added to a RNNavMesh, to the same reference node (i.e. parent) of
- * the RNNavMesh object.
+ * \note A RNCrowdAgent will be reparented to a RNNavMesh when added to it.
  *
  * > **Manager Creation Parameter(s)**:
  * param | type | default | note

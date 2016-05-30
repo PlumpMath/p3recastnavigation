@@ -389,7 +389,7 @@ def handleObstacles(data):
             obstacleNP.set_scale(scale);
             # set obstacle position
             pos = entry0.get_surface_point(sceneNP)
-            obstacleNP.set_pos(pos)
+            obstacleNP.set_pos(sceneNP, pos)
             # try to add to nav mesh
             if navMesh.add_obstacle(obstacleNP) < 0:
                 # something went wrong remove from scene

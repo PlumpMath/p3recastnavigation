@@ -11,7 +11,7 @@
 ///RNCrowdAgent inline definitions
 
 /**
- * Gets RNCrowdAgent parameters.
+ * Returns RNCrowdAgent's parameters.
  */
 INLINE RNCrowdAgentParams RNCrowdAgent::get_params() const
 {
@@ -19,7 +19,7 @@ INLINE RNCrowdAgentParams RNCrowdAgent::get_params() const
 }
 
 /**
- * Gets RNCrowdAgent move target.
+ * Returns RNCrowdAgent's move target.
  */
 INLINE LPoint3f RNCrowdAgent::get_move_target() const
 {
@@ -27,7 +27,7 @@ INLINE LPoint3f RNCrowdAgent::get_move_target() const
 }
 
 /**
- * Gets RNCrowdAgent move velocity.
+ * Returns RNCrowdAgent's move velocity.
  */
 INLINE LVector3f RNCrowdAgent::get_move_velocity() const
 {
@@ -35,7 +35,7 @@ INLINE LVector3f RNCrowdAgent::get_move_velocity() const
 }
 
 /**
- * Gets RNCrowdAgent movement type (recast native or kinematic).
+ * Returns RNCrowdAgent's movement type (eithr recast or kinematic).
  */
 INLINE RNCrowdAgent::RNCrowdAgentMovType RNCrowdAgent::get_mov_type() const
 {
@@ -43,7 +43,7 @@ INLINE RNCrowdAgent::RNCrowdAgentMovType RNCrowdAgent::get_mov_type() const
 }
 
 /**
- * Gets the RNNavMesh this RNCrowdAgent is added to.
+ * Returns the RNNavMesh this RNCrowdAgent is added to.
  */
 INLINE PT(RNNavMesh) RNCrowdAgent::get_nav_mesh() const
 {
@@ -51,7 +51,7 @@ INLINE PT(RNNavMesh) RNCrowdAgent::get_nav_mesh() const
 }
 
 /**
- * Enables/disables the RNCrowdAgent event to be thrown.
+ * Enables/disables the RNCrowdAgent's events to be thrown.
  */
 INLINE void RNCrowdAgent::enable_throw_event(RNEventThrown event,
 		ThrowEventData eventData)

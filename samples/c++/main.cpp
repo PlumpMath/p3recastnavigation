@@ -277,7 +277,7 @@ NodePath getOwnerModel()
 	NodePath modelNP = window->load_model(framework.get_models(), sceneFile);
 	modelNP.set_collide_mask(mask);
 //	modelNP.set_pos(5.0, 20.0, 5.0);
-//	modelNP.set_h(30.0);
+//	modelNP.set_h(45.0);
 //	modelNP.set_scale(2.0);
 	return modelNP;
 }
@@ -616,14 +616,14 @@ void handleObstacles(const Event* e, void* data)
 			// add an obstacle to the scene
 
 			// get a model as obstacle
-			NodePath obstacleNP = window->load_model(sceneNP, obstacleFile);
+			NodePath obstacleNP = window->load_model(commonNP, obstacleFile);
 			obstacleNP.set_collide_mask(mask);
 			// set random scale (0.01 - 0.02)
 			float scale = 0.01 + 0.01 * ((float) rd() / (float) rd.max());
 			obstacleNP.set_scale(scale);
 			// set obstacle position
 			LPoint3f pos = entry0->get_surface_point(sceneNP);
-			obstacleNP.set_pos(pos);
+			obstacleNP.set_pos(sceneNP, pos);
 			// try to add to nav mesh
 			if (navMesh->add_obstacle(obstacleNP) < 0)
 			{

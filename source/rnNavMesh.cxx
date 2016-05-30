@@ -35,7 +35,7 @@ RNNavMesh::~RNNavMesh()
 
 /**
  * Sets the underlying NavMeshType type: SOLO, TILE, OBSTACLES.
- * Can be set only before RNNavMesh is setup.
+ * Should be called before RNNavMesh setup.
  */
 void RNNavMesh::set_nav_mesh_type_enum(RNNavMeshTypeEnum typeEnum)
 {
@@ -45,7 +45,7 @@ void RNNavMesh::set_nav_mesh_type_enum(RNNavMeshTypeEnum typeEnum)
 }
 
 /**
- * Sets up the underlying NavMeshType settings.
+ * Sets the underlying NavMeshType settings.
  */
 void RNNavMesh::set_nav_mesh_settings(const RNNavMeshSettings& settings)
 {
@@ -58,7 +58,7 @@ void RNNavMesh::set_nav_mesh_settings(const RNNavMeshSettings& settings)
 }
 
 /**
- * Sets the Recast area's traversal cost.
+ * Sets the area's traversal cost.
  */
 void RNNavMesh::set_crowd_area_cost(int area, float cost)
 {
@@ -84,8 +84,8 @@ void RNNavMesh::set_crowd_area_cost(int area, float cost)
 }
 
 /**
- * Sets Recast Crowd include flags.
- * \note oredFlags: ored flags as specified in RNNavMeshPolyFlagsEnum.
+ * Sets RNCrowdAgent's include flags.
+ * \note oredFlags: 'ored' flags as specified in RNNavMeshPolyFlagsEnum.
  */
 void RNNavMesh::set_crowd_include_flags(int oredFlags)
 {
@@ -104,8 +104,8 @@ void RNNavMesh::set_crowd_include_flags(int oredFlags)
 }
 
 /**
- * Set Recast Crowd exclude flags.
- * \note oredFlags: ored flags as specified in RNNavMeshPolyFlagsEnum.
+ * Set RNCrowdAgent's exclude flags.
+ * \note oredFlags: 'ored' flags as specified in RNNavMeshPolyFlagsEnum.
  */
 void RNNavMesh::set_crowd_exclude_flags(int oredFlags)
 {
@@ -124,7 +124,7 @@ void RNNavMesh::set_crowd_exclude_flags(int oredFlags)
 }
 
 /**
- * Sets up the underlying NavMeshType tile settings (only TILE and OBSTACLE).
+ * Sets the underlying NavMeshType tile settings (only TILE and OBSTACLE).
  */
 void RNNavMesh::set_nav_mesh_tile_settings(
 		const RNNavMeshTileSettings& settings)
@@ -147,7 +147,7 @@ void RNNavMesh::set_nav_mesh_tile_settings(
 }
 
 /**
- * Initialize the RNNavMesh with common settings.
+ * Initializes the RNNavMesh with starting settings.
  */
 void RNNavMesh::do_initialize()
 {
@@ -510,9 +510,8 @@ void RNNavMesh::do_initialize()
 }
 
 /**
- * Sets up RNNavMesh to be ready for RNCrowdAgents handling.
- * This method can be called at startup or during program execution
- * repeatedly.
+ * Sets up RNNavMesh to be ready for RNCrowdAgents management.
+ * This method can be repeatedly called during program execution.
  */
 int RNNavMesh::setup()
 {
@@ -845,7 +844,7 @@ int RNNavMesh::setup()
 }
 
 /**
- * Builds the navigation mesh for the loaded model mesh.
+ * Builds the underlying navigation mesh for the loaded model mesh.
  */
 bool RNNavMesh::do_build_navMesh()
 {
@@ -861,9 +860,10 @@ bool RNNavMesh::do_build_navMesh()
 }
 
 /**
- * Adds a convex volume given its points (at least 3) and the area type.
- * Can be added only before RNNavMesh is setup.
- * Returns the convex volume's unique reference, or a negative number on error.
+ * Adds a convex volume with the points (at least 3) and the area type specified.
+ * Should be called before RNNavMesh setup.
+ * Returns the convex volume's unique reference (>0), or a negative number on
+ * error.
  * \note The added convex volume is temporary: after setup this convex volume
  * can be eliminated, so reference validity should always be verified before
  * use.
@@ -888,10 +888,10 @@ int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
 }
 
 /**
- * Removes a convex volume given an internal point.
- * Can be removed only before RNNavMesh is setup.
- * \note The first one found volume will be removed.
- * Returns the convex volume's reference, or a negative number on error.
+ * Removes a convex volume with the specified internal point.
+ * Should be called before RNNavMesh setup.
+ * \note The first one found convex volume will be removed.
+ * Returns the convex volume's reference (>0), or a negative number on error.
  */
 int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 {
@@ -955,8 +955,8 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 }
 
 /**
- * Gets the convex volume with the point inside.
- * Returns the index of the convex volume, or a negative number if none is found.
+ * Returns the index of the convex volume with the specified internal point,
+ * or a negative number if none is found.
  */
 int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) const
 {
@@ -981,7 +981,7 @@ int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) cons
 }
 
 /**
- * Finds polygons of a convex volume.
+ * Finds the underlying nav mesh's polygons around a convex volume.
  */
 int RNNavMesh::do_find_convex_volume_polys(int convexVolumeID,
 		dtQueryFilter& filter, dtPolyRef* polys, int& npolys,
@@ -1038,9 +1038,10 @@ int RNNavMesh::do_find_convex_volume_polys(int convexVolumeID,
 }
 
 /**
- * Updates settings of the convex volume given a point inside.
- * Can be set only after RNNavMesh is setup.
- * Returns the index of the convex volume, or a negative number if none if not found or on error.
+ * Updates the settings of the convex volume with the specified internal point.
+ * Should be called after RNNavMesh setup.
+ * Returns the convex volume's index in the list, or a negative number
+ * on error.
  */
 int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 		const RNConvexVolumeSettings& settings)
@@ -1120,8 +1121,9 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 
 /**
  * Updates settings of the convex volume given its reference.
- * Can be set only after RNNavMesh is setup.
- * Returns the index of the convex volume, or a negative number if none if not found or on error.
+ * Should be called after RNNavMesh setup.
+ * Returns the convex volume's index in the list, or a negative number
+ * on error.
  */
 int RNNavMesh::set_convex_volume_settings(int ref,
 		const RNConvexVolumeSettings& settings)
@@ -1146,8 +1148,8 @@ int RNNavMesh::set_convex_volume_settings(int ref,
 
 /**
  * Returns settings of the convex volume given a point inside.
- * Can be get only after RNNavMesh is setup.
- * Returns RNConvexVolumeSettings::ref = a negative number on error.
+ * Should be called after RNNavMesh setup.
+ * Returns RNConvexVolumeSettings::ref == a negative number on error.
  */
 RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(
 		const LPoint3f& insidePoint) const
@@ -1171,8 +1173,8 @@ RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(
 
 /**
  * Returns settings of the convex volume given its ref.
- * Can be get only after RNNavMesh is setup.
- * Returns RNConvexVolumeSettings::ref = a negative number on error.
+ * Should be called after RNNavMesh setup.
+ * Returns RNConvexVolumeSettings::ref == a negative number on error.
  */
 RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(int ref) const
 {
@@ -1196,7 +1198,8 @@ RNConvexVolumeSettings RNNavMesh::get_convex_volume_settings(int ref) const
 }
 
 /**
- * Gets a convex volume's point list given its unique reference (>0).
+ * Returns the point list of the convex volume with the specified unique
+ * reference (>0).
  * Returns an empty list on error.
  */
 ValueList<LPoint3f> RNNavMesh::get_convex_volume_by_ref(int ref) const
@@ -1217,10 +1220,11 @@ ValueList<LPoint3f> RNNavMesh::get_convex_volume_by_ref(int ref) const
 }
 
 /**
- * Adds an off mesh connection given its two points and if bidirectional.
- * Can be added only before RNNavMesh is setup.
+ * Adds an off mesh connection with the specified begin/end points and if
+ * it is bidirectional.
+ * Should be called before RNNavMesh setup.
  * \note pointPair[0] = begin point, pointPair[1] = end point
- * Returns the off mesh connection's unique reference, or a negative number
+ * Returns the off mesh connection's unique reference (>0), or a negative number
  * on error.
  * \note The added off mesh connection is temporary: after setup this off mesh
  * connection can be eliminated, so reference validity should always be
@@ -1249,9 +1253,10 @@ int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points,
 }
 
 /**
- * Removes an off mesh connection given the begin or end point.
- * Can be removed only before RNNavMesh is setup.
- * Returns the off mesh connection's reference, or a negative number on error.
+ * Removes an off mesh connection with the begin or end point specified.
+ * Should be called before RNNavMesh setup.
+ * Returns the off mesh connection's reference (>0), or a negative number
+ * on error.
  */
 int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 {
@@ -1314,8 +1319,9 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 }
 
 /**
- * Gets the off mesh connection given the begin or end point.
- * Returns the index of the convex volume, or a negative number if none is found.
+ * Gets the off mesh connection with the begin or end point specified.
+ * Returns the off mesh connection's index in the list, or a negative number
+ * on error.
  */
 int RNNavMesh::do_get_off_mesh_connection_from_point(
 		const LPoint3f& startEndPoint) const
@@ -1352,7 +1358,9 @@ int RNNavMesh::do_get_off_mesh_connection_from_point(
 	return offMeshConnectionID;
 }
 
-
+/**
+ * Finds the underlying nav mesh's polygons of an off mesh connection.
+ */
 int RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
 		dtPolyRef* poly) const
 {
@@ -1403,9 +1411,11 @@ int RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
 }
 
 /**
- * Updates settings of the off mesh connection given the begin or end point.
- * Can be set only after RNNavMesh is setup.
- * Returns the index of the off mesh connection, or a negative number if none is found or on error.
+ * Updates settings of the off mesh connection with the specified begin or
+ * end point.
+ * Should be called after RNNavMesh setup.
+ * Returns the off mesh connection's index in the list, or a negative number
+ * on error.
  */
 int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 	const RNOffMeshConnectionSettings& settings)
@@ -1463,9 +1473,10 @@ int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 }
 
 /**
- * Updates settings of the off mesh connection given its reference.
- * Can be set only after RNNavMesh is setup.
- * Returns the index of the off mesh connection, or a negative number if none is found or on error.
+ * Updates settings of the off mesh connection with the specified reference (>0).
+ * Should be called after RNNavMesh setup.
+ * Returns the off mesh connection's index in the list, or a negative number
+ * on error.
  */
 int RNNavMesh::set_off_mesh_connection_settings(int ref,
 	const RNOffMeshConnectionSettings& settings)
@@ -1481,9 +1492,10 @@ int RNNavMesh::set_off_mesh_connection_settings(int ref,
 }
 
 /**
- * Returns settings of the off mesh connection given the begin or end point.
- * Can be get only after RNNavMesh is setup.
- * Returns RNOffMeshConnectionSettings::ref = a negative number on error.
+ * Returns settings of the off mesh connection with the specified begin or
+ * end point.
+ * Should be called after RNNavMesh setup.
+ * Returns RNOffMeshConnectionSettings::ref == a negative number on error.
  */
 RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 	const LPoint3f& beginOrEndPoint) const
@@ -1508,9 +1520,9 @@ RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 
 
 /**
- * Returns settings of the off mesh connection given its ref.
- * Can be get only after RNNavMesh is setup.
- * Returns RNOffMeshConnectionSettings::ref = a negative number on error.
+ * Returns settings of the off mesh connection with the specified reference (>0).
+ * Should be called after RNNavMesh setup.
+ * Returns RNOffMeshConnectionSettings::ref == a negative number on error.
  */
 RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 		int ref) const
@@ -1535,7 +1547,8 @@ RNOffMeshConnectionSettings RNNavMesh::get_off_mesh_connection_settings(
 }
 
 /**
- * Gets an off mesh connection's point list given its unique reference (>0).
+ * Returns the point list (pair) of the off mesh connection with the specified
+ * unique reference (>0).
  * Returns an empty list on error.
  */
 ValueList<LPoint3f> RNNavMesh::get_off_mesh_connection_by_ref(int ref) const
@@ -1558,8 +1571,8 @@ ValueList<LPoint3f> RNNavMesh::get_off_mesh_connection_by_ref(int ref) const
 
 /**
  * On destruction cleanup.
- * Gives a RNNavMesh the ability to do any required cleanup just
- * when being destroyed.
+ * Gives an RNNavMesh the ability to do any cleaning is necessary when
+ * destroyed
  */
 void RNNavMesh::do_finalize()
 {
@@ -1664,7 +1677,7 @@ int RNNavMesh::cleanup()
 
 /**
  * Gets the position of a RNNavMesh's tile (TILE).
- * Can be get only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  */
 LVecBase2i RNNavMesh::get_tile_pos(const LPoint3f& pos)
 {
@@ -1690,7 +1703,7 @@ LVecBase2i RNNavMesh::get_tile_pos(const LPoint3f& pos)
 
 /**
  * Builds a RNNavMesh's tile (TILE).
- * Can be built only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  */
 int RNNavMesh::build_tile(const LPoint3f& pos)
 {
@@ -1717,7 +1730,7 @@ int RNNavMesh::build_tile(const LPoint3f& pos)
 
 /**
  * Removes a RNNavMesh's tile (TILE).
- * Can be get only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  */
 int RNNavMesh::remove_tile(const LPoint3f& pos)
 {
@@ -1744,7 +1757,7 @@ int RNNavMesh::remove_tile(const LPoint3f& pos)
 
 /**
  * Builds all RNNavMesh's tiles (TILE).
- * Can be get only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  */
 int RNNavMesh::build_all_tiles()
 {
@@ -1767,7 +1780,7 @@ int RNNavMesh::build_all_tiles()
 
 /**
  * Removes all RNNavMesh's tiles (TILE).
- * Can be get only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  */
 int RNNavMesh::remove_all_tiles()
 {
@@ -1826,7 +1839,7 @@ int RNNavMesh::add_obstacle(NodePath objectNP)
 }
 
 /**
- * Adds obstacle to recast.
+ * Adds obstacle to the underlying nav mesh.
  */
 int RNNavMesh::do_add_obstacle_to_recast(NodePath& objectNP, int index,
 		bool buildFromBam)
@@ -1925,7 +1938,7 @@ int RNNavMesh::remove_obstacle(NodePath objectNP)
 }
 
 /**
- * Removes obstacle from recast.
+ * Removes obstacle from underlying nav mesh.
  */
 int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP,
 		int obstacleRef)
@@ -1957,7 +1970,7 @@ int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP,
 }
 
 /**
- * Gets an obstacle's NodePath by its unique reference (>0).
+ * Returns the NodePathn of the obstacle with the specified unique reference (>0).
  * Return an empty NodePath on error.
  */
 NodePath RNNavMesh::get_obstacle_by_ref(int ref) const
@@ -1997,7 +2010,8 @@ int RNNavMesh::remove_all_obstacles()
 }
 
 /**
- * Adds a RNCrowdAgent to this RNNavMesh (i.e. to the dtCrowd handling mechanism).
+ * Adds a RNCrowdAgent to this RNNavMesh (i.e. to the underlying dtCrowd
+ * management mechanism).
  */
 int RNNavMesh::add_crowd_agent(NodePath crowdAgentNP)
 {
@@ -2051,7 +2065,7 @@ void RNNavMesh::do_add_crowd_agent_to_update_list(PT(RNCrowdAgent)crowdAgent)
 }
 
 /**
- * Adds RNCrowdAgent to recast update.
+ * Adds RNCrowdAgent to the underlying nav mesh update.
  */
 bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
 		bool buildFromBam)
@@ -2138,7 +2152,8 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
 }
 
 /**
- * Removes a RNCrowdAgent from this RNNavMesh (i.e. from the dtCrowd handling mechanism).
+ * Removes a RNCrowdAgent from this RNNavMesh (i.e. from the underlying
+ * dtCrowd management mechanism).
  */
 int RNNavMesh::remove_crowd_agent(NodePath crowdAgentNP)
 {
@@ -2183,7 +2198,7 @@ void RNNavMesh::do_remove_crowd_agent_from_update_list(PT(RNCrowdAgent)crowdAgen
 }
 
 /**
- * Removes RNCrowdAgent from recast update.
+ * Removes RNCrowdAgent from the underlying nav mesh update.
  */
 void RNNavMesh::do_remove_crowd_agent_from_recast_update(PT(RNCrowdAgent)crowdAgent)
 {
@@ -2203,7 +2218,8 @@ void RNNavMesh::do_remove_crowd_agent_from_recast_update(PT(RNCrowdAgent)crowdAg
 }
 
 /**
- * Sets CrowdAgentParams for a given added RNCrowdAgent.
+ * Sets RNCrowdAgentParams for a given added RNCrowdAgent.
+ * Should be called after RNNavMesh setup.
  */
 int RNNavMesh::do_set_crowd_agent_params(PT(RNCrowdAgent)crowdAgent,
 const RNCrowdAgentParams& params)
@@ -2228,7 +2244,7 @@ const RNCrowdAgentParams& params)
 
 /**
  * Gets the underlying dtTileCache (OBSTACLE).
- * Can be get only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  */
 dtTileCache* RNNavMesh::get_recast_tile_cache() const
 {
@@ -2240,7 +2256,7 @@ dtTileCache* RNNavMesh::get_recast_tile_cache() const
 
 /**
  * Sets the target for a given added RNCrowdAgent.
- * Can be get only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  */
 int RNNavMesh::do_set_crowd_agent_target(PT(RNCrowdAgent)crowdAgent,
 const LPoint3f& moveTarget)
@@ -2265,7 +2281,7 @@ const LPoint3f& moveTarget)
 
 /**
  * Sets the target velocity for a given added RNCrowdAgent.
- * Can be get only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  */
 int RNNavMesh::do_set_crowd_agent_velocity(PT(RNCrowdAgent)crowdAgent,
 const LVector3f& moveVelocity)
@@ -2289,7 +2305,7 @@ const LVector3f& moveVelocity)
 }
 
 /**
- * Helper: only called by other methods.
+ * Sets other settings of a RNCrowdAgent.
  */
 void RNNavMesh::do_set_crowd_agent_other_settings(PT(RNCrowdAgent)crowdAgent,
 		rnsup::CrowdTool* crowdTool)
@@ -2409,7 +2425,7 @@ bool RNNavMesh::do_load_model_mesh(NodePath model,
 }
 
 /**
- * Creates the navigation mesh type for the loaded model mesh.
+ * Creates the underlying navigation mesh type for the loaded model mesh.
  */
 void RNNavMesh::do_create_nav_mesh_type(rnsup::NavMeshType* navMeshType)
 {
@@ -2425,7 +2441,8 @@ void RNNavMesh::do_create_nav_mesh_type(rnsup::NavMeshType* navMeshType)
 
 
 /**
- * Updates position/orientation of all added RNCrowdAgents along their navigation paths.
+ * Updates position/orientation of all added RNCrowdAgents along their
+ * navigation paths.
  */
 void RNNavMesh::update(float dt)
 {
@@ -2472,7 +2489,7 @@ void RNNavMesh::update(float dt)
 
 /**
  * Finds a path from the start point to the end point.
- * Can be get only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  * Returns a list of points, empty on error.
  */
 ValueList<LPoint3f> RNNavMesh::path_find_follow(const LPoint3f& startPos,
@@ -2513,7 +2530,7 @@ ValueList<LPoint3f> RNNavMesh::path_find_follow(const LPoint3f& startPos,
 
 /**
  * Finds a straight path from the start point to the end point.
- * Can be get only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  * Returns a list of points, empty on error.
  */
 RNNavMesh::PointFlagList RNNavMesh::path_find_straight(
@@ -2561,7 +2578,7 @@ RNNavMesh::PointFlagList RNNavMesh::path_find_straight(
 
 /**
  * Casts a walkability/visibility ray from the start point toward the end point.
- * Can be casted only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  * Returns the first hit point if not walkable, or the end point if walkable.
  * This method is meant only for short distance checks.
  */
@@ -2601,7 +2618,7 @@ LPoint3f RNNavMesh::ray_cast(const LPoint3f& startPos,
 
 /**
  * Finds the distance from the specified position to the nearest polygon wall.
- * Can be found only after RNNavMesh is setup.
+ * Should be called after RNNavMesh setup.
  */
 float RNNavMesh::distance_to_wall(const LPoint3f& pos)
 {

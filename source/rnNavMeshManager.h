@@ -20,7 +20,7 @@ class RNCrowdAgent;
 /**
  * RNNavMeshManager Singleton class.
  *
- * Used for handling RNNavMeshes and RNCrowdAgents.
+ * Used for handling RNNavMeshes and RNCrowdAgents creation/destruction.
  */
 class EXPORT_CLASS RNNavMeshManager: public TypedReferenceCount,
 		public Singleton<RNNavMeshManager>
