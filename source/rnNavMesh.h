@@ -30,16 +30,14 @@ class RNCrowdAgent;
  * 		- http://digestingduck.blogspot.it
  * 		- https://groups.google.com/forum/?fromgroups#!forum/recastnavigation
  *
- * This object will create a "navigation mesh" for its "owner object", which
+ * This PandaNode will create a "navigation mesh" for its "owner object", which
  * is a model specified as NodePath at setup time.\n
  * The owner object is, typically, a stationary/static object.\n
  * An "update" task should call this object's update() method to drive the
- * added RNCrowdAgents to their own targets.\n
- * \note all locations/orientation are calculated wrt the owner object parent,
- * i.e. the reference node path.
- * \note area = 5 (NAVMESH_POLYAREA_JUMP) and flags = 0x08 (NAVMESH_POLYFLAGS_JUMP)
- * are hard-coded for use of off mesh connections (hard-coded), so should be not
- * redefined.
+ * crowd agents (RNCrowdAgent), which are added to this nav mesh, to their own
+ * targets.\n
+ * \note a model can "own" many nav meshes, so the typical pattern is to create a
+ * common parent NodePath to which both model and its nav meshes are reparented.
  *
  * > **Manager Creation Parameter(s)**:
  * param | type | default | note

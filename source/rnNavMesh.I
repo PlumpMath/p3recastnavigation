@@ -13,6 +13,7 @@
 
 /**
  * Sets the owner object's NodePath this RNNavMesh is attached to.
+ * Should be called before nav mesh setup.
  */
 INLINE void RNNavMesh::set_owner_node_path(const NodePath& ownerObject)
 {
@@ -29,6 +30,7 @@ INLINE NodePath RNNavMesh::get_owner_node_path()const
 
 /**
  * Gets the owner object's input geometry min bounds.
+ * Returns LVecBase3f::zero() before nav mesh setup.
  */
 INLINE LVecBase3f RNNavMesh::get_recast_bounds_min() const
 {
@@ -39,6 +41,7 @@ INLINE LVecBase3f RNNavMesh::get_recast_bounds_min() const
 
 /**
  * Gets the owner object's input geometry max bounds.
+ * Returns LVecBase3f::zero() before nav mesh setup.
  */
 INLINE LVecBase3f RNNavMesh::get_recast_bounds_max() const
 {
@@ -65,7 +68,7 @@ INLINE RNNavMeshSettings RNNavMesh::get_nav_mesh_settings() const
 
 /**
  * Sets the Recast area's ored flags.
- * Can be set only before RNNavMesh is setup.
+ * Should be called before nav mesh setup.
  * \note oredFlags: by default flags as specified in RNNavMeshPolyFlagsEnum.
  */
 INLINE void RNNavMesh::set_area_flags(int area, int oredFlags)
@@ -111,8 +114,8 @@ INLINE int RNNavMesh::get_crowd_exclude_flags() const
 }
 
 /**
- * Gets a convex volume's unique reference (>0) by index
- * (i.e. position into internal repository).
+ * Returns the convex volume's unique reference (>0) given its
+ * index into the list of defined convex volumes.
  */
 INLINE int RNNavMesh::get_convex_volume(int index) const
 {
@@ -120,7 +123,7 @@ INLINE int RNNavMesh::get_convex_volume(int index) const
 }
 
 /**
- * Returns the number of convex volumes defined on this RNNavMesh.
+ * Returns the number of convex volumes defined for this RNNavMesh.
  */
 INLINE int RNNavMesh::get_num_convex_volumes() const
 {
@@ -128,8 +131,8 @@ INLINE int RNNavMesh::get_num_convex_volumes() const
 }
 
 /**
- * Gets a off mesh connection's unique reference (>0) by index
- * (i.e. position into internal repository).
+ * Returns the off mesh connection's unique reference (>0) given its
+ * index into the list of defined off mesh connections.
  */
 INLINE int RNNavMesh::get_off_mesh_connection(int index) const
 {
@@ -145,7 +148,8 @@ INLINE int RNNavMesh::get_num_off_mesh_connections() const
 }
 
 /**
- * Gets an obstacle's unique reference (>0) by index (i.e. position into internal repository).
+ * Gets an obstacle's unique reference (>0) given its index into the
+ * list of defined obstacles.
  */
 INLINE int RNNavMesh::get_obstacle(int index) const
 {
