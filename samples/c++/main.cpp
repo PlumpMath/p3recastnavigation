@@ -21,7 +21,7 @@
 ///functions' declarations
 void loadAllScene();
 void restoreAllScene();
-void getOwnerModel();
+NodePath getOwnerModel();
 void getAgentModelAnims();
 bool readFromBamFile(string);
 void writeToBamFileAndExit(const Event*, void*);
@@ -41,6 +41,7 @@ PT(CollisionEntry)getCollisionEntryFromCamera();
 ///global data
 PandaFramework framework;
 WindowFramework *window;
+NodePath commonNP;
 CollideMask mask = BitMask32(0x10);
 PT(RNNavMesh)navMesh;
 const int NUMAGENTS = 2;//XXX
@@ -192,10 +193,16 @@ int main(int argc, char *argv[])
 void loadAllScene()
 {
 	RNNavMeshManager* navMesMgr = RNNavMeshManager::get_global_ptr();
-	// get a sceneNP as owner model
-	getOwnerModel();
 
-	// create a nav mesh and attach it to render
+	// create a common parent for nav meshes and models
+	commonNP = window->get_render().attach_new_node("commonNP");
+
+	// get a sceneNP as owner model
+	sceneNP = getOwnerModel();
+	// set name: to ease restoring from bam file
+	sceneNP.set_name("Owner");
+
+	// create a nav mesh
 	NodePath navMeshNP = navMesMgr->create_nav_mesh();
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
 
@@ -205,9 +212,9 @@ void loadAllScene()
 	// setup the nav mesh with scene as its owner object
 	navMesh->setup();
 
-	// reparent navMeshNP to sceneNP (or both to a common parent)
-	sceneNP.reparent_to(window->get_render());
-	navMeshNP.reparent_to(sceneNP);
+	// reparent both navMeshNP to sceneNP to commonNP
+	sceneNP.reparent_to(commonNP);
+	navMeshNP.reparent_to(commonNP);
 
 	// get agentNP[] (and agentAnimNP[]) as models for crowd agents
 	getAgentModelAnims();
@@ -229,24 +236,27 @@ void loadAllScene()
 		crowdAgentNP.set_pos(randPos);
 		// attach some geometry (a model) to crowdAgent
 		agentNP[i].reparent_to(crowdAgentNP);
-		// attach the crowd agent to the sceneNP's nav mesh
+		// attach the crowd agent to the nav mesh
+		// (crowdAgentNP is automatically reparented to navMeshNP)
 		navMesh->add_crowd_agent(crowdAgentNP);
 	}
 }
 
-// restore all scene stuff
+// restore all scene stuff when read from bam file
 void restoreAllScene()
 {
-	// restore nav mesh
-	NodePath navMeshNP = RNNavMeshManager::get_global_ptr()->get_nav_mesh(
-			0);
+	// restore nav mesh: through nav mesh manager
+	NodePath navMeshNP = RNNavMeshManager::get_global_ptr()->get_nav_mesh(0);
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
-	sceneNP.reparent_to(window->get_render());
+	// restore sceneNP: through panda3d
+	sceneNP = commonNP.find("**/Owner");
+	// reparent commonNP to render
+	commonNP.reparent_to(window->get_render());
 
 	// restore crowd agents
 	for (int i = 0; i < NUMAGENTS; ++i)
 	{
-		// create the crowd agent
+		// restore the crowd agent: through nav mesh manager
 		NodePath crowdAgentNP =
 				RNNavMeshManager::get_global_ptr()->get_crowd_agent(i);
 		crowdAgent[i] = DCAST(RNCrowdAgent, crowdAgentNP.node());
@@ -261,14 +271,15 @@ void restoreAllScene()
 }
 
 // load the owner model
-void getOwnerModel()
+NodePath getOwnerModel()
 {
 	// get a model to use as nav mesh' owner object
-	sceneNP = window->load_model(framework.get_models(), sceneFile);
-	sceneNP.set_collide_mask(mask);
-//	sceneNP.set_pos(5.0, 20.0, 5.0);
-//	sceneNP.set_h(30.0);
-//	sceneNP.set_scale(2.0);
+	NodePath modelNP = window->load_model(framework.get_models(), sceneFile);
+	modelNP.set_collide_mask(mask);
+//	modelNP.set_pos(5.0, 20.0, 5.0);
+//	modelNP.set_h(30.0);
+//	modelNP.set_scale(2.0);
+	return modelNP;
 }
 
 // load the agents' models and anims
@@ -318,8 +329,8 @@ bool readFromBamFile(string fileName)
 		cout << "Bam file version: " << inBamFile.get_file_major_ver() << "."
 				<< inBamFile.get_file_minor_ver() << endl;
 		// read the scene
-		TypedWritable* scene = inBamFile.read_object();
-		if (scene)
+		TypedWritable* common = inBamFile.read_object();
+		if (common)
 		{
 			// resolve pointers
 			if (!inBamFile.resolve())
@@ -338,7 +349,7 @@ bool readFromBamFile(string fileName)
 		cout << "SUCCESS: all nav meshes and crowd agents were read from "
 				<< fileName << endl;
 		// restore sceneNP
-		sceneNP = NodePath::any_path(DCAST(PandaNode, scene));
+		commonNP = NodePath::any_path(DCAST(PandaNode, common));
 	}
 	else
 	{
@@ -359,7 +370,7 @@ void writeToBamFileAndExit(const Event* e, void* data)
 				<< outBamFile.get_current_major_ver() << "."
 				<< outBamFile.get_current_minor_ver() << endl;
 		//write the the scene
-		if (!outBamFile.write_object(sceneNP.node()))
+		if (!outBamFile.write_object(commonNP.node()))
 		{
 			cerr << "Error writing " << fileName << endl;
 		}

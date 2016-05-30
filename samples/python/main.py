@@ -8,13 +8,15 @@ from direct.showbase.ShowBase import ShowBase
 from direct.actor.Actor import Actor
 from panda3d.core import load_prc_file_data, NodePath, ClockObject, \
                 BitMask32, LVector3f, LVecBase3f, LPoint3f, \
-                AnimControlCollection, auto_bind, TextNode
+                AnimControlCollection, auto_bind, TextNode, BamFile, \
+                Filename
 from p3recastnavigation import RNNavMeshManager, RNCrowdAgent, \
                 ValueList_string
 import random, sys
 
 dataDir = "../data"
 # global data
+commonNP = None
 mask = BitMask32(0x10);
 navMesh = None
 NUMAGENTS = 2
@@ -38,12 +40,18 @@ bamFileName = "nav_mesh.boo"
 def loadAllScene():
     """load all scene stuff"""
     
-    global app, navMesh, crowdAgent, sceneNP, agentNP
+    global app, navMesh, crowdAgent, sceneNP, agentNP, commonNP
     navMesMgr = RNNavMeshManager.get_global_ptr()
-    # get a sceneNP as owner model
-    getOwnerModel()
     
-    # create a nav mesh and attach it to render
+    # create a common parent for nav meshes and models
+    commonNP = app.render.attach_new_node("commonNP")
+    
+    # get a sceneNP as owner model
+    sceneNP = getOwnerModel()
+    # set name: to ease restoring from bam file
+    sceneNP.set_name("Owner")
+   
+    # create a nav mesh
     navMeshNP = navMesMgr.create_nav_mesh()
     navMesh = navMeshNP.node()
     
@@ -53,9 +61,9 @@ def loadAllScene():
     # setup the nav mesh with scene as its owner object
     navMesh.setup()
     
-    # reparent navMeshNP to sceneNP (or both to a common parent)
-    sceneNP.reparent_to(app.render)
-    navMeshNP.reparent_to(sceneNP)
+    # reparent both navMeshNP to sceneNP to commonNP
+    sceneNP.reparent_to(commonNP)
+    navMeshNP.reparent_to(commonNP)
     
     # get agentNP[] (and agentAnimNP[]) as models for crowd agents
     getAgentModelAnims()
@@ -76,21 +84,25 @@ def loadAllScene():
         crowdAgentNP.set_pos(randPos)
         # attach some geometry (a model) to crowdAgent
         agentNP[i].reparent_to(crowdAgentNP)
-        # attach the crowd agent to the sceneNP's nav mesh
+        # attach the crowd agent to the nav mesh 
+        # (crowdAgentNP is automatically reparented to navMeshNP) 
         navMesh.add_crowd_agent(crowdAgentNP)
         
 def restoreAllScene():
-    """restore all scene stuff """
+    """restore all scene stuff  when read from bam file"""
     
     global navMesh, crowdAgent, sceneNP, agentAnimCtls
-    # restore nav mesh
+    # restore nav mesh: through nav mesh manager
     navMeshNP = RNNavMeshManager.get_global_ptr().get_nav_mesh(0)
     navMesh = navMeshNP.node()
-    navMeshNP.reparent_to(app.render)
+    # restore sceneNP: through panda3d
+    sceneNP = commonNP.find("**/Owner")
+    # reparent commonNP to render
+    commonNP.reparent_to(app.render)
     
     # restore crowd agents
     for i in range(NUMAGENTS):
-        # create the crowd agent
+        # restore the crowd agent: through nav mesh manager
         crowdAgentNP = RNNavMeshManager.get_global_ptr().get_crowd_agent(i)
         crowdAgent[i] = crowdAgentNP.node()
         # restore animations
@@ -102,13 +114,14 @@ def restoreAllScene():
 def getOwnerModel():
     """loads the owner model"""
     
-    global app, sceneNP, sceneFile, mask
+    global app, sceneFile, mask
     # get a model to use as nav mesh' owner object
-    sceneNP = app.loader.load_model(sceneFile)
-    sceneNP.set_collide_mask(mask)
-#     sceneNP.set_pos(5.0, 20.0, 5.0)
-#     sceneNP.set_h(30.0)
-#     sceneNP.set_scale(2.0)
+    modelNP = app.loader.load_model(sceneFile)
+    modelNP.set_collide_mask(mask)
+#     modelNP.set_pos(5.0, 20.0, 5.0)
+#     modelNP.set_h(30.0)
+#     modelNP.set_scale(2.0)
+    return modelNP
 
 def getAgentModelAnims():
     """load the agents' models and anims"""
@@ -145,17 +158,18 @@ def getAgentModelAnims():
 def readFromBamFile(fileName):
     """read nav mesh from a file"""
     
+    global commonNP
     # read from bamFile
     inBamFile = BamFile()
     if inBamFile.open_read(Filename(fileName)):
         print("Current system Bam version: "
-              + inBamFile.get_current_major_ver() + "."
-              + inBamFile.get_current_minor_ver())
-        print("Bam file version: " + inBamFile.get_file_major_ver() + "."
-                + inBamFile.get_file_minor_ver())
+              + str(inBamFile.get_current_major_ver()) + "."
+              + str(inBamFile.get_current_minor_ver()))
+        print("Bam file version: " + str(inBamFile.get_file_major_ver()) + "."
+                + str(inBamFile.get_file_minor_ver()))
         # read the scene
-        scene = inBamFile.read_object()
-        if scene:
+        common = inBamFile.read_object()
+        if common:
             # resolve pointers
             if not inBamFile.resolve():
                 print("Error resolving pointers in " + fileName)
@@ -168,7 +182,7 @@ def readFromBamFile(fileName):
         print("SUCCESS: all nav meshes and crowd agents were read from "
                 + fileName)
         # restore sceneNP
-        sceneNP = NodePath.any_path(scene)
+        commonNP = NodePath.any_path(common)
     else:
         print("Error opening " + fileName)
         return False
@@ -177,14 +191,13 @@ def readFromBamFile(fileName):
 def writeToBamFileAndExit(fileName):
     """write nav mesh to a file (and exit)"""
     
-    RNNavMeshManager.get_global_ptr().write_to_bam_file(fileName)
     outBamFile = BamFile()
     if outBamFile.open_write(Filename(fileName)):
         print("Current system Bam version: "
-                + outBamFile.get_current_major_ver() + "."
-                + outBamFile.get_current_minor_ver())
+                + str(outBamFile.get_current_major_ver()) + "."
+                + str(outBamFile.get_current_minor_ver()))
         # write the the scene
-        if not outBamFile.write_object(sceneNP.node()):
+        if not str(outBamFile.write_object(commonNP.node())):
             print("Error writing " + fileName)
         # close the file
         outBamFile.close()

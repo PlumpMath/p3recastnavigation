@@ -99,20 +99,21 @@ int main(int argc, char *argv[])
 	// create a nav mesh manager
 	WPT(RNNavMeshManager)navMesMgr = new RNNavMeshManager(window->get_render(), mask);
 
-	// get a sceneNP as owner model
+	// create a common parent for nav meshes and models
+	NodePath commonNP = window->get_render().attach_new_node("commonNP");
+
+	// get a sceneNP as owner model and reparent to commonNP
 	sceneNP = window->load_model(framework.get_models(), "dungeon.egg");
 	sceneNP.set_collide_mask(mask);
-	sceneNP.reparent_to(window->get_render());
+	sceneNP.reparent_to(commonNP);
 
-	// create a nav mesh and attach it to render
+	// create a nav mesh and reparent to commonNP
 	NodePath navMeshNP = navMesMgr->create_nav_mesh();
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
+	navMeshNP.reparent_to(commonNP);
 
 	// mandatory: set sceneNP as owner of navMesh
 	navMesh->set_owner_node_path(sceneNP);
-
-	// reparent navMeshNP to a reference NodePath
-	navMeshNP.reparent_to(window->get_render());
 
 	// set nav mesh type
 	navMesh->set_nav_mesh_type_enum(RNNavMesh::SOLO);
@@ -627,12 +628,14 @@ void toggleSetupCleanup(const Event* e, void* data)
 		navMesh->cleanup();
 		areaPointList.clear();
 		linkPointPair.clear();
-		// now crowd agents and obstacles are detached:
-		// prevent to make them disappear from the scene
+		// now crowd agents and obstacles are detached
+		// from navMesh's NodePath, so we need to
+		// prevent them to disappear from the scene:
+		// reparent to navMeshNP's parent (i.e. commonNP)
 		for (int i = 0; i < navMesh->get_num_crowd_agents(); ++i)
 		{
 			NodePath::any_path(navMesh->get_crowd_agent(i)).reparent_to(
-					window->get_render());
+					NodePath::any_path(navMesh).get_parent());
 		}
 	}
 	*setupCleanupFlag = not *setupCleanupFlag;

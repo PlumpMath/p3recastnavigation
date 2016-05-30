@@ -49,6 +49,9 @@ int main(int argc, char *argv[])
 	cout << "create a nav mesh manager" << endl;
 	WPT(RNNavMeshManager)navMesMgr = new RNNavMeshManager(window->get_render());
 
+	cout << "create a common parent for nav meshes and models" << endl;
+	NodePath commonNP = window->get_render().attach_new_node("commonNP");
+
 	cout << "get a sceneNP as owner model" << endl;
 	NodePath sceneNP = window->load_model(framework.get_models(),
 			"nav_test.egg");
@@ -60,12 +63,12 @@ int main(int argc, char *argv[])
 	cout << "mandatory: set sceneNP as owner of navMesh" << endl;
 	navMesh->set_owner_node_path(sceneNP);
 
-	cout << "setup the nav mesh with scene as its owner object" << endl;
+	cout << "setup the navMesh with sceneNP as its owner object" << endl;
 	navMesh->setup();
 
-	cout << "reparent navMeshNP to sceneNP (or both to a common parent)" << endl;
-	sceneNP.reparent_to(window->get_render());
-	navMeshNP.reparent_to(sceneNP);
+	cout << "reparent both navMeshNP to sceneNP to commonNP" << endl;
+	sceneNP.reparent_to(commonNP);
+	navMeshNP.reparent_to(commonNP);
 
 	cout << "get the agent model" << endl;
 	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");

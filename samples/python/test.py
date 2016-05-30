@@ -349,10 +349,12 @@ def toggleSetupCleanup():
         navMesh.cleanup()
         areaPointList.clear()
         linkPointPair.clear()
-        # now crowd agents and obstacles are detached:
-        # prevent to make them disappear from the scene
+        # now crowd agents and obstacles are detached
+        # from navMesh's NodePath, so we need to
+        # prevent them to disappear from the scene:
+        # reparent to navMeshNP's parent (i.e. commonNP)
         for agent in navMesh:
-            NodePath.any_path(agent).reparent_to(app.render)
+            NodePath.any_path(agent).reparent_to(NodePath.any_path(navMesh).get_parent())
         
     setupCleanupFlag = not setupCleanupFlag
 
@@ -426,21 +428,22 @@ if __name__ == '__main__':
 
     # create a nav mesh manager
     navMesMgr = RNNavMeshManager(app.render, mask)
+    
+    # create a common parent for nav meshes and models
+    commonNP = app.render.attach_new_node("commonNP")
 
-    # get a sceneNP as owner model
+    # get a sceneNP as owner model and reparent to commonNP
     sceneNP = app.loader.load_model("dungeon.egg")
     sceneNP.set_collide_mask(mask)
-    sceneNP.reparent_to(app.render)
+    sceneNP.reparent_to(commonNP)
     
-    # create a nav mesh and attach it to render
+    # create a nav mesh and reparent to commonNP
     navMeshNP = navMesMgr.create_nav_mesh()
     navMesh = navMeshNP.node()
+    navMeshNP.reparent_to(commonNP)
     
     # mandatory: set sceneNP as owner of navMesh
     navMesh.set_owner_node_path(sceneNP)
-    
-    # reparent navMeshNP to a reference NodePath
-    navMeshNP.reparent_to(app.render)
     
     # set nav mesh type
     navMesh.set_nav_mesh_type_enum(RNNavMesh.SOLO)
