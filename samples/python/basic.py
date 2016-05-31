@@ -28,8 +28,8 @@ if __name__ == '__main__':
     print("create a nav mesh manager")
     navMesMgr = RNNavMeshManager()
 
-    print("create a common parent for nav meshes and models")
-    commonNP = app.render.attach_new_node("commonNP")
+    print("reparent the reference node to render")
+    navMesMgr.get_reference_node_path().reparent_to(app.render)
 
     print("get a sceneNP as owner model")
     sceneNP = app.loader.load_model("nav_test.egg")
@@ -44,9 +44,8 @@ if __name__ == '__main__':
     print("setup the navMesh with sceneNP as its owner object")
     navMesh.setup()
 
-    print("reparent both navMeshNP to sceneNP to commonNP")
-    sceneNP.reparent_to(commonNP)
-    navMeshNP.reparent_to(commonNP)
+    print("reparent sceneNP to the reference node")
+    sceneNP.reparent_to(navMesMgr.get_reference_node_path())
     
     print("get the agent model")
     agentNP = app.loader.load_model("eve.egg")

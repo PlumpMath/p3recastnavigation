@@ -16,7 +16,6 @@ import random, sys
 
 dataDir = "../data"
 # global data
-commonNP = None
 mask = BitMask32(0x10);
 navMesh = None
 NUMAGENTS = 2
@@ -43,15 +42,12 @@ def loadAllScene():
     global app, navMesh, crowdAgent, sceneNP, agentNP, commonNP
     navMesMgr = RNNavMeshManager.get_global_ptr()
     
-    # create a common parent for nav meshes and models
-    commonNP = app.render.attach_new_node("commonNP")
-    
     # get a sceneNP as owner model
     sceneNP = getOwnerModel()
     # set name: to ease restoring from bam file
     sceneNP.set_name("Owner")
    
-    # create a nav mesh
+    # create a nav mesh; its parent is the reference node
     navMeshNP = navMesMgr.create_nav_mesh()
     navMesh = navMeshNP.node()
     
@@ -61,10 +57,12 @@ def loadAllScene():
     # setup the nav mesh with scene as its owner object
     navMesh.setup()
     
-    # reparent both navMeshNP to sceneNP to commonNP
-    sceneNP.reparent_to(commonNP)
-    navMeshNP.reparent_to(commonNP)
-    
+    # reparent sceneNP to the reference node
+    sceneNP.reparent_to(navMesMgr.get_reference_node_path())
+
+    # reparent the reference node to render
+    navMesMgr.get_reference_node_path().reparent_to(app.render)
+        
     # get agentNP[] (and agentAnimNP[]) as models for crowd agents
     getAgentModelAnims()
     
@@ -96,9 +94,9 @@ def restoreAllScene():
     navMeshNP = RNNavMeshManager.get_global_ptr().get_nav_mesh(0)
     navMesh = navMeshNP.node()
     # restore sceneNP: through panda3d
-    sceneNP = commonNP.find("**/Owner")
-    # reparent commonNP to render
-    commonNP.reparent_to(app.render)
+    sceneNP = RNNavMeshManager.get_global_ptr().get_reference_node_path().find("**/Owner")
+    # reparent the reference node to render
+    RNNavMeshManager.get_global_ptr().get_reference_node_path().reparent_to(app.render)
     
     # restore crowd agents
     for i in range(NUMAGENTS):
@@ -168,8 +166,8 @@ def readFromBamFile(fileName):
         print("Bam file version: " + str(inBamFile.get_file_major_ver()) + "."
                 + str(inBamFile.get_file_minor_ver()))
         # read the scene
-        common = inBamFile.read_object()
-        if common:
+        reference = inBamFile.read_object()
+        if reference:
             # resolve pointers
             if not inBamFile.resolve():
                 print("Error resolving pointers in " + fileName)
@@ -181,8 +179,9 @@ def readFromBamFile(fileName):
         inBamFile.close()
         print("SUCCESS: all nav meshes and crowd agents were read from "
                 + fileName)
-        # restore sceneNP
-        commonNP = NodePath.any_path(common)
+        # restore reference node
+        RNNavMeshManager.get_global_ptr().set_reference_node_path(
+                NodePath.any_path(reference))
     else:
         print("Error opening " + fileName)
         return False
@@ -196,8 +195,9 @@ def writeToBamFileAndExit(fileName):
         print("Current system Bam version: "
                 + str(outBamFile.get_current_major_ver()) + "."
                 + str(outBamFile.get_current_minor_ver()))
-        # write the the scene
-        if not str(outBamFile.write_object(commonNP.node())):
+        # write the scene: just write the reference node
+        if not outBamFile.write_object(
+                RNNavMeshManager.get_global_ptr().get_reference_node_path().node()):
             print("Error writing " + fileName)
         # close the file
         outBamFile.close()
@@ -290,13 +290,6 @@ def toggleSetupCleanup():
         app.taskMgr.remove("updateNavMesh")
         # false: cleanup
         navMesh.cleanup()
-        # now crowd agents and obstacles are detached:
-        # prevent to make them disappear from the scene
-        for agent in navMesh:
-            NodePath.any_path(agent).reparent_to(app.render)
-        for i in range(navMesh.get_num_obstacles()):
-            ref = navMesh.get_obstacle(i)
-            navMesh.get_obstacle_by_ref(ref).reparent_to(app.render)
     setupCleanupFlag = not setupCleanupFlag
 
 def handleCrowdAgentEvent(crowAgent):
@@ -469,6 +462,8 @@ if __name__ == '__main__':
     load_prc_file_data("", "win-size 1024 768")
     load_prc_file_data("", "show-frame-rate-meter #t")
     load_prc_file_data("", "sync-video #t")
+    load_prc_file_data("", "want-directtools #t")
+    load_prc_file_data("", "want-tk #t")
         
     # Setup your application
     app = ShowBase()
@@ -487,7 +482,7 @@ if __name__ == '__main__':
     textNodePath.set_pos(-1.25, 0.0, 0.9)
     textNodePath.set_scale(0.035)
     
-    # create a nav mesh manager
+    # create a nav mesh manager; set root and mask to manage 'kinematic' agents
     navMesMgr = RNNavMeshManager(app.render, mask)
 
     # print creation parameters: defult values

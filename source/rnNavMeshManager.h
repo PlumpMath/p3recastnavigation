@@ -30,6 +30,9 @@ PUBLISHED:
 			const CollideMask& mask = GeomNode::get_default_collide_mask());
 	virtual ~RNNavMeshManager();
 
+	INLINE NodePath get_reference_node_path() const;
+	INLINE void set_reference_node_path(const NodePath& reference);
+
 	// RNNavMeshes
 	NodePath create_nav_mesh();
 	bool destroy_nav_mesh(NodePath navMeshNP);
@@ -101,6 +104,8 @@ PUBLISHED:
 	void debug_draw_reset();
 
 private:
+	///The reference node path.
+	NodePath mReferenceNP;
 	///List of RNNavMeshes handled by this template.
 	typedef pvector<PT(RNNavMesh)> NavMeshList;
 	NavMeshList mNavMeshes;

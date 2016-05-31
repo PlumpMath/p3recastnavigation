@@ -494,8 +494,6 @@ void RNNavMesh::do_initialize()
 	//set mov type: already done
 	//set nav mesh settings: already done
 	//set nav mesh tile settings: already done
-	//set reference node path
-	mReferenceNP = NodePath::any_path(this);
 	//
 #ifdef RN_DEBUG
 	// un-setup debug node path
@@ -523,12 +521,12 @@ int RNNavMesh::setup()
 
 	set_name(mOwnerObject.get_name() + string("_RNNavMesh"));
 
-	//detach any old child node path: owner, crowd agents, obstacles
-	NodePathCollection children = NodePath::any_path(this).get_children();
-	for (int i; i < children.size(); ++i)
-	{
-		children[i].detach_node();
-	}
+//	//detach any old child node path: owner, crowd agents, obstacles XXX
+//	NodePathCollection children = NodePath::any_path(this).get_children();
+//	for (int i; i < children.size(); ++i)
+//	{
+//		children[i].detach_node();
+//	}
 
 	//setup the build context
 	mCtx = new rnsup::BuildContext;
@@ -1954,8 +1952,6 @@ int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP,
 	{
 		tileCache->update(0, mNavMeshType->getNavMesh());
 	}
-	//detach_node the obstacle's node path
-	objectNP.detach_node();
 	//index and remove from obstacle from the list
 	PRINT_DEBUG(
 			"'" << get_owner_node_path() << "' remove_obstacle: '" << objectNP << "'");
@@ -2076,10 +2072,10 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
 	rnsup::CrowdTool* crowdTool = static_cast<rnsup::CrowdTool*>(mNavMeshType->getTool());
 	if(crowdAgent->mAgentIdx == -1)
 	{
-		//RNNavMesh object updates CrowdAgents pos/vel wrt its reference node path
-		//the RNCrowdAgent node path is reparented to the reference node path
-		NodePath::any_path(crowdAgent).wrt_reparent_to(mReferenceNP);
-		crowdAgent->mReferenceNP = mReferenceNP;
+//		//RNNavMesh object updates CrowdAgents pos/vel wrt its reference node path XXX
+//		//the RNCrowdAgent node path is reparented to the reference node path
+//		NodePath::any_path(crowdAgent).wrt_reparent_to(mReferenceNP);
+//		crowdAgent->mReferenceNP = mReferenceNP;
 
 		//get the actual pos
 		LPoint3f pos = NodePath::any_path(crowdAgent).get_pos();
@@ -2130,10 +2126,10 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
 		crowdAgent->mAgentIdx = crowdTool->getState()->addAgent(p, &ap);
 		if(crowdAgent->mAgentIdx == -1)
 		{
-			//agent has not been added to recast
-			//detach the node path
-			NodePath::any_path(crowdAgent).detach_node();
-			crowdAgent->mReferenceNP.clear();
+//			//agent has not been added to recast XXX
+//			//detach the node path
+//			NodePath::any_path(crowdAgent).detach_node();
+//			crowdAgent->mReferenceNP.clear();
 			//restore RNNavMeshSettings
 			set_nav_mesh_settings(oldNavMeshSettings);
 			return false;
@@ -2212,8 +2208,6 @@ void RNNavMesh::do_remove_crowd_agent_from_recast_update(PT(RNCrowdAgent)crowdAg
 		crowdTool->getState()->removeAgent(crowdAgent->mAgentIdx);
 		//set the index of the crowd agent to -1
 		crowdAgent->mAgentIdx = -1;
-		//detach this crowd agent
-		NodePath::any_path(crowdAgent).detach_node();
 	}
 }
 

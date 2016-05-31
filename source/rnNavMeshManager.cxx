@@ -17,7 +17,7 @@
  *
  */
 RNNavMeshManager::RNNavMeshManager(const NodePath& root,
-		const CollideMask& mask) :
+		const CollideMask& mask) : mReferenceNP(NodePath("ReferenceNode")),
 		mRoot(root), mMask(mask), mCollisionHandler(NULL), mPickerRay(NULL), mCTrav(
 		NULL)
 {
@@ -111,8 +111,11 @@ NodePath RNNavMeshManager::create_nav_mesh()
 
 	//add the new NavMesh to the inner list (and to the update task)
 	mNavMeshes.push_back(newNavMesh);
+	// reparent to reference node
+	NodePath np = mReferenceNP.attach_new_node(newNavMesh);
+	newNavMesh->mReferenceNP = mReferenceNP;
 	//
-	return NodePath::any_path(newNavMesh);
+	return np;
 }
 
 /**
@@ -162,8 +165,11 @@ NodePath RNNavMeshManager::create_crowd_agent(const string& name)
 
 	//add the new CrowdAgent to the inner list
 	mCrowdAgents.push_back(newCrowdAgent);
+	// reparent to reference node
+	NodePath np = mReferenceNP.attach_new_node(newCrowdAgent);
+	newCrowdAgent->mReferenceNP = mReferenceNP;
 	//
-	return NodePath::any_path(newCrowdAgent);
+	return np;
 }
 
 /**

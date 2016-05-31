@@ -41,7 +41,6 @@ PT(CollisionEntry)getCollisionEntryFromCamera();
 ///global data
 PandaFramework framework;
 WindowFramework *window;
-NodePath commonNP;
 CollideMask mask = BitMask32(0x10);
 PT(RNNavMesh)navMesh;
 const int NUMAGENTS = 2;//XXX
@@ -105,7 +104,7 @@ int main(int argc, char *argv[])
 	textNodePath.set_pos(-1.25, 0.0, 0.9);
 	textNodePath.set_scale(0.035);
 
-	// create a nav mesh manager
+	// create a nav mesh manager; set root and mask to manage 'kinematic' agents
 	WPT(RNNavMeshManager)navMesMgr = new RNNavMeshManager(window->get_render(), mask);
 
 	// print creation parameters: defult values
@@ -194,15 +193,12 @@ void loadAllScene()
 {
 	RNNavMeshManager* navMesMgr = RNNavMeshManager::get_global_ptr();
 
-	// create a common parent for nav meshes and models
-	commonNP = window->get_render().attach_new_node("commonNP");
-
 	// get a sceneNP as owner model
 	sceneNP = getOwnerModel();
 	// set name: to ease restoring from bam file
 	sceneNP.set_name("Owner");
 
-	// create a nav mesh
+	// create a nav mesh; its parent is the reference node
 	NodePath navMeshNP = navMesMgr->create_nav_mesh();
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
 
@@ -212,9 +208,11 @@ void loadAllScene()
 	// setup the nav mesh with scene as its owner object
 	navMesh->setup();
 
-	// reparent both navMeshNP to sceneNP to commonNP
-	sceneNP.reparent_to(commonNP);
-	navMeshNP.reparent_to(commonNP);
+	// reparent sceneNP to the reference node
+	sceneNP.reparent_to(navMesMgr->get_reference_node_path());
+
+	// reparent the reference node to render
+	navMesMgr->get_reference_node_path().reparent_to(window->get_render());
 
 	// get agentNP[] (and agentAnimNP[]) as models for crowd agents
 	getAgentModelAnims();
@@ -249,9 +247,9 @@ void restoreAllScene()
 	NodePath navMeshNP = RNNavMeshManager::get_global_ptr()->get_nav_mesh(0);
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
 	// restore sceneNP: through panda3d
-	sceneNP = commonNP.find("**/Owner");
-	// reparent commonNP to render
-	commonNP.reparent_to(window->get_render());
+	sceneNP = RNNavMeshManager::get_global_ptr()->get_reference_node_path().find("**/Owner");
+	// reparent the reference node to render
+	RNNavMeshManager::get_global_ptr()->get_reference_node_path().reparent_to(window->get_render());
 
 	// restore crowd agents
 	for (int i = 0; i < NUMAGENTS; ++i)
@@ -329,8 +327,8 @@ bool readFromBamFile(string fileName)
 		cout << "Bam file version: " << inBamFile.get_file_major_ver() << "."
 				<< inBamFile.get_file_minor_ver() << endl;
 		// read the scene
-		TypedWritable* common = inBamFile.read_object();
-		if (common)
+		TypedWritable* reference = inBamFile.read_object();
+		if (reference)
 		{
 			// resolve pointers
 			if (!inBamFile.resolve())
@@ -348,8 +346,13 @@ bool readFromBamFile(string fileName)
 		inBamFile.close();
 		cout << "SUCCESS: all nav meshes and crowd agents were read from "
 				<< fileName << endl;
-		// restore sceneNP
-		commonNP = NodePath::any_path(DCAST(PandaNode, common));
+		// restore reference node
+		RNNavMeshManager::get_global_ptr()->set_reference_node_path(
+				NodePath::any_path(DCAST(PandaNode, reference)));
+		bool result = reference->is_of_type(PandaNode::get_class_type());
+		cout << reference->get_type() << endl;
+		result = reference->get_type().is_derived_from(TypedWritable::get_class_type(), reference);
+		cout << reference->get_type().is_derived_from(TypedWritable::get_class_type(), reference) << endl;
 	}
 	else
 	{
@@ -369,8 +372,9 @@ void writeToBamFileAndExit(const Event* e, void* data)
 		cout << "Current system Bam version: "
 				<< outBamFile.get_current_major_ver() << "."
 				<< outBamFile.get_current_minor_ver() << endl;
-		//write the the scene
-		if (!outBamFile.write_object(commonNP.node()))
+		// write the scene: just write the reference node
+		if (!outBamFile.write_object(
+				RNNavMeshManager::get_global_ptr()->get_reference_node_path().node()))
 		{
 			cerr << "Error writing " << fileName << endl;
 		}
@@ -494,19 +498,6 @@ void toggleSetupCleanup(const Event* e, void* data)
 		framework.get_task_mgr().remove(updateTask);
 		// false: cleanup
 		navMesh->cleanup();
-		// now crowd agents and obstacles are detached:
-		// prevent to make them disappear from the scene
-		for (int i = 0; i < navMesh->get_num_crowd_agents(); ++i)
-		{
-			NodePath::any_path(navMesh->get_crowd_agent(i)).reparent_to(
-					window->get_render());
-		}
-		for (int i = 0; i < navMesh->get_num_obstacles(); ++i)
-		{
-			int ref = navMesh->get_obstacle(i);
-			navMesh->get_obstacle_by_ref(ref).reparent_to(
-					window->get_render());
-		}
 	}
 	*setupCleanupFlag = not *setupCleanupFlag;
 }
@@ -616,7 +607,8 @@ void handleObstacles(const Event* e, void* data)
 			// add an obstacle to the scene
 
 			// get a model as obstacle
-			NodePath obstacleNP = window->load_model(commonNP, obstacleFile);
+			NodePath obstacleNP = window->load_model(framework.get_models(),
+					obstacleFile);
 			obstacleNP.set_collide_mask(mask);
 			// set random scale (0.01 - 0.02)
 			float scale = 0.01 + 0.01 * ((float) rd() / (float) rd.max());

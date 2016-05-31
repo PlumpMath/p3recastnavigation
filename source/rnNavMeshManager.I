@@ -11,6 +11,29 @@
 ///RNNavMeshManager inline definitions
 
 /**
+ * Returns the reference NodePath.
+ * The reference NodePath is the node with respect to which all RNNavMeshes,
+ * RNCrowdAgents and obstacles (for OBSTACLE RNNavMesh type) are reparented
+ * and with respect to which all placements are computed.
+ */
+INLINE NodePath RNNavMeshManager::get_reference_node_path() const
+{
+	return mReferenceNP;
+}
+
+/**
+ * Sets the reference NodePath.
+ * The reference NodePath is the node with respect to which all RNNavMeshes,
+ * RNCrowdAgents and obstacles (for OBSTACLE RNNavMesh type) are reparented
+ * and with respect to which all placements are computed.
+ * This is usually called after restoring from a bam file.
+ */
+INLINE void RNNavMeshManager::set_reference_node_path(const NodePath& reference)
+{
+	mReferenceNP = reference;
+}
+
+/**
  * Returns the number of RNNavMeshes.
  */
 INLINE int RNNavMeshManager::get_num_nav_meshes() const
