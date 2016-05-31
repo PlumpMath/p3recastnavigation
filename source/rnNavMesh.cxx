@@ -521,13 +521,6 @@ int RNNavMesh::setup()
 
 	set_name(mOwnerObject.get_name() + string("_RNNavMesh"));
 
-//	//detach any old child node path: owner, crowd agents, obstacles XXX
-//	NodePathCollection children = NodePath::any_path(this).get_children();
-//	for (int i; i < children.size(); ++i)
-//	{
-//		children[i].detach_node();
-//	}
-
 	//setup the build context
 	mCtx = new rnsup::BuildContext;
 
@@ -2072,11 +2065,6 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
 	rnsup::CrowdTool* crowdTool = static_cast<rnsup::CrowdTool*>(mNavMeshType->getTool());
 	if(crowdAgent->mAgentIdx == -1)
 	{
-//		//RNNavMesh object updates CrowdAgents pos/vel wrt its reference node path XXX
-//		//the RNCrowdAgent node path is reparented to the reference node path
-//		NodePath::any_path(crowdAgent).wrt_reparent_to(mReferenceNP);
-//		crowdAgent->mReferenceNP = mReferenceNP;
-
 		//get the actual pos
 		LPoint3f pos = NodePath::any_path(crowdAgent).get_pos();
 		//get recast p (y-up)
@@ -2126,10 +2114,6 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
 		crowdAgent->mAgentIdx = crowdTool->getState()->addAgent(p, &ap);
 		if(crowdAgent->mAgentIdx == -1)
 		{
-//			//agent has not been added to recast XXX
-//			//detach the node path
-//			NodePath::any_path(crowdAgent).detach_node();
-//			crowdAgent->mReferenceNP.clear();
 			//restore RNNavMeshSettings
 			set_nav_mesh_settings(oldNavMeshSettings);
 			return false;
@@ -2859,6 +2843,9 @@ void RNNavMesh::write_datagram(BamWriter *manager, Datagram &dg)
 	///The owner object NodePath this RNNavMesh is associated to.
 	manager->write_pointer(dg, mOwnerObject.node());
 
+	///The reference node path.
+	manager->write_pointer(dg, mReferenceNP.node());
+
 	///Crowd agents.
 	dg.add_uint32(mCrowdAgents.size());
 	{
@@ -2895,6 +2882,10 @@ int RNNavMesh::complete_pointers(TypedWritable **p_list, BamReader *manager)
 	///The owner object NodePath this RNNavMesh is associated to.
 	PT(PandaNode)ownerObjectPandaNode = DCAST(PandaNode, p_list[pi++]);
 	mOwnerObject = NodePath::any_path(ownerObjectPandaNode);
+
+	///The reference node path.
+	PT(PandaNode)referenceNPPandaNode = DCAST(PandaNode, p_list[pi++]);
+	mReferenceNP = NodePath::any_path(referenceNPPandaNode);
 
 	///Crowd agents.
 	{
@@ -3067,6 +3058,9 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 
 	/// Pointers
 	///The owner object NodePath this RNNavMesh is associated to.
+	manager->read_pointer(scan);
+
+	///The reference node path.
 	manager->read_pointer(scan);
 
 	///Crowd agents.

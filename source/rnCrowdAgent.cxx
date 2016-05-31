@@ -474,6 +474,9 @@ void RNCrowdAgent::write_datagram(BamWriter *manager, Datagram &dg)
 
 	///The RNNavMesh this RNCrowdAgent is added to.
 	manager->write_pointer(dg, mNavMesh);
+
+	///The reference node path.
+	manager->write_pointer(dg, mReferenceNP.node());
 }
 
 /**
@@ -486,6 +489,10 @@ int RNCrowdAgent::complete_pointers(TypedWritable **p_list, BamReader *manager)
 
 	///The RNNavMesh this RNCrowdAgent is added to.
 	mNavMesh = DCAST(RNNavMesh, p_list[pi++]);
+
+	///The reference node path.
+	PT(PandaNode)referenceNPPandaNode = DCAST(PandaNode, p_list[pi++]);
+	mReferenceNP = NodePath::any_path(referenceNPPandaNode);
 
 	return pi;
 }
@@ -542,6 +549,9 @@ void RNCrowdAgent::fillin(DatagramIterator &scan, BamReader *manager)
 	mSteady.read_datagram(scan);
 
 	///The RNNavMesh this RNCrowdAgent is added to.
+	manager->read_pointer(scan);
+
+	///The reference node path.
 	manager->read_pointer(scan);
 }
 

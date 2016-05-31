@@ -180,8 +180,7 @@ def readFromBamFile(fileName):
         print("SUCCESS: all nav meshes and crowd agents were read from "
                 + fileName)
         # restore reference node
-        RNNavMeshManager.get_global_ptr().set_reference_node_path(
-                NodePath.any_path(reference))
+        RNNavMeshManager.get_global_ptr().set_reference_node_path(NodePath.any_path(reference))
     else:
         print("Error opening " + fileName)
         return False
@@ -310,7 +309,7 @@ def placeCrowdAgents():
         NodePath.any_path(crowdAgent[i]).set_pos(randPos)
         # re-add agent to nav mesh
         navMesh.add_crowd_agent(NodePath.any_path(crowdAgent[i]))
-    #just for debug draw the last agent's straight path
+    # just for debug draw the last agent's straight path
     navMesh.path_find_straight(
             NodePath.any_path(navMesh[i]).get_pos(),
             navMesh[i].get_move_target());
@@ -353,7 +352,7 @@ def setMoveTarget():
         target = entry0.get_surface_point(NodePath())
         for agent in navMesh:
             agent.set_move_target(target)
-        #just for debug draw the last agent's straight path
+        # just for debug draw the last agent's straight path
         navMesh.path_find_straight(
                 NodePath.any_path(agent).get_pos(), target);
 
@@ -462,8 +461,6 @@ if __name__ == '__main__':
     load_prc_file_data("", "win-size 1024 768")
     load_prc_file_data("", "show-frame-rate-meter #t")
     load_prc_file_data("", "sync-video #t")
-    load_prc_file_data("", "want-directtools #t")
-    load_prc_file_data("", "want-tk #t")
         
     # Setup your application
     app = ShowBase()

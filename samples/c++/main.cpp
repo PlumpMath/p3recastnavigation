@@ -247,9 +247,12 @@ void restoreAllScene()
 	NodePath navMeshNP = RNNavMeshManager::get_global_ptr()->get_nav_mesh(0);
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
 	// restore sceneNP: through panda3d
-	sceneNP = RNNavMeshManager::get_global_ptr()->get_reference_node_path().find("**/Owner");
+	sceneNP =
+			RNNavMeshManager::get_global_ptr()->get_reference_node_path().find(
+					"**/Owner");
 	// reparent the reference node to render
-	RNNavMeshManager::get_global_ptr()->get_reference_node_path().reparent_to(window->get_render());
+	RNNavMeshManager::get_global_ptr()->get_reference_node_path().reparent_to(
+			window->get_render());
 
 	// restore crowd agents
 	for (int i = 0; i < NUMAGENTS; ++i)
@@ -349,10 +352,6 @@ bool readFromBamFile(string fileName)
 		// restore reference node
 		RNNavMeshManager::get_global_ptr()->set_reference_node_path(
 				NodePath::any_path(DCAST(PandaNode, reference)));
-		bool result = reference->is_of_type(PandaNode::get_class_type());
-		cout << reference->get_type() << endl;
-		result = reference->get_type().is_derived_from(TypedWritable::get_class_type(), reference);
-		cout << reference->get_type().is_derived_from(TypedWritable::get_class_type(), reference) << endl;
 	}
 	else
 	{
@@ -605,7 +604,6 @@ void handleObstacles(const Event* e, void* data)
 		{
 			// the hit object is the scene
 			// add an obstacle to the scene
-
 			// get a model as obstacle
 			NodePath obstacleNP = window->load_model(framework.get_models(),
 					obstacleFile);
