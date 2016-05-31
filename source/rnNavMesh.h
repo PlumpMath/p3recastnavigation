@@ -400,6 +400,7 @@ public:
 	virtual void write_datagram (BamWriter *manager, Datagram &dg) override;
 	virtual int complete_pointers(TypedWritable **p_list, BamReader *manager) override;
 	virtual void finalize(BamReader *manager);
+	bool require_fully_complete() const;
 
 protected:
 	static TypedWritable *make_from_bam(const FactoryParams &params);

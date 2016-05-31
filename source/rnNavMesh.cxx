@@ -2936,6 +2936,17 @@ void RNNavMesh::finalize(BamReader *manager)
 }
 
 /**
+ * Some objects require all of their nested pointers to have been completed
+ * before the objects themselves can be completed.  If this is the case,
+ * override this method to return true, and be careful with circular
+ * references (which would make the object unreadable from a bam file).
+ */
+bool RNNavMesh::require_fully_complete() const
+{
+	return true;
+}
+
+/**
  * This function is called by the BamReader's factory when a new object of
  * type RNNavMesh is encountered in the Bam file.  It should create the
  * RNNavMesh and extract its information from the file.
