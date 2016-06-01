@@ -31,14 +31,6 @@ RNCrowdAgent::~RNCrowdAgent()
 }
 
 /**
- * Sets the reference NodePath of this RNCrowdAgent.
- */
-INLINE void RNCrowdAgent::set_reference_node_path(const NodePath& reference)
-{
-	mReferenceNP = reference;
-}
-
-/**
  * Sets the RNCrowdAgent's parameters.
  * Should be called after addition to a RNNavMesh.
  */

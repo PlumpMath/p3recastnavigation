@@ -11,6 +11,14 @@
 ///RNCrowdAgent inline definitions
 
 /**
+ * Sets the reference NodePath of this RNCrowdAgent.
+ */
+INLINE void RNCrowdAgent::set_reference_node_path(const NodePath& reference)
+{
+	mReferenceNP = reference;
+}
+
+/**
  * Returns RNCrowdAgent's parameters.
  */
 INLINE RNCrowdAgentParams RNCrowdAgent::get_params() const
