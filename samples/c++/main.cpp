@@ -136,7 +136,11 @@ int main(int argc, char *argv[])
 			(void*) navMesh.p());
 	framework.get_task_mgr().add(updateTask);
 
-	// setup  debug drawing 
+	// DEBUG DRAWING
+	// make the debug reference node path sibling of the reference node
+	navMesMgr->get_reference_node_path_debug().reparent_to(
+			window->get_render());
+	// enable debug drawing
 	navMesh->enable_debug_drawing(window->get_camera_group());
 
 	/// set events' callbacks

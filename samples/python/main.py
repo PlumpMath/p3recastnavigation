@@ -505,7 +505,10 @@ if __name__ == '__main__':
     # # second option: start a path finding custom update task
     app.taskMgr.add(updateNavMesh, "updateNavMesh", extraArgs=[navMesh], appendTask=True)
 
-    # setup  debug drawing 
+    # DEBUG DRAWING
+    # make the debug reference node path sibling of the reference node
+    navMesMgr.get_reference_node_path_debug().reparent_to(app.render)
+    # enable debug drawing
     navMesh.enable_debug_drawing(app.camera)
 
     # # set events' callbacks

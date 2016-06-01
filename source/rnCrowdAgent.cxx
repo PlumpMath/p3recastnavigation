@@ -5,6 +5,10 @@
  * \author consultit
  */
 
+#if !defined(CPPPARSER) && defined(_WIN32)
+#include "support/pstdint.h"
+#endif
+
 #include "rnCrowdAgent.h"
 
 #include "rnNavMesh.h"
@@ -24,6 +28,14 @@ RNCrowdAgent::RNCrowdAgent(const string& name):PandaNode(name)
  */
 RNCrowdAgent::~RNCrowdAgent()
 {
+}
+
+/**
+ * Sets the reference NodePath of this RNCrowdAgent.
+ */
+INLINE void RNCrowdAgent::set_reference_node_path(const NodePath& reference)
+{
+	mReferenceNP = reference;
 }
 
 /**

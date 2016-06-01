@@ -34,7 +34,7 @@ if __name__ == '__main__':
     print("get a sceneNP as owner model")
     sceneNP = app.loader.load_model("nav_test.egg")
     
-    print("create a nav mesh")
+    print("create a nav mesh (it is attached to the reference node)")
     navMeshNP = navMesMgr.create_nav_mesh()
     navMesh = navMeshNP.node()
     
@@ -65,7 +65,9 @@ if __name__ == '__main__':
     print("start the path finding default update task")
     navMesMgr.start_default_update()
 
-    print("enable debug draw")
+    print("DEBUG DRAWING: make the debug reference node path sibling of the reference node")
+    navMesMgr.get_reference_node_path_debug().reparent_to(app.render)
+    print("enable debug drawing")
     navMesh.enable_debug_drawing(app.camera)
 
     print("toggle debug draw")

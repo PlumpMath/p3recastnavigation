@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 	NodePath sceneNP = window->load_model(framework.get_models(),
 			"nav_test.egg");
 
-	cout << "create a nav mesh" << endl;
+	cout << "create a nav mesh (it is attached to the reference node)" << endl;
 	NodePath navMeshNP = navMesMgr->create_nav_mesh();
 	PT(RNNavMesh)navMesh = DCAST(RNNavMesh, navMeshNP.node());
 
@@ -87,7 +87,10 @@ int main(int argc, char *argv[])
 	cout << "start the path finding default update task" << endl;
 	navMesMgr->start_default_update();
 
-	cout << "enable debug draw" << endl;
+	cout << "DEBUG DRAWING: make the debug reference node path sibling of the reference node" << endl;
+	navMesMgr->get_reference_node_path_debug().reparent_to(
+			window->get_render());
+	cout << "enable debug drawing" << endl;
 	navMesh->enable_debug_drawing(window->get_camera_group());
 
 	cout << "toggle debug draw" << endl;

@@ -33,6 +33,8 @@ PUBLISHED:
 	INLINE NodePath get_reference_node_path() const;
 	INLINE void set_reference_node_path(const NodePath& reference);
 
+	INLINE NodePath get_reference_node_path_debug() const;
+
 	// RNNavMeshes
 	NodePath create_nav_mesh();
 	bool destroy_nav_mesh(NodePath navMeshNP);
@@ -131,6 +133,8 @@ private:
 	CollisionHandlerQueue* mCollisionHandler;
 	CollisionRay* mPickerRay;
 
+	///The reference node path for debug drawing.
+	NodePath mReferenceDebugNP;
 #ifdef RN_DEBUG
 	class DebugDrawPrimitives: public rnsup::DebugDrawPanda3d
 	{

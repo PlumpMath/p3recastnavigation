@@ -19,7 +19,7 @@
 RNNavMeshManager::RNNavMeshManager(const NodePath& root,
 		const CollideMask& mask) : mReferenceNP(NodePath("ReferenceNode")),
 		mRoot(root), mMask(mask), mCollisionHandler(NULL), mPickerRay(NULL), mCTrav(
-		NULL)
+		NULL), mReferenceDebugNP(NodePath("ReferenceDebugNode"))
 {
 	PRINT_DEBUG(
 			"RNNavMeshManager::RNNavMeshManager: creating the singleton manager.");
@@ -106,14 +106,16 @@ NodePath RNNavMeshManager::create_nav_mesh()
 	PT(RNNavMesh) newNavMesh = new RNNavMesh();
 	nassertr_always(newNavMesh, NodePath())
 
-	//initialize the new NavMesh
+	// set reference nodes
+	newNavMesh->mReferenceNP = mReferenceNP;
+	newNavMesh->mReferenceDebugNP = mReferenceDebugNP;
+	// initialize the new NavMesh
 	newNavMesh->do_initialize();
 
-	//add the new NavMesh to the inner list (and to the update task)
+	// add the new NavMesh to the inner list (and to the update task)
 	mNavMeshes.push_back(newNavMesh);
 	// reparent to reference node
 	NodePath np = mReferenceNP.attach_new_node(newNavMesh);
-	newNavMesh->mReferenceNP = mReferenceNP;
 	//
 	return np;
 }
@@ -160,6 +162,8 @@ NodePath RNNavMeshManager::create_crowd_agent(const string& name)
 	PT(RNCrowdAgent) newCrowdAgent = new RNCrowdAgent(name);
 	nassertr_always(newCrowdAgent, NodePath())
 
+	// set reference node
+	newCrowdAgent->mReferenceNP = mReferenceNP;
 	//initialize the new CrowdAgent
 	newCrowdAgent->do_initialize();
 
@@ -167,7 +171,6 @@ NodePath RNNavMeshManager::create_crowd_agent(const string& name)
 	mCrowdAgents.push_back(newCrowdAgent);
 	// reparent to reference node
 	NodePath np = mReferenceNP.attach_new_node(newCrowdAgent);
-	newCrowdAgent->mReferenceNP = mReferenceNP;
 	//
 	return np;
 }

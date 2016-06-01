@@ -99,18 +99,17 @@ int main(int argc, char *argv[])
 	// create a nav mesh manager
 	WPT(RNNavMeshManager)navMesMgr = new RNNavMeshManager(window->get_render(), mask);
 
-	// create a common parent for nav meshes and models
-	NodePath commonNP = window->get_render().attach_new_node("commonNP");
+	// reparent the reference node to render
+	navMesMgr->get_reference_node_path().reparent_to(window->get_render());
 
-	// get a sceneNP as owner model and reparent to commonNP
+	// get a sceneNP as owner model and reparent to the reference node
 	sceneNP = window->load_model(framework.get_models(), "dungeon.egg");
 	sceneNP.set_collide_mask(mask);
-	sceneNP.reparent_to(commonNP);
+	sceneNP.reparent_to(navMesMgr->get_reference_node_path());
 
-	// create a nav mesh and reparent to commonNP
+	// create a nav mesh (it is attached to the reference node)
 	NodePath navMeshNP = navMesMgr->create_nav_mesh();
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
-	navMeshNP.reparent_to(commonNP);
 
 	// mandatory: set sceneNP as owner of navMesh
 	navMesh->set_owner_node_path(sceneNP);
@@ -119,6 +118,10 @@ int main(int argc, char *argv[])
 	navMesh->set_nav_mesh_type_enum(RNNavMesh::SOLO);
 //	navMesh->set_nav_mesh_type_enum(RNNavMesh::TILE);
 //	navMesh->set_nav_mesh_type_enum(RNNavMesh::OBSTACLE);
+
+	// DEBUG DRAWING: make the debug reference node path sibling of the reference node
+	navMesMgr->get_reference_node_path_debug().reparent_to(
+			window->get_render());
 
 	// get the agent model
 	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");

@@ -140,6 +140,9 @@ PUBLISHED:
 	INLINE void set_owner_node_path(const NodePath& ownerObject);
 	INLINE NodePath get_owner_node_path() const;
 
+	///REFERENCE NODE.
+	INLINE void set_reference_node_path(const NodePath& reference);
+
 	///SOLO TILE OBSTACLE TYPES
 	//GENERAL PARAMETERS
 	INLINE LVecBase3f get_recast_bounds_min() const;
@@ -308,6 +311,8 @@ private:
 	string mMeshName;
 	///The reference node path.
 	NodePath mReferenceNP;
+	///The reference node path for debug drawing.
+	NodePath mReferenceDebugNP;
 	///RNNavMesh's NavMeshSettings equivalent.
 	RNNavMeshSettings mNavMeshSettings;
 	///RNNavMesh's NavMeshTileSettings equivalent.

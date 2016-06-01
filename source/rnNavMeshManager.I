@@ -34,6 +34,15 @@ INLINE void RNNavMeshManager::set_reference_node_path(const NodePath& reference)
 }
 
 /**
+ * Returns the reference NodePath for debug drawing.
+ * This node should be made sibling of the reference NodePath in the scene.
+ */
+INLINE NodePath RNNavMeshManager::get_reference_node_path_debug() const
+{
+	return mReferenceDebugNP;
+}
+
+/**
  * Returns the number of RNNavMeshes.
  */
 INLINE int RNNavMeshManager::get_num_nav_meshes() const

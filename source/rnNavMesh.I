@@ -31,6 +31,14 @@ INLINE NodePath RNNavMesh::get_owner_node_path()const
 }
 
 /**
+ * Sets the reference NodePath of this RNNavMesh.
+ */
+INLINE void RNNavMesh::set_reference_node_path(const NodePath& reference)
+{
+	mReferenceNP = reference;
+}
+
+/**
  * Returns the owner object's input geometry min bounds.
  * or LVecBase3f::zero() before nav mesh setup.
  */
@@ -225,6 +233,7 @@ inline void RNNavMesh::do_reset()
 	mCtx = NULL;
 	mMeshName.clear();
 	mReferenceNP.clear();
+	mReferenceDebugNP.clear();
 	mNavMeshSettings = RNNavMeshSettings();
 	mNavMeshTileSettings = RNNavMeshTileSettings();
 	mPolyAreaFlags.clear();

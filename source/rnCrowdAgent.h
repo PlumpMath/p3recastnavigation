@@ -110,6 +110,8 @@ PUBLISHED:
 
 	virtual ~RNCrowdAgent();
 
+	INLINE void set_reference_node_path(const NodePath& reference);
+
 	int set_params(const RNCrowdAgentParams& agentParams);
 	INLINE RNCrowdAgentParams get_params() const;
 	int set_move_target(const LPoint3f& pos);

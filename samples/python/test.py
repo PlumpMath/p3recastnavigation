@@ -428,19 +428,18 @@ if __name__ == '__main__':
 
     # create a nav mesh manager
     navMesMgr = RNNavMeshManager(app.render, mask)
-    
-    # create a common parent for nav meshes and models
-    commonNP = app.render.attach_new_node("commonNP")
 
-    # get a sceneNP as owner model and reparent to commonNP
+    # reparent the reference node to render
+    navMesMgr.get_reference_node_path().reparent_to(app.render)
+
+    # get a sceneNP as owner model and reparent to the reference node
     sceneNP = app.loader.load_model("dungeon.egg")
     sceneNP.set_collide_mask(mask)
-    sceneNP.reparent_to(commonNP)
+    sceneNP.reparent_to(navMesMgr.get_reference_node_path())
     
-    # create a nav mesh and reparent to commonNP
+    # create a nav mesh (it is attached to the reference node)
     navMeshNP = navMesMgr.create_nav_mesh()
     navMesh = navMeshNP.node()
-    navMeshNP.reparent_to(commonNP)
     
     # mandatory: set sceneNP as owner of navMesh
     navMesh.set_owner_node_path(sceneNP)
@@ -449,6 +448,9 @@ if __name__ == '__main__':
     navMesh.set_nav_mesh_type_enum(RNNavMesh.SOLO)
 #     navMesh.set_nav_mesh_type_enum(RNNavMesh.TILE);
 #     navMesh.set_nav_mesh_type_enum(RNNavMesh.OBSTACLE)
+
+    # DEBUG DRAWING: make the debug reference node path sibling of the reference node
+    navMesMgr.get_reference_node_path_debug().reparent_to(app.render)
     
     # get the agent model
     agentNP = app.loader.load_model("eve.egg")

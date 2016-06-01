@@ -5,6 +5,10 @@
  * \author consultit
  */
 
+#if !defined(CPPPARSER) && defined(_WIN32)
+#include "support/pstdint.h"
+#endif
+
 #include "rnNavMesh.h"
 
 #include "rnCrowdAgent.h"
@@ -497,7 +501,7 @@ void RNNavMesh::do_initialize()
 	//
 #ifdef RN_DEBUG
 	// un-setup debug node path
-	NodePath debugNodePathUnsetup = mReferenceNP.attach_new_node(
+	NodePath debugNodePathUnsetup = mReferenceDebugNP.attach_new_node(
 				string("DebugNodePathUsetup") + get_name());
 	//no collide mask for all their children
 	debugNodePathUnsetup.set_collide_mask(BitMask32::all_off());
@@ -1653,7 +1657,7 @@ int RNNavMesh::cleanup()
 	// disable debug drawing;
 	disable_debug_drawing();
 	// un-setup debug node path
-	NodePath debugNodePathUnsetup = mReferenceNP.attach_new_node(
+	NodePath debugNodePathUnsetup = mReferenceDebugNP.attach_new_node(
 				string("DebugNodePathUsetup") + get_name());
 	//no collide mask for all their children
 	debugNodePathUnsetup.set_collide_mask(BitMask32::all_off());
@@ -2649,7 +2653,7 @@ void RNNavMesh::enable_debug_drawing(NodePath debugCamera)
 	{
 		mDebugCamera = debugCamera;
 		//set the recast debug node path as child of mReferenceNP node path
-		mDebugNodePath = mReferenceNP.attach_new_node(
+		mDebugNodePath = mReferenceDebugNP.attach_new_node(
 				string("RecastDebugNodePath_") + get_name());
 		mDebugNodePath.set_bin(string("fixed"), 10);
 		//by default mDebugNodePath is hidden
