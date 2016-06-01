@@ -129,6 +129,7 @@ int main(int argc, char *argv[])
 
 	// create the crowd agent and set the position
 	NodePath crowdAgentNP = navMesMgr->create_crowd_agent("crowdAgent");
+	crowdAgentNP.hide();
 	crowdAgent = DCAST(RNCrowdAgent, crowdAgentNP.node());
 
 	// attach the agent model to crowdAgent
@@ -552,6 +553,7 @@ void toggleSetupCleanup(const Event* e, void* data)
 			// then attach the crowd agent to the nav mesh
 			navMesh->add_crowd_agent(NodePath::any_path(crowdAgent));
 			crowdAgent->set_move_target(LPoint3f(0.0, 20.0, 10.0));
+			NodePath::any_path(crowdAgent).show();
 			firstSetup = false;
 		}
 

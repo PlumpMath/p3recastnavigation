@@ -301,6 +301,7 @@ def toggleSetupCleanup():
             # then attach the crowd agent to the nav mesh
             navMesh.add_crowd_agent(NodePath.any_path(crowdAgent))
             crowdAgent.set_move_target(LPoint3f(0.0, 20.0, 10.0))
+            NodePath.any_path(crowdAgent).show()
             firstSetup = False
 
         # show debug draw
@@ -458,6 +459,7 @@ if __name__ == '__main__':
 
     # create the crowd agent and set the position
     crowdAgentNP = navMesMgr.create_crowd_agent("crowdAgent")
+    crowdAgentNP.hide()
     crowdAgent = crowdAgentNP.node()
     
     # attach the agent model to crowdAgent
