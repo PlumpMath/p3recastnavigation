@@ -12,7 +12,7 @@
 #include <rnCrowdAgent.h>
 #include <mouseWatcher.h>
 
-#include "main.h"
+#include "data.h"
 
 ///global data
 PandaFramework framework;

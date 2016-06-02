@@ -1,20 +1,22 @@
-Usage Notes
+USAGE NOTES
 ***********
-In addition to reading this document, please also refer to the API documentation 
-(c++ only) that can be generated with doxygen:
+In addition to reading this document, please also refer to the API 
+documentation (c++ only) that can be generated with doxygen:
 
   doxygen Doxyfile 
 
-Also see the code of the samples (both in python and c++) in the 'samples' folder:
-- "Basic" it is a minimum example of p3recastnavigation usage
-- "Test1" shows examples of how to define and use convex volumes and off mesh 
+Also look at the code of the samples (both in python and c++) in the 'samples' 
+folder:
+- "basic" it is a minimum example of p3recastnavigation usage
+- "test1" shows examples of how to define and use convex volumes and off mesh 
 connections
-- "Test2" shows other module features: setting of creation parameters, integration 
+- "test2" shows other module features: setting of creation parameters, 
+integration 
 with Panda3D objects, custom update, management of obstacles, event management, 
 serialization (ie read/write to/from BAM files)
 
-In addition, always refer to the original documentation and forums of Recastnavigation 
-(https://github.com/recastnavigation/recastnavigation):
+In addition, always refer to the original documentation and forums of 
+Recastnavigation (https://github.com/recastnavigation/recastnavigation):
 - Discuss Recast & Detour: http://groups.google.com/group/recastnavigation
 - Development blog: http://digestingduck.blogspot.com/
 - API documentation that can be generated with doxygen using the "Doxygen" file 
@@ -23,35 +25,96 @@ In addition, always refer to the original documentation and forums of Recastnavi
    doxygen Doxyfile
    
 Finally, and very importantly, use the comprehensive application "RecastDemo", 
-from which much of the p3recastnavigation code is derived, to experience and become 
-familiar with the internals of RecastNavigation.
+from which much of the p3recastnavigation code is derived, to experience and 
+become familiar with the internals of RecastNavigation.
 
-Structure
+Framework
 ---------
-p3recastnavigation has several objects to work with:
+p3recastnavigation distinguishes various objects and elements to work with:
 
 - RNNavMeshManager: this is a unique object (singleton) whose main task is to 
 create/destroy RNNavMeshes and RNCrowdAgents
-- RNNavMEsh: represents the nav mesh on which they move the RNCrowdAgents
-- RNCrowdAgent: is the agent that moves to reach the target by following the 
-paths tracked down thanks to the nav mesh
-- Convex volumes: these represent specific areas of the nav mesh and could have 
-distinct properties from the rest of the nav mesh
-- Off mesh connection: represent one-dimensional connections between disjointed 
-regions of the nav mesh, possibly having also distinct properties
+
+- RNNavMesh: is a PandNode representing the navigation mesh on which they move 
+the RNCrowdAgents
+
+- Owner Object: is a NodePath representing a Panda3D model (static) for which 
+a navigation mesh is created; an owner object can "own" several RNNavMeshes
+
+- RNCrowdAgent: is a PandNode representing a crowd agent that moves along the 
+owner object to reach the target by following the paths tracked down thanks to 
+the navigation mesh; NodePaths of 3d models are usually attached to a 
+RNCrowdAgent
+
+- Convex Volumes: these represents specific areas of a navigation mesh that 
+could have distinct properties from the rest of the mesh
+
+- Off mesh connections: represent one-dimensional links between disjointed 
+regions of the navigation mesh, possibly having also distinct properties
+
 - Area types, flags and costs: these are the elements that allow you to set the 
-properties of convex volumes and off mesh connections, affecting even dynamically, 
-the choice of paths that agents make to go towards their targets.
+properties of convex volumes and off mesh connections, affecting even 
+dynamically, the choice of paths that agents make to go towards their targets
+
+Placement of objects in the scene
+---------------------------------
+To make possible the simultaneous use of the various features of the module 
+(and also for the integration with other Panda3D modules), it was chosen this 
+model of placement of the various elements in the scene:
+
+- Reference NodePath: this node is the root under which objects are attached 
+  and with respect to which points, distances and movements  are computed; the 
+  RNNavMeshManager provides a default reference node;
+  
+- placement of RNNavMesh, RNCrowdAgent: at the time of creation, they are 
+  automatically attached to the default reference NodePath (and to which they 
+  have an internal reference); to the RNCrowdAgent(s) can be subsequently 
+  attached 3d models;
+
+- placement of Owner Object: this object should be attached manually to the 
+  reference node too, especially to allow you to manage various transformations: 
+  translation, rotation (along the axis z - heading), (uniform) scaling.
+
+Once attached objects to the reference NodePath, just reparent this to the scene
+(usually under the "render" node).
+
+NOTE: Except for the owner object, no transform should be applied to the other 
+objects (except the identity one of course).
+
+Other positioning schemes may work but they have not been tested. 
+NOTE: if you change the reference NodePath don't forget to set RNNavMeshes' and
+RNCrowdAgents' internal reference to it. 
 
 RNNavMeshManager
 ----------------
-The manager is a singleton that can be retrieved through get_global_ptr() method (static 
-in c++). Ut manages the creation and destruction of navigation meshes and crowd agents, 
-maintaining lists of all these created objects, so they can be retrieved at any time. 
-In addition to the management functions of the above objects, it is provided with 
-some utilities: to find the dimensions of the used models (get_bounding_dimensions ()) or 
-to manage the collisions with the same models (get_collision_traverser(), get_collision_ray()
-etc...), and these are used internally, for example for the kinematic crowd agents, but 
-can be used for general public purposes. 
-Finally there are two serialization methods to write/read to/from "bam" files, the objects 
-of a scene having its root a navigation mesh.
+The manager is a singleton that can be retrieved through get_global_ptr() method
+(static in c++). 
+It manages the creation and destruction of any RNNavMesh and RNCrowdAgent, 
+maintaining lists of all these created objects, so they can be retrieved at any 
+time.
+
+The manager also has the task to set the many parameters to default values 
+during these objects' creation. 
+In this regard, a method has been made available for specifying these parameters
+in textual mode, the syntax of which is specified in the doxygen documentation 
+of RNNavMesh and RNCrowdAgent classes. This was done to ease the creation of 
+objects in a "data driven" way, that is, for example, by reading parameters from
+an xml configuration file. 
+For this purpose various methods are provided, that is, those with names like 
+"set_parameter*()" or "get_parameter*()".
+
+In addition, the manager is provided with some other utilities: 
+- to find the dimensions of the used models (get_bounding_dimensions()) 
+- to manage the collisions with the models (get_collision_traverser(), 
+  get_collision_ray() etc...); these are used internally, for example for 
+  kinematic RNCrowdAgents, but can be used for general purposes toot(see 
+  samples).
+- to perform a default update (start/stop_default_update()), that is a task 
+  which calls all of the RNNavMeshes' update methods, with no possibility of 
+  interaction (usually it is used for test purposes).
+- to write/read to/from "bam" files the objects of (part of) a scene having its 
+  root as the default reference NodePath (write_to/read_from_bam_file()).
+  
+
+
+

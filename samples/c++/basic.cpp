@@ -11,7 +11,7 @@
 #include <rnNavMesh.h>
 #include <rnCrowdAgent.h>
 
-#include "main.h"
+#include "data.h"
 
 ///global data
 PandaFramework framework;

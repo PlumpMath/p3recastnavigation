@@ -16,7 +16,7 @@
 #include <random>
 #include <bamFile.h>
 
-#include "main.h"
+#include "data.h"
 
 ///functions' declarations
 void loadAllScene();
