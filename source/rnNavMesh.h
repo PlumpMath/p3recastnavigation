@@ -168,8 +168,9 @@ PUBLISHED:
 	int add_convex_volume(const ValueList<LPoint3f>& points, int area);
 	int remove_convex_volume(const LPoint3f& insidePoint);
 	int set_convex_volume_settings(const LPoint3f& insidePoint,
-		const RNConvexVolumeSettings& settings);
-	int set_convex_volume_settings(int ref, const RNConvexVolumeSettings& settings);
+		const RNConvexVolumeSettings& settings, float reductionFactor = 0.90);
+	int set_convex_volume_settings(int ref, const RNConvexVolumeSettings& settings,
+		float reductionFactor = 0.90);
 	RNConvexVolumeSettings get_convex_volume_settings(
 		const LPoint3f& insidePoint) const;
 	RNConvexVolumeSettings get_convex_volume_settings(int ref) const;
@@ -367,7 +368,7 @@ private:
 
 	int do_get_convex_volume_from_point(const LPoint3f& insidePoint) const;
 	int do_find_convex_volume_polys(int convexVolumeID, dtQueryFilter& filter,
-			dtPolyRef* polys, int& npolys, const int MAX_POLYS) const;
+		dtPolyRef* polys, int& npolys, const int MAX_POLYS, float reduceFactor) const;
 
 	int do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint) const;
 	int do_find_off_mesh_connection_poly(int offMeshConnectionID,

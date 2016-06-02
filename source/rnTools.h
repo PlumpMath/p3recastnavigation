@@ -399,11 +399,14 @@ PUBLISHED:
 	INLINE void set_area(int value);
 	INLINE int get_flags() const;
 	INLINE void set_flags(int value);
+	INLINE LPoint3f get_centroid() const;
+	INLINE void set_centroid(LPoint3f value);
 	INLINE int get_ref() const;
 	INLINE void set_ref(int value);
 private:
 	int _area;
 	int _flags;
+	LPoint3f _centroid;
 	int _ref;
 
 public:

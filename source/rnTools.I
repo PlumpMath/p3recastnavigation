@@ -386,6 +386,14 @@ INLINE void RNConvexVolumeSettings::set_flags(int value)
 {
 	_flags = value;
 }
+INLINE LPoint3f RNConvexVolumeSettings::get_centroid() const
+{
+	return _centroid;
+}
+INLINE void RNConvexVolumeSettings::set_centroid(LPoint3f value)
+{
+	_centroid = value;
+}
 INLINE int RNConvexVolumeSettings::get_ref() const
 {
 	return _ref;

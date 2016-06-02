@@ -420,9 +420,18 @@ void RNNavMesh::do_initialize()
 			pointList.add_value(point);
 		}
 		//insert convex volume to the list
+		// compute centroid
+		LPoint3f centroid = LPoint3f::zero();
+		for (int p = 0; p < pointList.get_num_values(); ++p)
+		{
+			centroid += pointList[p];
+		}
+		centroid /= pointList.get_num_values();
+		//
 		RNConvexVolumeSettings settings;
 		settings.set_area(areaType);
 		settings.set_flags(mPolyAreaFlags[areaType]);
+		settings.set_centroid(centroid);
 		int ref = unique_ref();
 		settings.set_ref(ref);
 		mConvexVolumes.push_back(PointListConvexVolumeSettings(pointList, settings));
@@ -663,6 +672,13 @@ int RNNavMesh::setup()
 					points.add_value(
 							rnsup::RecastToLVecBase3f(&convexVol.verts[i * 3]));
 				}
+				// recompute centroid
+				LPoint3f centroid = LPoint3f::zero();
+				for (int p = 0; p < points.get_num_values(); ++p)
+				{
+					centroid += points[p];
+				}
+				centroid /= points.get_num_values();
 				//mConvexVolumes and mGeom::m_volumes have the same order
 				nassertr_always(mGeom->getConvexVolumeCount() - 1 == idx,
 						RN_ERROR)
@@ -670,6 +686,7 @@ int RNNavMesh::setup()
 						RN_ERROR)
 				//
 				mConvexVolumes[idx].set_first(points);
+				mConvexVolumes[idx].second().set_centroid(centroid);
 			}
 			else
 			{
@@ -870,9 +887,18 @@ int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
 	CONTINUE_IF_ELSE_R((!mNavMeshType) && (points.size() >= 3), RN_ERROR)
 
 	// add to convex volumes
+	// compute centroid
+	LPoint3f centroid = LPoint3f::zero();
+	for (int p = 0; p < points.get_num_values(); ++p)
+	{
+		centroid += points[p];
+	}
+	centroid /= points.get_num_values();
+	//
 	RNConvexVolumeSettings settings;
 	settings.set_area(area);
 	settings.set_flags(mPolyAreaFlags[area]);
+	settings.set_centroid(centroid);
 	int ref = unique_ref();
 	settings.set_ref(ref);
 	mConvexVolumes.push_back(PointListConvexVolumeSettings(points, settings));
@@ -980,7 +1006,7 @@ int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) cons
  */
 int RNNavMesh::do_find_convex_volume_polys(int convexVolumeID,
 		dtQueryFilter& filter, dtPolyRef* polys, int& npolys,
-		const int MAX_POLYS) const
+		const int MAX_POLYS, float reductionFactor) const
 {
 	///https://groups.google.com/forum/?fromgroups#!searchin/recastnavigation/door/recastnavigation/K2C44OCpxGE/a2Zn6nu0dIIJ
 	const float *queryPolyPtr =
@@ -989,10 +1015,22 @@ int RNNavMesh::do_find_convex_volume_polys(int convexVolumeID,
 			mNavMeshType->getInputGeom()->getConvexVolumes()[convexVolumeID].nverts;
 
 	float *queryPoly = new float[nverts * 3];
+	float centroid[3];
+	// mConvexVolumes and mGeom::m_volumes have the same order
+	rnsup::LVecBase3fToRecast(
+			mConvexVolumes[convexVolumeID].get_second().get_centroid(),
+			centroid);
 
-	for (int i = 0; i < nverts * 3; ++i)
+	// scale points by reduceFactor around centroid:
+	// queryPoly = centroid + reduceFactor * (queryPolyPtr - centroid)
+	for (int i = 0; i < nverts; ++i)
 	{
-		queryPoly[i] = queryPolyPtr[i];
+		queryPoly[i * 3] = centroid[0]
+				+ reductionFactor * (queryPolyPtr[i * 3] - centroid[0]);
+		queryPoly[i * 3 + 1] = centroid[1]
+				+ reductionFactor * (queryPolyPtr[i * 3 + 1] - centroid[1]);
+		queryPoly[i * 3 + 2] = centroid[2]
+				+ reductionFactor * (queryPolyPtr[i * 3 + 2] - centroid[2]);
 	}
 
 	rnsup::reverseVector(queryPoly, nverts);
@@ -1037,9 +1075,16 @@ int RNNavMesh::do_find_convex_volume_polys(int convexVolumeID,
  * Should be called after RNNavMesh setup.
  * Returns the convex volume's index in the list, or a negative number
  * on error.
+ * \note Because the default area's search in the underlying navigation mesh,
+ * results in all the polygons of the underlying nav mesh that are 'touched'
+ * by the convex volume, so the found area is, generally, more extensive
+ * (and with a quite different shape) compared to that of the convex volume;
+ * for this was introduced the 'reductionFactor' (< 1.0) that has the purpose
+ * to reduce the area found so as to make it roughly corresponding to that
+ * of the convex volume; the default value is 0.90.
  */
 int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
-		const RNConvexVolumeSettings& settings)
+		const RNConvexVolumeSettings& settings, float reductionFactor)
 {
 	// continue if nav mesh has been already setup
 	CONTINUE_IF_ELSE_R(mNavMeshType, RN_ERROR)
@@ -1056,7 +1101,7 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
 		dtStatus status, status2;
 
 		CONTINUE_IF_ELSE_R(
-				do_find_convex_volume_polys(convexVolumeID, filter, polys, npolys, MAX_POLYS) == RN_SUCCESS,
+				do_find_convex_volume_polys(convexVolumeID, filter, polys, npolys, MAX_POLYS, reductionFactor) == RN_SUCCESS,
 				RN_ERROR)
 
 		int area = (
@@ -1119,9 +1164,16 @@ int RNNavMesh::set_convex_volume_settings(const LPoint3f& insidePoint,
  * Should be called after RNNavMesh setup.
  * Returns the convex volume's index in the list, or a negative number
  * on error.
+ * \note Because the default area's search in the underlying navigation mesh,
+ * results in all the polygons of the underlying nav mesh that are 'touched'
+ * by the convex volume, so the found area is, generally, more extensive
+ * (and with a quite different shape) compared to that of the convex volume;
+ * for this was introduced the 'reductionFactor' (< 1.0) that has the purpose
+ * to reduce the area found so as to make it roughly corresponding to that
+ * of the convex volume; the default value is 0.90.
  */
 int RNNavMesh::set_convex_volume_settings(int ref,
-		const RNConvexVolumeSettings& settings)
+		const RNConvexVolumeSettings& settings, float reductionFactor)
 {
 	// get point list
 	ValueList<LPoint3f> points = get_convex_volume_by_ref(ref);
@@ -1129,16 +1181,10 @@ int RNNavMesh::set_convex_volume_settings(int ref,
 	// continue if convex volume found
 	CONTINUE_IF_ELSE_R(points.size() > 0, RN_ERROR)
 
-	// compute the centroid
-	LPoint3f centroid = LPoint3f::zero();
-	for (int p = 0; p < points.size(); ++p)
-	{
-		centroid += points[p];
-	}
-	centroid /= points.size();
-
-	// set by point
-	return set_convex_volume_settings(centroid, settings);
+	// set by point (centroid)
+	return set_convex_volume_settings(
+			get_convex_volume_settings(ref).get_centroid(), settings,
+			reductionFactor);
 }
 
 /**

@@ -1,0 +1,57 @@
+Usage Notes
+***********
+In addition to reading this document, please also refer to the API documentation 
+(c++ only) that can be generated with doxygen:
+
+  doxygen Doxyfile 
+
+Also see the code of the samples (both in python and c++) in the 'samples' folder:
+- "Basic" it is a minimum example of p3recastnavigation usage
+- "Test1" shows examples of how to define and use convex volumes and off mesh 
+connections
+- "Test2" shows other module features: setting of creation parameters, integration 
+with Panda3D objects, custom update, management of obstacles, event management, 
+serialization (ie read/write to/from BAM files)
+
+In addition, always refer to the original documentation and forums of Recastnavigation 
+(https://github.com/recastnavigation/recastnavigation):
+- Discuss Recast & Detour: http://groups.google.com/group/recastnavigation
+- Development blog: http://digestingduck.blogspot.com/
+- API documentation that can be generated with doxygen using the "Doxygen" file 
+  located in the root of the source code:
+  
+   doxygen Doxyfile
+   
+Finally, and very importantly, use the comprehensive application "RecastDemo", 
+from which much of the p3recastnavigation code is derived, to experience and become 
+familiar with the internals of RecastNavigation.
+
+Structure
+---------
+p3recastnavigation has several objects to work with:
+
+- RNNavMeshManager: this is a unique object (singleton) whose main task is to 
+create/destroy RNNavMeshes and RNCrowdAgents
+- RNNavMEsh: represents the nav mesh on which they move the RNCrowdAgents
+- RNCrowdAgent: is the agent that moves to reach the target by following the 
+paths tracked down thanks to the nav mesh
+- Convex volumes: these represent specific areas of the nav mesh and could have 
+distinct properties from the rest of the nav mesh
+- Off mesh connection: represent one-dimensional connections between disjointed 
+regions of the nav mesh, possibly having also distinct properties
+- Area types, flags and costs: these are the elements that allow you to set the 
+properties of convex volumes and off mesh connections, affecting even dynamically, 
+the choice of paths that agents make to go towards their targets.
+
+RNNavMeshManager
+----------------
+The manager is a singleton that can be retrieved through get_global_ptr() method (static 
+in c++). Ut manages the creation and destruction of navigation meshes and crowd agents, 
+maintaining lists of all these created objects, so they can be retrieved at any time. 
+In addition to the management functions of the above objects, it is provided with 
+some utilities: to find the dimensions of the used models (get_bounding_dimensions ()) or 
+to manage the collisions with the same models (get_collision_traverser(), get_collision_ray()
+etc...), and these are used internally, for example for the kinematic crowd agents, but 
+can be used for general public purposes. 
+Finally there are two serialization methods to write/read to/from "bam" files, the objects 
+of a scene having its root a navigation mesh.

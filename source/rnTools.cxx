@@ -213,6 +213,8 @@ void RNConvexVolumeSettings::write_datagram(Datagram &dg) const
 {
 	dg.add_int32(get_area());
 	dg.add_int32(get_flags());
+	_centroid.write_datagram(dg);
+	dg.add_int32(get_ref());
 }
 /**
  * Restores the RNConvexVolumeSettings from the datagram.
@@ -221,6 +223,8 @@ void RNConvexVolumeSettings::read_datagram(DatagramIterator &scan)
 {
 	set_area(scan.get_int32());
 	set_flags(scan.get_int32());
+	_centroid.read_datagram(scan);
+	set_ref(scan.get_int32());
 }
 
 ///Off mesh connection settings.
@@ -241,6 +245,7 @@ void RNOffMeshConnectionSettings::write_datagram(Datagram &dg) const
 	dg.add_uint32(get_userId());
 	dg.add_int32(get_area());
 	dg.add_int32(get_flags());
+	dg.add_int32(get_ref());
 }
 /**
  * Restores the RNOffMeshConnectionSettings from the datagram.
@@ -252,6 +257,7 @@ void RNOffMeshConnectionSettings::read_datagram(DatagramIterator &scan)
 	set_userId(scan.get_uint32());
 	set_area(scan.get_int32());
 	set_flags(scan.get_int32());
+	set_ref(scan.get_int32());
 }
 
 ///Obstacle settings.

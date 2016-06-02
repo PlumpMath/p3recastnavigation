@@ -154,56 +154,14 @@ def getAgentModelAnims():
         agentAnimNP[1].reparent_to(agentNP[i])
 
 def readFromBamFile(fileName):
-    """read nav mesh from a file"""
+    """read scene from a file"""
     
-    global commonNP
-    # read from bamFile
-    inBamFile = BamFile()
-    if inBamFile.open_read(Filename(fileName)):
-        print("Current system Bam version: "
-              + str(inBamFile.get_current_major_ver()) + "."
-              + str(inBamFile.get_current_minor_ver()))
-        print("Bam file version: " + str(inBamFile.get_file_major_ver()) + "."
-                + str(inBamFile.get_file_minor_ver()))
-        # read the scene
-        reference = inBamFile.read_object()
-        if reference:
-            # resolve pointers
-            if not inBamFile.resolve():
-                print("Error resolving pointers in " + fileName)
-                return False
-        else:
-            print("Error reading " + fileName)
-            return False
-        # close the file
-        inBamFile.close()
-        print("SUCCESS: all nav meshes and crowd agents were read from "
-                + fileName)
-        # restore reference node
-        RNNavMeshManager.get_global_ptr().set_reference_node_path(NodePath.any_path(reference))
-    else:
-        print("Error opening " + fileName)
-        return False
-    return True
+    return RNNavMeshManager.get_global_ptr().read_from_bam_file(fileName)
 
 def writeToBamFileAndExit(fileName):
-    """write nav mesh to a file (and exit)"""
+    """write scene to a file (and exit)"""
     
-    outBamFile = BamFile()
-    if outBamFile.open_write(Filename(fileName)):
-        print("Current system Bam version: "
-                + str(outBamFile.get_current_major_ver()) + "."
-                + str(outBamFile.get_current_minor_ver()))
-        # write the scene: just write the reference node
-        if not outBamFile.write_object(
-                RNNavMeshManager.get_global_ptr().get_reference_node_path().node()):
-            print("Error writing " + fileName)
-        # close the file
-        outBamFile.close()
-        print("SUCCESS: all nav mesh and crowd agent collections were written to "
-                + fileName)
-    else:
-        print("Error opening " + fileName)
+    RNNavMeshManager.get_global_ptr().write_to_bam_file(fileName)
     #
     sys.exit(0)
 

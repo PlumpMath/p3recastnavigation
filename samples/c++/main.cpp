@@ -321,77 +321,17 @@ void getAgentModelAnims()
 	}
 }
 
-// read nav mesh from a file
+// read scene from a file
 bool readFromBamFile(string fileName)
 {
-	// read from bamFile
-	BamFile inBamFile;
-	if (inBamFile.open_read(Filename(fileName)))
-	{
-		cout << "Current system Bam version: "
-				<< inBamFile.get_current_major_ver() << "."
-				<< inBamFile.get_current_minor_ver() << endl;
-		cout << "Bam file version: " << inBamFile.get_file_major_ver() << "."
-				<< inBamFile.get_file_minor_ver() << endl;
-		// read the scene
-		TypedWritable* reference = inBamFile.read_object();
-		if (reference)
-		{
-			// resolve pointers
-			if (!inBamFile.resolve())
-			{
-				cerr << "Error resolving pointers in " << fileName << endl;
-				return false;
-			}
-		}
-		else
-		{
-			cerr << "Error reading " << fileName << endl;
-			return false;
-		}
-		// close the file
-		inBamFile.close();
-		cout << "SUCCESS: all nav meshes and crowd agents were read from "
-				<< fileName << endl;
-		// restore reference node
-		RNNavMeshManager::get_global_ptr()->set_reference_node_path(
-				NodePath::any_path(DCAST(PandaNode, reference)));
-	}
-	else
-	{
-		cerr << "Error opening " << fileName << endl;
-		return false;
-	}
-	return true;
+	return RNNavMeshManager::get_global_ptr()->read_from_bam_file(fileName);
 }
 
-// write nav mesh to a file
+// write scene to a file (and exit)
 void writeToBamFileAndExit(const Event* e, void* data)
 {
 	string fileName = *reinterpret_cast<string*>(data);
-	BamFile outBamFile;
-	if (outBamFile.open_write(Filename(fileName)))
-	{
-		cout << "Current system Bam version: "
-				<< outBamFile.get_current_major_ver() << "."
-				<< outBamFile.get_current_minor_ver() << endl;
-		// write the scene: just write the reference node
-		if (!outBamFile.write_object(
-				RNNavMeshManager::get_global_ptr()->get_reference_node_path().node()))
-		{
-			cerr << "Error writing " << fileName << endl;
-		}
-		// close the file
-		outBamFile.close();
-		cout
-				<< "SUCCESS: all nav mesh and crowd agent collections were written to "
-				<< fileName << endl;
-	}
-	else
-	{
-		cerr << "Error opening " << fileName << endl;
-	}
-
+	RNNavMeshManager::get_global_ptr()->write_to_bam_file(fileName);
 	/// second option: remove custom update updateTask
 	framework.get_task_mgr().remove(updateTask);
 	// delete nav mesh manager

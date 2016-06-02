@@ -16,43 +16,5 @@ p3recastnavigation is a LGPL v3 licensed open source project. A copy of the
 GNU LESSER GENERAL PUBLIC LICENSE is reported into COPYING file. 
 See also <http://www.gnu.org/licenses/>.
 
-Basic Usage
-***********
-
-p3recastnavigation has several objects to work with:
-
-- RNNavMeshManager: this is a unique object (singleton) whose main task is to 
-create/destroy RNNavMeshes and RNCrowdAgents
-- RNNavMEsh: represents the nav mesh on which they move the RNCrowdAgents
-- RNCrowdAgent: is the agent that moves to reach the target by following the 
-paths tracked down thanks to the nav mesh
-- Convex volumes: these represent specific areas of the nav mesh and have distinct 
-properties from the rest of the nav mesh
-- Off mesh connection: represent one-dimensional connections between disjointed 
-regions of the nav mesh, possibly having also distinct properties
-- Area types, flags and costs: these are the elements that allow you to set the 
-properties of convex volumes and off mesh connections, affecting, even dynamically, 
-choosing the path that agents follow to their targets
-
-To have a minimal example of use see the "basic" application (both in python and c++) 
-in the samples folder. To see examples that show a wider range of use see the "main"
-applications (always in python and c++).
-
-In addition to reading this document, plese also refer to the API documentation 
-(c++ only) that can be generated with doxygen:
-
-  doxygen Doxyfile 
-
-
-RNNavMeshManager
-----------------
-The manager is a singleton that can be retrieved through get_global_ptr() method (static 
-in c++). Ut manages the creation and destruction of navigation meshes and crowd agents, 
-maintaining lists of all these created objects, so they can be retrieved at any time. 
-In addition to the management functions of the above objects, it is provided with 
-some utilities: to find the dimensions of the used models (get_bounding_dimensions ()) or 
-to manage the collisions with the same models (get_collision_traverser(), get_collision_ray()
-etc...), and these are used internally, for example for the kinematic crowd agents, but 
-can be used for general public purposes. 
-Finally there are two serialization methods to write/read to/from "bam" files, the objects 
-of a scene having its root a navigation mesh.
+To learn about the use of the p3recastnavigation module, see the 
+'doc/NOTES' document and the code samples in the 'samples' folder.

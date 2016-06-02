@@ -591,24 +591,11 @@ bool RNNavMeshManager::write_to_bam_file(const string& fileName)
 		cout << "Current system Bam version: "
 				<< outBamFile.get_current_major_ver() << "."
 				<< outBamFile.get_current_minor_ver() << endl;
-		BamWriter* manager = outBamFile.get_writer();
-		DatagramSink* dgSink = manager->get_target();
-		Datagram dg;
-
-		//save nav meshes' number
-		unsigned int navMeshNum = mNavMeshes.size();
-		dg.add_uint32(navMeshNum);
-		dgSink->put_datagram(dg);
-		//for each nav mesh do:
-		NavMeshList::iterator iter;
-		for (iter = mNavMeshes.begin(); iter != mNavMeshes.end(); ++iter)
+		// just write the reference node
+		if (!outBamFile.write_object(mReferenceNP.node()))
 		{
-			//write the the nav mesh
-			if (! outBamFile.write_object((*iter)))
-			{
-				errorReport += string("Error writing ")
-						+ string((*iter)->get_name()) + string("\n");
-			}
+			errorReport += string("Error writing ") + mReferenceNP.get_name()
+					+ string(" node in ") + fileName + string("\n");
 		}
 		// close the file
 		outBamFile.close();
@@ -642,41 +629,30 @@ bool RNNavMeshManager::read_from_bam_file(const string& fileName)
 	BamFile inBamFile;
 	if (inBamFile.open_read(Filename(fileName)))
 	{
-		cout << "Current system Bam version: " << inBamFile.get_current_major_ver() << "."
+		cout << "Current system Bam version: "
+				<< inBamFile.get_current_major_ver() << "."
 				<< inBamFile.get_current_minor_ver() << endl;
 		cout << "Bam file version: " << inBamFile.get_file_major_ver() << "."
 				<< inBamFile.get_file_minor_ver() << endl;
-		BamReader* manager = inBamFile.get_reader();
-		DatagramGenerator* dgGenerator = manager->get_source();
-		Datagram dg;
-
-		//read the nav meshes' number
-		dgGenerator->get_datagram(dg);
-		DatagramIterator scan(dg);
-		unsigned int navMeshNum = scan.get_uint32();
-		//for each nav mesh do:
-		for (unsigned int i = 0; i < navMeshNum; ++i)
+		// just read the reference node
+		TypedWritable* reference = inBamFile.read_object();
+		if (reference)
 		{
-			//read the nav mesh
-			TypedWritable* navMesh = inBamFile.read_object();
-			if (navMesh)
+			//resolve pointers
+			if (!inBamFile.resolve())
 			{
-				//resolve pointers
-				if (!inBamFile.resolve())
-				{
-					errorReport += string(
-							"Error resolving pointers for nav mesh ") + str(i)
-							+ string("\n");
-				}
-			}
-			else
-			{
-				errorReport += string("Error reading nav mesh ") + str(i)
+				errorReport += string("Error resolving pointers in ") + fileName
 						+ string("\n");
 			}
 		}
+		else
+		{
+			errorReport += string("Error reading ") + fileName + string("\n");
+		}
 		// close the file
 		inBamFile.close();
+		// restore reference node
+		mReferenceNP = NodePath::any_path(DCAST(PandaNode, reference));
 	}
 	else
 	{
