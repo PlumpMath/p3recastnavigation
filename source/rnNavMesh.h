@@ -23,7 +23,7 @@
 class RNCrowdAgent;
 
 /**
- * Class implementing dtNavMesh from RecastNavigation nav mesh and path finding library.
+ * This class represents a "navigation mesh" of the RecastNavigation library.
  *
  * \see
  * 		- https://github.com/recastnavigation/recastnavigation.git
@@ -31,15 +31,16 @@ class RNCrowdAgent;
  * 		- https://groups.google.com/forum/?fromgroups#!forum/recastnavigation
  *
  * This PandaNode will create a "navigation mesh" for its "owner object", which
- * is a model specified as NodePath at setup time.\n
+ * is a model specified as NodePath before setting it up.\n
  * The owner object is, typically, a stationary/static object.\n
  * An "update" task should call this object's update() method to drive the
  * crowd agents (RNCrowdAgent), which are added to this nav mesh, to their own
  * targets.\n
- * \note a model can "own" many nav meshes, so the typical pattern is to create a
- * common parent NodePath to which both model and its nav meshes are reparented.
+ * \note a model can "own" many navigation meshes, so the typical pattern is to
+ * have a common parent (reference) NodePath to which both model and its
+ * navigation meshes are reparented.
  *
- * > **Manager Creation Parameter(s)**:
+ * > **RNNavMesh text parameters**:
  * param | type | default | note
  * ------|------|---------|-----
  * | *navmesh_type*					|single| *solo* | values: solo,tile,obstacle
@@ -71,9 +72,21 @@ class RNCrowdAgent;
  */
 class EXPORT_CLASS RNNavMesh: public PandaNode
 {
+public:
+	///convex volumes
+	typedef Pair<ValueList<LPoint3f>,RNConvexVolumeSettings> PointListConvexVolumeSettings;
+	///off mesh connections
+	typedef Pair<ValueList<LPoint3f>,RNOffMeshConnectionSettings> PointPairOffMeshConnectionSettings;
+	///obstacles
+	typedef Pair<RNObstacleSettings, NodePath> Obstacle;
+	///tester queries
+	typedef ValueList<Pair<LPoint3f, unsigned char> > PointFlagList;
+
 PUBLISHED:
 
-	///Equivalent to rnsup::NavMeshTypeEnum.
+	/**
+	 * Equivalent to rnsup::NavMeshTypeEnum.
+	 */
 	enum RNNavMeshTypeEnum
 	{
 #ifndef CPPPARSER
@@ -86,8 +99,10 @@ PUBLISHED:
 #endif //CPPPARSER
 	};
 
-	///Equivalent to default rnsup::NavMeshPolyAreasEnum.
-	/// \note You can add more area type values. Don't redefine these ones.
+	/**
+	 * Equivalent to default rnsup::NavMeshPolyAreasEnum.
+	 * \note You can add more area type values. Don't redefine these ones.
+	 */
 	enum RNNavMeshPolyAreasEnum
 	{
 #ifndef CPPPARSER
@@ -103,8 +118,10 @@ PUBLISHED:
 #endif //CPPPARSER
 	};
 
-	///Equivalent to default rnsup::NavMeshPolyFlagsEnum.
-	/// \note You can add more flag values. Don't redefine these ones.
+	/**
+	 * Equivalent to default rnsup::NavMeshPolyFlagsEnum.
+	 * \note You can add more flag values. Don't redefine these ones.
+	 */
 	enum RNNavMeshPolyFlagsEnum
 	{
 #ifndef CPPPARSER
@@ -120,7 +137,9 @@ PUBLISHED:
 #endif //CPPPARSER
 	};
 
-	///Equivalent to rnsup::NavMeshPartitionType.
+	/**
+	 * Equivalent to rnsup::NavMeshPartitionType.
+	 */
 	enum RNNavMeshPartitionType
 	{
 #ifndef CPPPARSER
@@ -134,37 +153,57 @@ PUBLISHED:
 
 	virtual ~RNNavMesh();
 
-	void update(float dt);
-
-	///OWNER OBJECT
+	/**
+	 * \name OWNER OBJECT
+	 */
+	///@{
 	INLINE void set_owner_node_path(const NodePath& ownerObject);
 	INLINE NodePath get_owner_node_path() const;
+	///@}
 
-	///REFERENCE NODE.
+	/**
+	 * \name REFERENCE NODE
+	 */
+	///@{
 	INLINE void set_reference_node_path(const NodePath& reference);
+	///@}
 
-	///SOLO TILE OBSTACLE TYPES
-	//GENERAL PARAMETERS
+	/**
+	 * \name GENERAL PARAMETERS
+	 */
+	///@{
 	INLINE LVecBase3f get_recast_bounds_min() const;
 	INLINE LVecBase3f get_recast_bounds_max() const;
+	///@}
 
-	//NAVMESH PARAMETERS
+	/**
+	 * \name NAVMESH PARAMETERS
+	 */
+	///@{
 	void set_nav_mesh_type_enum(RNNavMeshTypeEnum typeEnum);
 	INLINE RNNavMeshTypeEnum get_nav_mesh_type_enum() const;
 	void set_nav_mesh_settings(const RNNavMeshSettings& settings);
 	INLINE RNNavMeshSettings get_nav_mesh_settings() const;
 	INLINE void set_area_flags(int area, int oredFlags);
 	INLINE int get_area_flags(int area) const;
+	///@}
 
-	//CROWD PARAMETERS
+	/**
+	 * \name CROWD PARAMETERS
+	 */
+	///@{
 	void set_crowd_area_cost(int area, float cost);
-	INLINE float get_area_cost(int area) const;
+	INLINE float get_crowd_area_cost(int area) const;
 	void set_crowd_include_flags(int oredFlags);
 	INLINE int get_crowd_include_flags() const;
 	void set_crowd_exclude_flags(int oredFlags);
 	INLINE int get_crowd_exclude_flags() const;
+	///@}
 
-	//CONVEX VOLUME
+	/**
+	 * \name CONVEX VOLUMES
+	 */
+	///@{
 	int add_convex_volume(const ValueList<LPoint3f>& points, int area);
 	int remove_convex_volume(const LPoint3f& insidePoint);
 	int set_convex_volume_settings(const LPoint3f& insidePoint,
@@ -178,8 +217,12 @@ PUBLISHED:
 	INLINE int get_convex_volume(int index) const;
 	INLINE int get_num_convex_volumes() const;
 	MAKE_SEQ(get_convex_volumes, get_num_convex_volumes, get_convex_volume);
+	///@}
 
-	//OFF MESH CONNECTION
+	/**
+	 * \name OFF MESH CONNECTIONS
+	 */
+	///@{
 	int add_off_mesh_connection(const ValueList<LPoint3f>& points,
 		bool bidirectional);
 	int remove_off_mesh_connection(const LPoint3f& beginOrEndPoint);
@@ -194,20 +237,34 @@ PUBLISHED:
 	INLINE int get_off_mesh_connection(int index) const;
 	INLINE int get_num_off_mesh_connections() const;
 	MAKE_SEQ(get_off_mesh_connections, get_num_off_mesh_connections, get_off_mesh_connection);
+	///@}
 
-	///TILE OBSTACLE TYPES
-	//TILE PARAMETERS
+	/**
+	 * \name TILE PARAMETERS
+	 * (TILE and OBSTACLE types only)
+	 */
+	///@{
 	void set_nav_mesh_tile_settings(const RNNavMeshTileSettings& settings);
 	INLINE RNNavMeshTileSettings get_nav_mesh_tile_settings() const;
 	LVecBase2i get_tile_pos(const LPoint3f& pos);
+	///@}
 
-	//TILE
+	/**
+	 * \name TILES
+	 * (TILE type only)
+	 */
+	///@{
 	int build_tile(const LPoint3f& pos);
 	int remove_tile(const LPoint3f& pos);
 	int build_all_tiles();
 	int remove_all_tiles();
+	///@}
 
-	//OBSTACLE
+	/**
+	 * \name OBSTACLES
+	 * (OBSTACLE type only)
+	 */
+	///@{
 	int add_obstacle(NodePath objectNP);
 	int remove_obstacle(NodePath objectNP);
 	NodePath get_obstacle_by_ref(int ref) const;
@@ -215,12 +272,21 @@ PUBLISHED:
 	INLINE int get_num_obstacles() const;
 	MAKE_SEQ(get_obstacles, get_num_obstacles, get_obstacle);
 	int remove_all_obstacles();
+	///@}
 
-	///NAVMESH
+	/**
+	 * \name NAVMESH
+	 */
+	///@{
 	int setup();
 	int cleanup();
+	void update(float dt);
+	///@}
 
-	///CROWDAGENT
+	/**
+	 * \name CROWDAGENTS
+	 */
+	///@{
 	int add_crowd_agent(NodePath crowdAgentNP);
 	int remove_crowd_agent(NodePath crowdAgentNP);
 	INLINE PT(RNCrowdAgent) get_crowd_agent(int index) const;
@@ -228,8 +294,11 @@ PUBLISHED:
 	MAKE_SEQ(get_crowd_agents, get_num_crowd_agents, get_crowd_agent);
 	INLINE PT(RNCrowdAgent) operator [](int index) const;
 	INLINE int size() const;
+	///@}
 
-	///Equivalent to dtStraightPathOptions.
+	/**
+	 * Equivalent to dtStraightPathOptions.
+	 */
 	enum RNStraightPathOptions
 	{
 #ifndef CPPPARSER
@@ -241,7 +310,9 @@ PUBLISHED:
 #endif //CPPPARSER
 	};
 
-	///Equivalent to dtStraightPathFlags.
+	/**
+	 * Equivalent to dtStraightPathFlags.
+	 */
 	enum RNStraightPathFlags
 	{
 #ifndef CPPPARSER
@@ -253,33 +324,40 @@ PUBLISHED:
 #endif //CPPPARSER
 	};
 
-	///TESTER QUERIES
+	/**
+	 * \name TESTER QUERIES
+	 */
+	///@{
 	ValueList<LPoint3f> path_find_follow(const LPoint3f& startPos,
 		const LPoint3f& endPos);
-	typedef ValueList<Pair<LPoint3f, unsigned char> > PointFlagList;
 	PointFlagList path_find_straight(const LPoint3f& startPos,
 		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS);
 	LPoint3f ray_cast(const LPoint3f& startPos, const LPoint3f& endPos);
 	float distance_to_wall(const LPoint3f& pos);
+	///@}
 
-	///OUTPUT
+	/**
+	 * \name OUTPUT
+	 */
+	///@{
 	void output(ostream &out) const;
+	///@}
 
-	///DEBUG DRAW
+	/**
+	 * \name DEBUG DRAWING
+	 */
+	///@{
 	void enable_debug_drawing(NodePath debugCamera);
 	void disable_debug_drawing();
 	int toggle_debug_drawing(bool enable);
+	///@}
 
 public:
-	///Helper typedefs.
-	//convex volume
-	typedef Pair<ValueList<LPoint3f>,RNConvexVolumeSettings> PointListConvexVolumeSettings;
-	//off mesh connection
-	typedef Pair<ValueList<LPoint3f>,RNOffMeshConnectionSettings> PointPairOffMeshConnectionSettings;
-	//obstacles.
-	typedef Pair<RNObstacleSettings, NodePath> Obstacle;
-
-	///Library & support low level related methods (C++ only).
+	/**
+	 * \name C++ ONLY
+	 * Library & support low level related methods.
+	 */
+	///@{
 	inline rnsup::InputGeom* get_recast_input_geom() const;
 	inline dtNavMesh* get_recast_nav_mesh() const;
 	inline dtNavMeshQuery* get_recast_nav_mesh_query() const;
@@ -287,9 +365,9 @@ public:
 	dtTileCache* get_recast_tile_cache() const;
 	inline rnsup::NavMeshType& get_nav_mesh_type() const;
 	inline operator rnsup::NavMeshType&();
-
 	///Unique ref producer.
 	int unique_ref();
+	///@}
 
 protected:
 	friend class RNNavMeshManager;
@@ -400,20 +478,27 @@ private:
 	RNNavMesh(const RNNavMesh&);
 	RNNavMesh& operator=(const RNNavMesh&);
 
-	///TypedWritable API
 public:
+	/**
+	 * \name TypedWritable API
+	 */
+	///@{
 	static void register_with_read_factory();
 	virtual void write_datagram (BamWriter *manager, Datagram &dg) override;
 	virtual int complete_pointers(TypedWritable **p_list, BamReader *manager) override;
 	virtual void finalize(BamReader *manager);
 	bool require_fully_complete() const;
+	///@}
 
 protected:
 	static TypedWritable *make_from_bam(const FactoryParams &params);
 	virtual void fillin(DatagramIterator &scan, BamReader *manager) override;
 
-	///TypedObject semantics: hardcoded
 public:
+	/**
+	 * \name TypedObject API
+	 */
+	///@{
 	static TypeHandle get_class_type()
 	{
 		return _type_handle;
@@ -432,6 +517,7 @@ public:
 		init_type();
 		return get_class_type();
 	}
+	///@}
 
 private:
 	static TypeHandle _type_handle;

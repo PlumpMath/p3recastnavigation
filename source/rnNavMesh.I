@@ -101,7 +101,7 @@ INLINE int RNNavMesh::get_area_flags(int area) const
 /**
  * Returns the area's traversal cost, or a negative number on error.
  */
-INLINE float RNNavMesh::get_area_cost(int area) const
+INLINE float RNNavMesh::get_crowd_area_cost(int area) const
 {
 	map<int, float>::const_iterator iter = mPolyAreaCost.find(area);
 	return iter != mPolyAreaCost.end() ? (*iter).second : RN_ERROR;

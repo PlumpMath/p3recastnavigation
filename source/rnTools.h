@@ -40,7 +40,7 @@
   }
 
 /**
- * \brief An automatic Singleton Utility.
+ * An automatic Singleton Utility.
  *
  * \note This Singleton class is based on the article "An automatic
  * Singleton Utility" by Scott Bilas in "Game Programming Gems 1" book.
@@ -77,7 +77,7 @@ public:
 template<typename T> T* Singleton<T>::ms_Singleton = 0;
 
 /**
- * \brief A std::pair wrapper
+ * A std::pair wrapper
  */
 template<typename T1, typename T2> struct Pair
 {
@@ -125,7 +125,7 @@ private:
 };
 
 /**
- * \brief A pair that can be used with PT/CPT (C++ only)
+ * A pair that can be used with PT/CPT (C++ only)
  */
 template<typename T1, typename T2> struct PairRC: public Pair<T1, T2>,
 		public ReferenceCount
@@ -142,7 +142,7 @@ public:
 };
 
 /**
- * \brief Template struct for generic Task Function interface
+ * Template struct for generic Task Function interface
  *
  * The effective Tasks are composed by a Pair of an object and
  * a method (member function) doing the effective task.
@@ -185,7 +185,7 @@ template<typename A> struct TaskInterface
 };
 
 /**
- * \brief Throwing event data.
+ * Throwing event data.
  *
  * Data related to throwing events by components.
  */
@@ -260,7 +260,7 @@ public:
 };
 
 /**
- * \brief Declarations for parameters management.
+ * Declarations for parameters management.
  */
 typedef multimap<string, string> ParameterTable;
 typedef multimap<string, string>::iterator ParameterTableIter;
@@ -277,10 +277,10 @@ template<typename Type> string str(Type value)
 }
 
 /**
- * \brief Parses a string composed by substrings separated by a character
- * separator.\n
+ * Parses a string composed by substrings separated by a character
+ * separator.
  * \note all blanks are erased before parsing.
- * @param compoundString The source string.
+ * @param srcCompoundString The source string.
  * @param separator The character separator.
  * @return The substrings vector.
  */
@@ -291,7 +291,7 @@ pvector<string> parseCompoundString(
  * \brief Into a given string, replaces any occurrence of a character with
  * another character.
  * @param source The source string.
- * @param character To be replaced character.
+ * @param character Character to be replaced .
  * @param replacement Replaced character.
  * @return The result string.
  */

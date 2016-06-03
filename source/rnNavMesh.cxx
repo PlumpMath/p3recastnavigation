@@ -1,5 +1,5 @@
 /**
- * \file rnNavMesh.cpp
+ * \file rnNavMesh.cxx
  *
  * \date 2016-03-16
  * \author consultit

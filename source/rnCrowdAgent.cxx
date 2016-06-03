@@ -1,5 +1,5 @@
 /**
- * \file rnCrowdAgent.cpp
+ * \file rnCrowdAgent.cxx
  *
  * \date 2016-03-16
  * \author consultit
@@ -65,7 +65,7 @@ int RNCrowdAgent::set_move_velocity(const LVector3f& vel)
 	// continue if crowdAgent belongs to a mesh
 	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
-	//request RNNavMesh to update move target for this RNCrowdAgent
+	//request RNNavMesh to update move velocity for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_velocity(this, vel);
 }
 

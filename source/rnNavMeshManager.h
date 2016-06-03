@@ -18,9 +18,9 @@ class RNNavMesh;
 class RNCrowdAgent;
 
 /**
- * RNNavMeshManager Singleton class.
+ * This class manages RNNavMeshes and RNCrowdAgents creation/destruction.
  *
- * Used for handling RNNavMeshes and RNCrowdAgents creation/destruction.
+ * RNNavMeshManager is a singleton class.
  */
 class EXPORT_CLASS RNNavMeshManager: public TypedReferenceCount,
 		public Singleton<RNNavMeshManager>
@@ -30,24 +30,36 @@ PUBLISHED:
 			const CollideMask& mask = GeomNode::get_default_collide_mask());
 	virtual ~RNNavMeshManager();
 
+	/**
+	 * \name REFERENCE NODES
+	 */
+	///@{
 	INLINE NodePath get_reference_node_path() const;
 	INLINE void set_reference_node_path(const NodePath& reference);
-
 	INLINE NodePath get_reference_node_path_debug() const;
+	///@}
 
-	// RNNavMeshes
+	/**
+	 * \name RNNavMesh
+	 */
+	///@{
 	NodePath create_nav_mesh();
 	bool destroy_nav_mesh(NodePath navMeshNP);
 	NodePath get_nav_mesh(int index) const;
 	INLINE int get_num_nav_meshes() const;
 	MAKE_SEQ(get_nav_meshes, get_num_nav_meshes, get_nav_mesh);
+	///@}
 
-	// RNCrowdAgents
+	/**
+	 * \name RNCrowdAgent
+	 */
+	///@{
 	NodePath create_crowd_agent(const string& name);
 	bool destroy_crowd_agent(NodePath crowdAgentNP);
 	NodePath get_crowd_agent(int index) const;
 	INLINE int get_num_crowd_agents() const;
 	MAKE_SEQ(get_crowd_agents, get_num_crowd_agents, get_crowd_agent);
+	///@}
 
 	/**
 	 * The type of object for creation parameters.
@@ -58,21 +70,38 @@ PUBLISHED:
 		CROWDAGENT
 	};
 
+	/**
+	 * \name TEXTUAL PARAMETERS
+	 */
+	///@{
 	ValueList<string> get_parameter_name_list(RNType type) const;
 	void set_parameter_values(RNType type, const string& paramName, const ValueList<string>& paramValues);
 	ValueList<string> get_parameter_values(RNType type, const string& paramName) const;
 	void set_parameter_value(RNType type, const string& paramName, const string& value);
 	string get_parameter_value(RNType type, const string& paramName) const;
 	void set_parameters_defaults(RNType type);
+	///@}
 
+	/**
+	 * \name DEFAULT UPDATE
+	 */
+	///@{
 	AsyncTask::DoneStatus update(GenericAsyncTask* task);
 	void start_default_update();
 	void stop_default_update();
+	///@}
 
-	//Get singleton
+	/**
+	 * \name SINGLETON
+	 */
+	///@{
 	INLINE static RNNavMeshManager* get_global_ptr();
+	///@}
 
-	//Utilities
+	/**
+	 * \name UTILITIES
+	 */
+	///@{
 	float get_bounding_dimensions(NodePath modelNP, LVecBase3f& modelDims,
 			LVector3f& modelDeltaCenter) const;
 	Pair<bool,float> get_collision_height(const LPoint3f& origin,
@@ -82,13 +111,19 @@ PUBLISHED:
 	INLINE CollisionTraverser* get_collision_traverser() const;
 	INLINE CollisionHandlerQueue* get_collision_handler() const;
 	INLINE CollisionRay* get_collision_ray() const;
+	///@}
 
-	//serialization
+	/**
+	 * \name SERIALIZATION
+	 */
+	///@{
 	bool write_to_bam_file(const string& fileName);
 	bool read_from_bam_file(const string& fileName);
+	///@}
 
-	// debug draw (low level)
-	///Equivalent to duDebugDrawPrimitives.
+	/**
+	 * Equivalent to duDebugDrawPrimitives.
+	 */
 	enum RNDebugDrawPrimitives
 	{
 #ifndef CPPPARSER
@@ -100,10 +135,16 @@ PUBLISHED:
 		POINTS,LINES,TRIS,QUADS
 #endif //CPPPARSER
 	};
+
+	/**
+	 * \name LOW LEVEL DEBUG DRAWING
+	 */
+	///@{
 	void debug_draw_primitive(RNDebugDrawPrimitives primitive,
 			const ValueList<LPoint3f>& points, const LVecBase4f color = LVecBase4f::zero(), float size =
 					1.0f);
 	void debug_draw_reset();
+	///@}
 
 private:
 	///The reference node path.
@@ -151,8 +192,11 @@ private:
 	DebugDrawPrimitives* mDD;
 #endif //RN_DEBUG
 
-	///TypedObject semantics: hardcoded
 public:
+	/**
+	 * \name TypedObject API
+	 */
+	///@{
 	static TypeHandle get_class_type()
 	{
 		return _type_handle;
@@ -172,6 +216,7 @@ public:
 		init_type();
 		return get_class_type();
 	}
+	///@}
 
 private:
 	static TypeHandle _type_handle;

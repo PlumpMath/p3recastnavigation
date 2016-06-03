@@ -1,5 +1,18 @@
 USAGE NOTES
 ***********
+p3Recastnavigation is an attempt to make available the RecastNavigation library 
+facilities to the Panda3d engine. 
+It is not a "one-to-one" export of the RecastNavigation functionalities, but a 
+synthesis of objects and methods which exploit the library to exhibit features 
+that deal with more general concepts such as points, paths, areas, links, 
+crossing's abilities etc., trying to avoid references to specific elements of 
+the library, such as polygons, corridors, filters, queries, nodes etc.. 
+In summary, p3Recastnavigation would like to make available to any programmer, 
+functionalities of path finding without the need (to a certain extent) to learn 
+the peculiar concepts of the underlying library.
+To achieve this, it followed the approach used by the comprehensive RecastDemo
+application, exploiting much of its code and adapting it to the Panda3D world.
+
 In addition to reading this document, please also refer to the API 
 documentation (c++ only) that can be generated with doxygen:
 
@@ -7,30 +20,29 @@ documentation (c++ only) that can be generated with doxygen:
 
 Also look at the code of the samples (both in python and c++) in the 'samples' 
 folder:
-- "basic" it is a minimum example of p3recastnavigation usage
+- "basic" it is a minimum example of p3Recastnavigation usage
 - "test1" shows examples of how to define and use convex volumes and off mesh 
 connections
 - "test2" shows other module features: setting of creation parameters, 
 integration 
 with Panda3D objects, custom update, management of obstacles, event management, 
-serialization (ie read/write to/from BAM files)
+serialization (that is read/write to/from BAM files)
 
-In addition, always refer to the original documentation and forums of 
-Recastnavigation (https://github.com/recastnavigation/recastnavigation):
-- Discuss Recast & Detour: http://groups.google.com/group/recastnavigation
+Moreover, it would help to refer to the original documentation and forums of 
+RecastNavigation (https://github.com/RecastNavigation/RecastNavigation):
+- Discuss Recast & Detour: http://groups.google.com/group/RecastNavigation
 - Development blog: http://digestingduck.blogspot.com/
 - API documentation that can be generated with doxygen using the "Doxygen" file 
   located in the root of the source code:
   
    doxygen Doxyfile
    
-Finally, and very importantly, use the comprehensive application "RecastDemo", 
-from which much of the p3recastnavigation code is derived, to experience and 
-become familiar with the internals of RecastNavigation.
+Finally, and very importantly, use the comprehensive RecastDemo program for
+experimenting and becoming familiar with the concepts of RecastNavigation.
 
 Framework
 ---------
-p3recastnavigation distinguishes various objects and elements to work with:
+p3Recastnavigation distinguishes various objects and elements to work with:
 
 - RNNavMeshManager: this is a unique object (singleton) whose main task is to 
 create/destroy RNNavMeshes and RNCrowdAgents
@@ -83,7 +95,7 @@ objects (except the identity one of course).
 
 Other positioning schemes may work but they have not been tested. 
 NOTE: if you change the reference NodePath don't forget to set RNNavMeshes' and
-RNCrowdAgents' internal reference to it. 
+RNCrowdAgents' internal reference and to reparent them to it. 
 
 RNNavMeshManager
 ----------------
@@ -115,6 +127,11 @@ In addition, the manager is provided with some other utilities:
 - to write/read to/from "bam" files the objects of (part of) a scene having its 
   root as the default reference NodePath (write_to/read_from_bam_file()).
   
+RNNavMesh
+---------
+This object corresponds roughly to the underlying navigation mesh.
 
-
-
+XXX
+A RNNavMesh can only be used after it is initially associated with a proprietary object (a 3D model consists of a mesh of triangles) through set_owner_node_path (), and then assembled by calling the setup () method.
+A RNNavMesh can be either SOLO, TILE, OBSTACLE (see RNNavMeshTypeEnum), and may be modified during its life cycle (prior call to cleanup () and then back to setup ()).
+A RNNavMesh is associated with a crowd of RNCrowdAgent (s), which shares several characteristics:
