@@ -2508,8 +2508,9 @@ void RNNavMesh::update(float dt)
 	{
 		if (mDDM)
 		{
-			mDDM->reset();
+			mDDM->initialize();
 			mNavMeshType->renderToolStates(*mDDM);
+			mDDM->finalize();
 		}
 	}
 #endif //RN_DEBUG
@@ -2657,6 +2658,7 @@ float RNNavMesh::distance_to_wall(const LPoint3f& pos)
 	//set the extremes
 	float recastPos[3];
 	rnsup::LVecBase3fToRecast(pos, recastPos);
+	mTesterTool.setStartEndPos(recastPos, NULL);
 	//select tester tool mode
 	mTesterTool.setToolMode(rnsup::NavMeshTesterTool::TOOLMODE_DISTANCE_TO_WALL);
 	//recalculate path

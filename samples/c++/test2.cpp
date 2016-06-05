@@ -43,7 +43,7 @@ PandaFramework framework;
 WindowFramework *window;
 CollideMask mask = BitMask32(0x10);
 PT(RNNavMesh)navMesh;
-const int NUMAGENTS = 2;//XXX
+const int NUMAGENTS = 2;
 PT(RNCrowdAgent)crowdAgent[2];
 //models and animations
 NodePath sceneNP, agentNP[2];
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 			"- press \"d\" to toggle debug drawing\n"
 			"- press \"s\" to toggle setup cleanup\n"
 			"- press \"p\" to place agents randomly\n"
-			"- press \"t\" to set agents' target under mouse cursor\n"
+			"- press \"t\", \"y\" to set agents' targets under mouse cursor\n"
 			"- press \"o\" to add obstacle under mouse cursor\n"
 			"- press \"shift-o\" to remove obstacle under mouse cursor\n");
 	NodePath textNodePath = window->get_aspect_2d().attach_new_node(text);
@@ -126,6 +126,13 @@ int main(int argc, char *argv[])
 	{
 		// valid bamFile
 		restoreAllScene();
+	}
+
+	// show the added agents
+	cout << "Agents added to nav mesh:" << endl;
+	for (int i = 0; i < navMesh->get_num_crowd_agents(); ++i)
+	{
+		cout << "\t- " << *((*navMesh)[i]) << endl;
 	}
 
 	/// first option: start the path finding default update task
@@ -162,8 +169,11 @@ int main(int argc, char *argv[])
 	framework.define_key("p", "placeCrowdAgents", &placeCrowdAgents,
 			nullptr);
 
-	// handle move target on scene surface
-	framework.define_key("t", "setMoveTarget", &setMoveTarget, nullptr);
+	// handle move targets on scene surface
+	framework.define_key("t", "setMoveTarget", &setMoveTarget,
+			(void*) crowdAgent[0].p());
+	framework.define_key("y", "setMoveTarget", &setMoveTarget,
+			(void*) crowdAgent[1].p());
 
 	// handle obstacle addition
 	bool TRUE = true;
@@ -467,10 +477,6 @@ void placeCrowdAgents(const Event* e, void* data)
 		// re-add agent to nav mesh
 		navMesh->add_crowd_agent(NodePath::any_path(crowdAgent[i]));
 	}
-	//just for debug draw the last agent's straight path
-	navMesh->path_find_straight(
-			NodePath::any_path((*navMesh)[i - 1]).get_pos(),
-			(*navMesh)[i - 1]->get_move_target());
 }
 
 // throws a ray and returns the first collision entry or nullptr
@@ -513,19 +519,13 @@ PT(CollisionEntry)getCollisionEntryFromCamera()
 // handle set move target
 void setMoveTarget(const Event* e, void* data)
 {
+	PT(RNCrowdAgent)agent = reinterpret_cast<RNCrowdAgent*>(data);
 	// get the collision entry, if any
 	PT(CollisionEntry)entry0 = getCollisionEntryFromCamera();
 	if (entry0)
 	{
 		LPoint3f target = entry0->get_surface_point(NodePath());
-		int i;
-		for (i = 0; i < navMesh->get_num_crowd_agents(); ++i)
-		{
-			(*navMesh)[i]->set_move_target(target);
-		}
-		//just for debug draw the last agent's straight path
-		navMesh->path_find_straight(
-				NodePath::any_path((*navMesh)[i-1]).get_pos(), target);
+		agent->set_move_target(target);
 	}
 }
 

@@ -99,9 +99,9 @@ CrowdToolState::CrowdToolState() :
 	m_run(true)
 {
 	m_toolParams.m_expandSelectedDebugDraw = true;
-	m_toolParams.m_showCorners = false;
+	m_toolParams.m_showCorners = true;
 	m_toolParams.m_showCollisionSegments = false;
-	m_toolParams.m_showPath = false;
+	m_toolParams.m_showPath = true;
 	m_toolParams.m_showVO = false;
 	m_toolParams.m_showOpt = false;
 	m_toolParams.m_showNeis = false;
@@ -110,7 +110,7 @@ CrowdToolState::CrowdToolState() :
 	m_toolParams.m_showGrid = false;
 	m_toolParams.m_showNodes = false;
 	m_toolParams.m_showPerfGraph = false;
-	m_toolParams.m_showDetailAll = false;
+	m_toolParams.m_showDetailAll = true;
 	m_toolParams.m_expandOptions = true;
 	m_toolParams.m_anticipateTurns = true;
 	m_toolParams.m_optimizeVis = true;

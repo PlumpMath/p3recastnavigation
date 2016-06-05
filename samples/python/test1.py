@@ -19,7 +19,8 @@ crowdAgent = None
 sceneNP = None
 setupCleanupFlag = True
 toggleDebugFlag = False
-halfVel = True
+maxVel = 3.5
+resetVel = True
 query = 0
 areaPointList = ValueList_LPoint3f()
 areaRefs = []
@@ -30,18 +31,17 @@ firstSetup = True
 def changeSpeed():
     """ handle change speed"""
     
-    global crowdAgent, halfVel
+    global crowdAgent, resetVel, maxVel
     if crowdAgent == None:
         return
     
     ap = crowdAgent.get_params()
-    vel = ap.get_maxSpeed()
-    if halfVel:
-        ap.set_maxSpeed(vel / 2.0)
+    if resetVel:
+        ap.set_maxSpeed(0.0)
     else:
-        ap.set_maxSpeed(vel * 2.0)
+        ap.set_maxSpeed(maxVel)
     crowdAgent.set_params(ap)
-    halfVel = not halfVel
+    resetVel = not resetVel
 
 def cycleQueries():
     """cycle over queries"""
@@ -50,15 +50,16 @@ def cycleQueries():
     if (crowdAgent == None) or (navMesh == None):
         return
     
+    crowdAgentNP = NodePath.any_path(crowdAgent)
     if query == 0:
         print("get path find to follow")
-        areaPointList = navMesh.get_path_find_follow(
+        areaPointList = navMesh.path_find_follow(
                 crowdAgentNP.get_pos(), crowdAgent.get_move_target());
         for p in areaPointList:
             print("\t" + str(p))
     elif query == 1: 
         print("get path find to follow straight")
-        pointFlagList = navMesh.get_path_find_straight(crowdAgentNP.get_pos(),
+        pointFlagList = navMesh.path_find_straight(crowdAgentNP.get_pos(),
                         crowdAgent.get_move_target(), RNNavMesh.NONE_CROSSINGS);
         for pF in pointFlagList:
             pathFlag = None
@@ -72,7 +73,7 @@ def cycleQueries():
             print("\t" + str(pF.get_first()) + ", " + str(pathFlag))
     elif query == 2:
         print("check walkability")
-        hitPoint = navMesh.check_walkability(
+        hitPoint = navMesh.ray_cast(
                 crowdAgentNP.get_pos(), crowdAgent.get_move_target())
         if hitPoint == crowdAgent.get_move_target():
             print("\t" + "walkable!")
@@ -80,7 +81,7 @@ def cycleQueries():
             print("\t" + "not walkable!")
     elif query == 3:
         print("get distance to wall")
-        distance = navMesh.get_distance_to_wall(crowdAgentNP.get_pos())
+        distance = navMesh.distance_to_wall(crowdAgentNP.get_pos())
         print("\t" + str(distance))    
     else:
         pass
@@ -211,9 +212,6 @@ def enableDisableArea():
             print("\tref: " + str(settings.get_ref()) + " | "
                     "area: " + str(settings.get_area()) + " | "
                     "flags: " + str(settings.get_flags()))   
-            # just for debug draw the agent's found path
-            navMesh.path_find_follow(NodePath.any_path(crowdAgent).get_pos(),
-                    crowdAgent.get_move_target())
 
 def enableDisableLink():
     """enable disable link (off mesh connection)"""
@@ -246,9 +244,6 @@ def enableDisableLink():
             print("\tref: " + str(settings.get_ref()) + " | "
                     "area: " + str(settings.get_area()) + " | "
                     "flags: " + str(settings.get_flags()))   
-            # just for debug draw the agent's found path
-            navMesh.path_find_follow(NodePath.any_path(crowdAgent).get_pos(),
-                    crowdAgent.get_move_target())
 
 def getCollisionEntryFromCamera():
     """throws a ray and returns the first collision entry or nullptr"""
@@ -375,8 +370,6 @@ def placeCrowdAgent():
         NodePath.any_path(crowdAgent).set_pos(point)
         # re-add agent to nav mesh
         navMesh.add_crowd_agent(NodePath.any_path(crowdAgent))
-        # just for debug draw the agent's found path
-        navMesh.path_find_follow(point, crowdAgent.get_move_target())
 
 def setMoveTarget():
     """handle set move target"""
@@ -390,9 +383,6 @@ def setMoveTarget():
     if entry0:
         target = entry0.get_surface_point(NodePath())
         crowdAgent.set_move_target(target)
-        # just for debug draw the agent's found path
-        navMesh.path_find_follow(
-                NodePath.any_path(crowdAgent).get_pos(), target)
 
 if __name__ == '__main__':
     # Load your application's configuration
@@ -421,7 +411,7 @@ if __name__ == '__main__':
             "\t- press \"d\" to switch debug drawing\n"
             "\t- press \"p\" to place agent under mouse cursor\n"
             "\t- press \"t\" to set agent's target under mouse cursor\n"
-            "\t- press \"v\" to change agent's speed\n"
+            "\t- press \"v\" to start/stop the agent\n"
             "\t- press \"q\" to cycle queries\n")
     textNodePath = app.aspect2d.attach_new_node(text)
     textNodePath.set_pos(-0.1, 0.0, -0.42)

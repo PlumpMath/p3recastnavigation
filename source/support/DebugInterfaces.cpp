@@ -518,10 +518,10 @@ void DebugDrawPanda3d::reset()
 
 DebugDrawMeshDrawer::DebugDrawMeshDrawer(NodePath render, NodePath camera,
 		int budget, bool singleMesh) :
-		m_render(render), m_camera(camera), m_meshDrawersSize(0), m_budget(
-				budget), m_singleMesh(singleMesh)
+		m_render(render), m_camera(camera), m_generatorsSize(0),
+		m_generatorsSizeLast(0), m_budget(budget), m_singleMesh(singleMesh)
 {
-	reset();
+	initialize();
 }
 
 DebugDrawMeshDrawer::~DebugDrawMeshDrawer()
@@ -532,18 +532,37 @@ DebugDrawMeshDrawer::~DebugDrawMeshDrawer()
 	}
 }
 
-void DebugDrawMeshDrawer::reset()
+void DebugDrawMeshDrawer::initialize()
 {
-	//reset current MeshDrawer index
-	m_meshDrawerIdx = 0;
+	//reset current MeshDrawer index in this frame
+	m_generatorIdx = 0;
 	m_prim = static_cast<duDebugDrawPrimitives>(DU_NULL_PRIM);
+}
+
+void DebugDrawMeshDrawer::finalize()
+{
+	//clean drawing of unused generators in this frame:
+	//m_meshDrawerIdx = number of most recently used generators
+	///NOTE: alternatively unused generators can be deallocated:
+	/// it should be less performant.
+	if (m_generatorIdx < m_generatorsSizeLast)
+	{
+		//
+		for (int i = m_generatorIdx; i < m_generatorsSizeLast; ++i)
+		{
+			m_generators[i]->begin(m_camera, m_render);
+			m_generators[i]->end();
+		}
+	}
+	//update m_meshDrawersSizeLast
+	m_generatorsSizeLast = m_generatorIdx;
 }
 
 void DebugDrawMeshDrawer::clear()
 {
 	//reset to initial values
-	m_meshDrawerIdx = 0;
-	m_meshDrawersSize = 0;
+	m_generatorIdx = 0;
+	m_generatorsSize = 0;
 	m_prim = static_cast<duDebugDrawPrimitives>(DU_NULL_PRIM);
 	//clear internal storage
 	std::vector<MeshDrawer*>::iterator iter;
@@ -557,7 +576,7 @@ void DebugDrawMeshDrawer::clear()
 void DebugDrawMeshDrawer::begin(duDebugDrawPrimitives prim, float size)
 {
 	//dynamically allocate MeshDrawers if necessary
-	if (m_meshDrawerIdx >= m_meshDrawersSize)
+	if (m_generatorIdx >= m_generatorsSize)
 	{
 		//allocate a new MeshDrawer
 		m_generators.push_back(new MeshDrawer());
@@ -570,13 +589,13 @@ void DebugDrawMeshDrawer::begin(duDebugDrawPrimitives prim, float size)
 		m_generators.back()->get_root().node()->set_final(true);
 		m_generators.back()->get_root().reparent_to(m_render);
 		//update number of MeshDrawers
-		m_meshDrawersSize = m_generators.size();
+		m_generatorsSize = m_generators.size();
 	}
 	//setup current MeshDrawer
-	m_generators[m_meshDrawerIdx]->get_root().set_depth_write(m_depthMask);
+	m_generators[m_generatorIdx]->get_root().set_depth_write(m_depthMask);
 //	m_generator[m_meshDrawerIdx]->get_root().set_render_mode_thickness(size);
 	//begin current MeshDrawer
-	m_generators[m_meshDrawerIdx]->begin(m_camera, m_render);
+	m_generators[m_generatorIdx]->begin(m_camera, m_render);
 	m_prim = prim;
 	m_size = size / 50;
 	m_lineIdx = m_triIdx = m_quadIdx = 0;
@@ -584,12 +603,16 @@ void DebugDrawMeshDrawer::begin(duDebugDrawPrimitives prim, float size)
 
 void DebugDrawMeshDrawer::end()
 {
+	ASSERT_TRUE(m_lineIdx == 0)
+	ASSERT_TRUE(m_triIdx == 0)
+	ASSERT_TRUE(m_quadIdx == 0)
+
 	//end current MeshDrawer
-	m_generators[m_meshDrawerIdx]->end();
-	//increase MeshDrawer index only if multiple mesh
+	m_generators[m_generatorIdx]->end();
+	//increase MeshDrawer index only if multiple meshes
 	if (! m_singleMesh)
 	{
-		++m_meshDrawerIdx;
+		++m_generatorIdx;
 	}
 	m_prim = static_cast<duDebugDrawPrimitives>(DU_NULL_PRIM);
 }
@@ -600,14 +623,14 @@ void DebugDrawMeshDrawer::doVertex(const LVector3f& vertex,
 	switch (m_prim)
 	{
 	case DU_DRAW_POINTS:
-		m_generators[m_meshDrawerIdx]->billboard(vertex,
+		m_generators[m_generatorIdx]->billboard(vertex,
 				LVector4f(uv.get_x(), uv.get_y(), uv.get_x(), uv.get_y()),
 				m_size, color);
 		break;
 	case DU_DRAW_LINES:
 		if ((m_lineIdx % 2) == 1)
 		{
-			m_generators[m_meshDrawerIdx]->segment(m_lineVertex, vertex,
+			m_generators[m_generatorIdx]->segment(m_lineVertex, vertex,
 					LVector4f(m_lineUV.get_x(), m_lineUV.get_y(), uv.get_x(),
 							uv.get_y()), m_size, color);
 			m_lineIdx = 0;
@@ -623,7 +646,7 @@ void DebugDrawMeshDrawer::doVertex(const LVector3f& vertex,
 	case DU_DRAW_TRIS:
 		if ((m_triIdx % 3) == 2)
 		{
-			m_generators[m_meshDrawerIdx]->tri(m_triVertex[0], m_triColor[0],
+			m_generators[m_generatorIdx]->tri(m_triVertex[0], m_triColor[0],
 					m_triUV[0], m_triVertex[1], m_triColor[1], m_triUV[1],
 					vertex, color, uv);
 			m_triIdx = 0;
@@ -639,10 +662,10 @@ void DebugDrawMeshDrawer::doVertex(const LVector3f& vertex,
 	case DU_DRAW_QUADS:
 		if ((m_quadIdx % 4) == 3)
 		{
-			m_generators[m_meshDrawerIdx]->tri(m_quadVertex[0], m_quadColor[0],
+			m_generators[m_generatorIdx]->tri(m_quadVertex[0], m_quadColor[0],
 					m_quadUV[0], m_quadVertex[1], m_quadColor[1], m_quadUV[1],
 					m_quadVertex[2], m_quadColor[2], m_quadUV[2]);
-			m_generators[m_meshDrawerIdx]->tri(m_quadVertex[0], m_quadColor[0],
+			m_generators[m_generatorIdx]->tri(m_quadVertex[0], m_quadColor[0],
 					LVector2f::zero(), m_quadVertex[2], m_quadColor[2],
 					LVector2f::zero(), vertex, color, uv);
 			m_quadIdx = 0;

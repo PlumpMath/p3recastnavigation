@@ -472,10 +472,18 @@ void NavMeshTesterTool::init(NavMeshType* sample, dtQueryFilter* filter)
 
 void NavMeshTesterTool::setStartEndPos(const float* s, const float* e)
 {
-	m_sposSet = true;
-	dtVcopy(m_spos, s);
-	m_eposSet = true;
-	dtVcopy(m_epos, e);
+	m_sposSet = false;
+	m_eposSet = false;
+	if (s)
+	{
+		m_sposSet = true;
+		dtVcopy(m_spos, s);
+	}
+	if (e)
+	{
+		m_eposSet = true;
+		dtVcopy(m_epos, e);
+	}
 }
 
 void NavMeshTesterTool::handleClick(const float* /*s*/, const float* p, bool shift)

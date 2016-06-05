@@ -267,10 +267,6 @@ def placeCrowdAgents():
         NodePath.any_path(crowdAgent[i]).set_pos(randPos)
         # re-add agent to nav mesh
         navMesh.add_crowd_agent(NodePath.any_path(crowdAgent[i]))
-    # just for debug draw the last agent's straight path
-    navMesh.path_find_straight(
-            NodePath.any_path(navMesh[i]).get_pos(),
-            navMesh[i].get_move_target());
 
 def getCollisionEntryFromCamera():
     """throws a ray and returns the first collision entry or nullptr"""    
@@ -300,7 +296,7 @@ def getCollisionEntryFromCamera():
                 return navMeshMgr.get_collision_handler().get_entry(0)
     return None
 
-def setMoveTarget():
+def setMoveTarget(agent):
     """handle set move target"""
     
     global navMesh
@@ -308,11 +304,7 @@ def setMoveTarget():
     entry0 = getCollisionEntryFromCamera()
     if entry0:
         target = entry0.get_surface_point(NodePath())
-        for agent in navMesh:
-            agent.set_move_target(target)
-        # just for debug draw the last agent's straight path
-        navMesh.path_find_straight(
-                NodePath.any_path(agent).get_pos(), target);
+        agent.set_move_target(target)
 
 def handleObstacles(data):
     """handle add/remove obstacles"""
@@ -430,7 +422,7 @@ if __name__ == '__main__':
             "- press \"d\" to toggle debug drawing\n"
             "- press \"s\" to toggle setup cleanup\n"
             "- press \"p\" to place agents randomly\n"
-            "- press \"t\" to set agents' target under mouse cursor\n"
+            "- press \"t\", \"y\" to set agents' targets under mouse cursor\n"
             "- press \"o\" to add obstacle under mouse cursor\n"
             "- press \"shift-o\" to remove obstacle under mouse cursor\n");
     textNodePath = app.aspect2d.attach_new_node(text)
@@ -456,7 +448,12 @@ if __name__ == '__main__':
     else:
         # valid bamFile
         restoreAllScene()
-    
+
+    # show the added agents
+    print("Agents added to nav mesh:")
+    for agent in navMesh:
+        print("\t- " + str(agent))
+   
     # # first option: start the path finding default update task
 #     navMesMgr.start_default_update()
 
@@ -484,8 +481,9 @@ if __name__ == '__main__':
     # place crowd agents randomly
     app.accept("p", placeCrowdAgents)
 
-    # handle move target on scene surface
-    app.accept("t", setMoveTarget)
+    # handle move targets on scene surface
+    app.accept("t", setMoveTarget, [crowdAgent[0]])
+    app.accept("y", setMoveTarget, [crowdAgent[1]])
 
     # handle obstacle addition
     app.accept("o", handleObstacles, [True])

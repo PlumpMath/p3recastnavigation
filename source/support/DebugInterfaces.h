@@ -176,12 +176,14 @@ protected:
 	bool m_depthMask;
 	///Texture.
 	bool m_texture;
-	///Inner MeshDrawers.
+	///The generators (ie MeshDrawers).
 	std::vector<MeshDrawer*> m_generators;
-	///Current MeshDrawer index.
-	int m_meshDrawerIdx;
-	///Current MeshDrawers number.
-	int m_meshDrawersSize;
+	///Index of the currently used generator.
+	int m_generatorIdx;
+	///Number of currently allocated generators.
+	int m_generatorsSize;
+	///Number of used generators during last frame.
+	int m_generatorsSizeLast;
 	///Budget.
 	int m_budget;
 	///Single mesh flag.
@@ -215,7 +217,8 @@ public:
 			int budget=50, bool singleMesh=false);
 	virtual ~DebugDrawMeshDrawer();
 
-	void reset();
+	void initialize();
+	void finalize();
 	void clear();
 
 	virtual void depthMask(bool state);

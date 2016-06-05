@@ -23,7 +23,8 @@ PT(RNCrowdAgent)crowdAgent;
 NodePath sceneNP;
 bool setupCleanupFlag = true;
 bool toggleDebugFlag = false;
-bool halfVel = true;
+float maxVel = 3.5;
+bool resetVel = true;
 int query = 0;
 ValueList<LPoint3f> areaPointList;
 vector<int> areaRefs;
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
             "\t- press \"d\" to switch debug drawing\n"
             "\t- press \"p\" to place agent under mouse cursor\n"
             "\t- press \"t\" to set agent's target under mouse cursor\n"
-            "\t- press \"v\" to change agent's speed\n"
+            "\t- press \"v\" to start/stop the agent\n"
             "\t- press \"q\" to cycle queries\n");
 	NodePath textNodePath = window->get_aspect_2d().attach_new_node(text);
 	textNodePath.set_pos(-0.1, 0.0, -0.42);
@@ -195,17 +196,16 @@ void changeSpeed(const Event* e, void* data)
 	nassertv_always(crowdAgent)
 
 	RNCrowdAgentParams ap = crowdAgent->get_params();
-	float vel = ap.get_maxSpeed();
-	if (halfVel)
+	if (resetVel)
 	{
-		ap.set_maxSpeed(vel / 2.0);
+		ap.set_maxSpeed(0.0);
 	}
 	else
 	{
-		ap.set_maxSpeed(vel * 2.0);
+		ap.set_maxSpeed(maxVel);
 	}
 	crowdAgent->set_params(ap);
-	halfVel = not halfVel;
+	resetVel = not resetVel;
 }
 
 // cycle over queries
@@ -435,9 +435,6 @@ void enableDisableArea(const Event*, void* data)
 			cout << "\tref: " << settings.get_ref() << " | "
 					"area: " << settings.get_area() << " | "
 					"flags: " << settings.get_flags() << endl;
-			// just for debug draw the agent's found path
-			navMesh->path_find_follow(NodePath::any_path(crowdAgent).get_pos(),
-					crowdAgent->get_move_target());
 		}
 	}
 }
@@ -481,9 +478,6 @@ void enableDisableLink(const Event*, void* data)
 			cout << "\tref: " << settings.get_ref() << " | "
 					"area: " << settings.get_area() << " | "
 					"flags: " << settings.get_flags() << endl;
-			// just for debug draw the agent's found path
-			navMesh->path_find_follow(NodePath::any_path(crowdAgent).get_pos(),
-					crowdAgent->get_move_target());
 		}
 	}
 }
@@ -661,8 +655,6 @@ void placeCrowdAgent(const Event* e, void* data)
 		NodePath::any_path(crowdAgent).set_pos(point);
 		// re-add agent to nav mesh
 		navMesh->add_crowd_agent(NodePath::any_path(crowdAgent));
-		// just for debug draw the agent's found path
-		navMesh->path_find_follow(point, crowdAgent->get_move_target());
 	}
 }
 
@@ -677,8 +669,5 @@ void setMoveTarget(const Event* e, void* data)
 	{
 		LPoint3f target = entry0->get_surface_point(NodePath());
 		crowdAgent->set_move_target(target);
-		// just for debug draw the agent's found path
-		navMesh->path_find_follow(
-				NodePath::any_path(crowdAgent).get_pos(), target);
 	}
 }

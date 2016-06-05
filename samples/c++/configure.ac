@@ -10,7 +10,7 @@ LT_PREREQ([2.2])
 LT_INIT([dlopen])
 
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR([main.cpp])
+AC_CONFIG_SRCDIR([basic.cpp])
 
 # Checks for programs.
 AC_PROG_CXX
