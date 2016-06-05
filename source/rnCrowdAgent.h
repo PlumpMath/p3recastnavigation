@@ -130,7 +130,7 @@ PUBLISHED:
 	///@}
 
 	/**
-	 * \name MOVEMENT PARAMETERS
+	 * \name MOTION STATUS AND PARAMETERS
 	 */
 	///@{
 	int set_move_target(const LPoint3f& pos);
