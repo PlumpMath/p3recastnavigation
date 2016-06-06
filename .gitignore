@@ -4,6 +4,14 @@
 *.pdb
 *.boo
 html/
+.deps/
+basic
+test*
+config.log
+config.status
+data.h
+libtool
+Makefile
 
 # Various output names
 win_*/
