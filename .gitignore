@@ -3,6 +3,7 @@
 *.so
 *.pdb
 *.boo
+html/
 
 # Various output names
 win_*/

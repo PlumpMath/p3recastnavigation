@@ -15,16 +15,16 @@ AM_LDFLAGS = -L/usr/lib/x86_64-linux-gnu/panda3d
 LDADD = -lp3framework -lpanda -lpandaexpress -lp3dtool -lp3dtoolconfig \
 		-lp3pystub -lXxf86dga -lpython2.7 -lpandaphysics -lpthread
 
-noinst_PROGRAMS = main test
+noinst_PROGRAMS = basic test1 test2
 
-BUILT_SOURCES = main.h
+BUILT_SOURCES = data.h
 
 substDataDir = sed -e 's|@sampledatadir[@]|$(srcdir)/../data|g'
 
-main.h: $(srcdir)/main.h.in Makefile
+data.h: $(srcdir)/data.h.in Makefile
 	$(substDataDir) $(srcdir)/$@.in > $@
 	
-EXTRA_DIST = main.h.in
+EXTRA_DIST = data.h.in
 
 common_sources = \
 	$(srcdir)/../../source/rnCrowdAgent.cxx \
@@ -74,16 +74,22 @@ common_sources = \
 	$(srcdir)/../../source/support/OffMeshConnectionTool.cpp \
 	$(srcdir)/../../source/support/PerfTimer.cpp
 
-#main
-main_SOURCES = \
-	main.cpp
+#basic
+basic_SOURCES = \
+	basic.cpp
 
-nodist_main_SOURCES = $(common_sources)
+nodist_basic_SOURCES = $(common_sources)
 
-#test
-test_SOURCES = \
-	test.cpp
+#test1
+test1_SOURCES = \
+	test1.cpp
 
-nodist_test_SOURCES = $(common_sources)
+nodist_test1_SOURCES = $(common_sources)
 
-CLEANFILES = main.h
+#test2
+test2_SOURCES = \
+	test2.cpp
+
+nodist_test2_SOURCES = $(common_sources)
+
+CLEANFILES = data.h

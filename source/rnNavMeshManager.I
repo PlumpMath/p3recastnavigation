@@ -11,11 +11,43 @@
 ///RNNavMeshManager inline definitions
 
 /**
+ * Returns the reference NodePath.
+ * The reference NodePath is the node with respect to which all RNNavMeshes,
+ * RNCrowdAgents and obstacles (for OBSTACLE RNNavMesh type) are reparented
+ * and with respect to which all placements are computed.
+ */
+INLINE NodePath RNNavMeshManager::get_reference_node_path() const
+{
+	return mReferenceNP;
+}
+
+/**
+ * Sets the reference NodePath.
+ * The reference NodePath is the node with respect to which all RNNavMeshes,
+ * RNCrowdAgents and obstacles (for OBSTACLE RNNavMesh type) are reparented
+ * and with respect to which all placements are computed.
+ * This is usually called after restoring from a bam file.
+ */
+INLINE void RNNavMeshManager::set_reference_node_path(const NodePath& reference)
+{
+	mReferenceNP = reference;
+}
+
+/**
+ * Returns the reference NodePath for debug drawing.
+ * This node should be made sibling of the reference NodePath in the scene.
+ */
+INLINE NodePath RNNavMeshManager::get_reference_node_path_debug() const
+{
+	return mReferenceDebugNP;
+}
+
+/**
  * Returns the number of RNNavMeshes.
  */
 INLINE int RNNavMeshManager::get_num_nav_meshes() const
 {
-	return (int)mNavMeshes.size();
+	return (int) mNavMeshes.size();
 }
 
 /**
@@ -23,7 +55,7 @@ INLINE int RNNavMeshManager::get_num_nav_meshes() const
  */
 INLINE int RNNavMeshManager::get_num_crowd_agents() const
 {
-	return (int)mCrowdAgents.size();
+	return (int) mCrowdAgents.size();
 }
 
 /**
@@ -37,7 +69,7 @@ INLINE RNNavMeshManager* RNNavMeshManager::get_global_ptr()
 /**
  * Get the collide mask.
  */
-INLINE CollideMask RNNavMeshManager::get_collide_mask()
+INLINE CollideMask RNNavMeshManager::get_collide_mask() const
 {
 	return mMask;
 }
@@ -45,7 +77,7 @@ INLINE CollideMask RNNavMeshManager::get_collide_mask()
 /**
  * Get the collision root.
  */
-INLINE NodePath RNNavMeshManager::get_collision_root()
+INLINE NodePath RNNavMeshManager::get_collision_root() const
 {
 	return mRoot;
 }
@@ -53,7 +85,7 @@ INLINE NodePath RNNavMeshManager::get_collision_root()
 /**
  * Get the collision traverser.
  */
-INLINE CollisionTraverser* RNNavMeshManager::get_collision_traverser()
+INLINE CollisionTraverser* RNNavMeshManager::get_collision_traverser() const
 {
 	return mCTrav;
 }
@@ -61,7 +93,7 @@ INLINE CollisionTraverser* RNNavMeshManager::get_collision_traverser()
 /**
  * Get the collision handler.
  */
-INLINE CollisionHandlerQueue* RNNavMeshManager::get_collision_handler()
+INLINE CollisionHandlerQueue* RNNavMeshManager::get_collision_handler() const
 {
 	return mCollisionHandler;
 }
@@ -69,7 +101,7 @@ INLINE CollisionHandlerQueue* RNNavMeshManager::get_collision_handler()
 /**
  * Get the collision ray.
  */
-INLINE CollisionRay* RNNavMeshManager::get_collision_ray()
+INLINE CollisionRay* RNNavMeshManager::get_collision_ray() const
 {
 	return mPickerRay;
 }

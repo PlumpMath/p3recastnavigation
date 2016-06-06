@@ -1,9 +1,13 @@
 /**
- * \file rnCrowdAgent.cpp
+ * \file rnCrowdAgent.cxx
  *
  * \date 2016-03-16
  * \author consultit
  */
+
+#if !defined(CPPPARSER) && defined(_WIN32)
+#include "support/pstdint.h"
+#endif
 
 #include "rnCrowdAgent.h"
 
@@ -27,43 +31,46 @@ RNCrowdAgent::~RNCrowdAgent()
 }
 
 /**
- * Sets RNCrowdAgent parameters.
+ * Sets the RNCrowdAgent's parameters.
+ * Should be called after addition to a RNNavMesh.
  */
 int RNCrowdAgent::set_params(const RNCrowdAgentParams& agentParams)
 {
-	//return if crowdAgent doesn't belong to any mesh
-	nassertr_always(mNavMesh, RN_NAVMESH_NULL)
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
-	//request RNNavMesh to update move target for this RNCrowdAgent
+	//request RNNavMesh to update parameters for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_params(this, agentParams);
 }
 
 /**
- * Sets RNCrowdAgent move target.
+ * Sets RNCrowdAgent's move target.
+ * Should be called after addition to a RNNavMesh.
  */
 int RNCrowdAgent::set_move_target(const LPoint3f& pos)
 {
-	//return if crowdAgent doesn't belong to any mesh
-	nassertr_always(mNavMesh, RN_NAVMESH_NULL)
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
 	//request RNNavMesh to update move target for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_target(this, pos);
 }
 
 /**
- * Sets RNCrowdAgent move velocity.
+ * Sets RNCrowdAgent's move velocity.
+ * Should be called after addition to a RNNavMesh.
  */
 int RNCrowdAgent::set_move_velocity(const LVector3f& vel)
 {
-	//return if crowdAgent doesn't belong to any mesh
-	nassertr_always(mNavMesh, RN_NAVMESH_NULL)
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
-	//request RNNavMesh to update move target for this RNCrowdAgent
+	//request RNNavMesh to update move velocity for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_velocity(this, vel);
 }
 
 /**
- * Sets RNCrowdAgent movement type (recast native or kinematic).
+ * Sets RNCrowdAgent's movement type (recast native or kinematic).
  */
 void RNCrowdAgent::set_mov_type(RNCrowdAgentMovType movType)
 {
@@ -73,31 +80,33 @@ void RNCrowdAgent::set_mov_type(RNCrowdAgentMovType movType)
 }
 
 /**
- * Gets RNCrowdAgent actual velocity.
+ * Returns RNCrowdAgent's actual velocity.
+ * Should be called after addition to a RNNavMesh.
  */
-LVector3f RNCrowdAgent::get_actual_velocity()
+LVector3f RNCrowdAgent::get_actual_velocity() const
 {
-	//return vector 0 if crowd agent doesn't belong to any mesh
-	nassertr_always(mNavMesh, LVector3f::zero())
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, LVector3f::zero())
 
 	return rnsup::RecastToLVecBase3f(
 			mNavMesh->get_recast_crowd()->getAgent(mAgentIdx)->vel);
 }
 
 /**
- * Gets RNCrowdAgent traversing state.
+ * Gets RNCrowdAgent's traversing state.
+ * Should be called after addition to a RNNavMesh.
  */
-RNCrowdAgent::RNCrowdAgentState RNCrowdAgent::get_traversing_state()
+RNCrowdAgent::RNCrowdAgentState RNCrowdAgent::get_traversing_state() const
 {
-	//return if crowdAgent doesn't belong to any mesh
-	nassertr_always(mNavMesh, STATE_INVALID)
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, STATE_INVALID)
 
 	return static_cast<RNCrowdAgentState>(mNavMesh->get_recast_crowd()->getAgent(
 			mAgentIdx)->state);
 }
 
 /**
- * Allows a RNCrowdAgent to be initialized.
+ * Initializes the RNCrowdAgent with starting settings.
  */
 void RNCrowdAgent::do_initialize()
 {
@@ -272,8 +281,8 @@ void RNCrowdAgent::do_initialize()
 
 /**
  * On destruction cleanup.
- * Gives a RNCrowdAgent the ability to do any required cleanup just
- * when being destroyed.
+ * Gives an RNCrowdAgent the ability to do any cleaning is necessary when
+ * destroyed
  */
 void RNCrowdAgent::do_finalize()
 {
@@ -288,6 +297,12 @@ void RNCrowdAgent::do_finalize()
 	}
 	//
 	mNavMesh.clear();
+	//detach any child node path: models
+	NodePathCollection children = NodePath::any_path(this).get_children();
+	for (int i; i < children.size(); ++i)
+	{
+		children[i].detach_node();
+	}
 	//remove this NodePath
 	thisNP.remove_node();
 	//
@@ -295,7 +310,7 @@ void RNCrowdAgent::do_finalize()
 }
 
 /**
- * Updates position/velocity/orientation of the controlled object.
+ * Updates position/velocity/orientation of this RNCrowdAgent.
  *
  * This method is called exclusively by the update() method of the
  * (friend) RNNavMesh object this RNCrowdAgent is added to.
@@ -308,7 +323,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 
 	//update node path position
 	LPoint3f updatedPos = pos;
-	if ((mMovType == RECAST_KINEMATIC) and (velSquared > 0.0))
+	if ((mMovType == RECAST_KINEMATIC) && (velSquared > 0.0))
 	{
 		// get nav mesh manager
 		WPT(RNNavMeshManager) navMeshMgr = RNNavMeshManager::get_global_ptr();
@@ -338,7 +353,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 			do_throw_event(mMove);
 		}
 		//reset Steady event (if enabled and if thrown)
-		if (mSteady.mEnable and mSteady.mThrown)
+		if (mSteady.mEnable && mSteady.mThrown)
 		{
 			mSteady.mThrown = false;
 			mSteady.mTimeElapsed = 0.0;
@@ -347,7 +362,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 	else //vel.length_squared() == 0.0
 	{
 		//reset Move event (if enabled and if thrown)
-		if (mMove.mEnable and mMove.mThrown)
+		if (mMove.mEnable && mMove.mThrown)
 		{
 			mMove.mThrown = false;
 			mMove.mTimeElapsed = 0.0;
@@ -367,7 +382,7 @@ void RNCrowdAgent::do_enable_crowd_agent_event(RNEventThrown event,
 		ThrowEventData eventData)
 {
 	//some checks
-	nassertv_always(not eventData.mEventName.empty())
+	CONTINUE_IF_ELSE_V(! eventData.mEventName.empty())
 
 	if (eventData.mFrequency <= 0.0)
 	{
@@ -463,6 +478,9 @@ void RNCrowdAgent::write_datagram(BamWriter *manager, Datagram &dg)
 
 	///The RNNavMesh this RNCrowdAgent is added to.
 	manager->write_pointer(dg, mNavMesh);
+
+	///The reference node path.
+	manager->write_pointer(dg, mReferenceNP.node());
 }
 
 /**
@@ -475,6 +493,10 @@ int RNCrowdAgent::complete_pointers(TypedWritable **p_list, BamReader *manager)
 
 	///The RNNavMesh this RNCrowdAgent is added to.
 	mNavMesh = DCAST(RNNavMesh, p_list[pi++]);
+
+	///The reference node path.
+	PT(PandaNode)referenceNPPandaNode = DCAST(PandaNode, p_list[pi++]);
+	mReferenceNP = NodePath::any_path(referenceNPPandaNode);
 
 	return pi;
 }
@@ -531,6 +553,9 @@ void RNCrowdAgent::fillin(DatagramIterator &scan, BamReader *manager)
 	mSteady.read_datagram(scan);
 
 	///The RNNavMesh this RNCrowdAgent is added to.
+	manager->read_pointer(scan);
+
+	///The reference node path.
 	manager->read_pointer(scan);
 }
 

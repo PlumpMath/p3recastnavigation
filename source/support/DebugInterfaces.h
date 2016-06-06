@@ -141,7 +141,6 @@ protected:
 	LVector4f m_quadFirstColor, m_quadThirdColor;
 	LVector2f m_quadFirstUV, m_quadThirdUV;
 
-private:
 	///Helper
 	void doVertex(const LVector3f& vertex, const LVector4f& color,
 			const LVector2f& uv = LVecBase2f::zero());
@@ -177,12 +176,14 @@ protected:
 	bool m_depthMask;
 	///Texture.
 	bool m_texture;
-	///Inner MeshDrawers.
+	///The generators (ie MeshDrawers).
 	std::vector<MeshDrawer*> m_generators;
-	///Current MeshDrawer index.
-	int m_meshDrawerIdx;
-	///Current MeshDrawers number.
-	int m_meshDrawersSize;
+	///Index of the currently used generator.
+	int m_generatorIdx;
+	///Number of currently allocated generators.
+	int m_generatorsSize;
+	///Number of used generators during last frame.
+	int m_generatorsSizeLast;
 	///Budget.
 	int m_budget;
 	///Single mesh flag.
@@ -208,7 +209,6 @@ protected:
 	LVecBase2f m_quadUV[3];
 	int m_quadIdx;
 
-private:
 	///Helper
 	void doVertex(const LVector3f& vertex, const LVector4f& color,
 			const LVector2f& uv = LVecBase2f::zero());
@@ -217,7 +217,8 @@ public:
 			int budget=50, bool singleMesh=false);
 	virtual ~DebugDrawMeshDrawer();
 
-	void reset();
+	void initialize();
+	void finalize();
 	void clear();
 
 	virtual void depthMask(bool state);

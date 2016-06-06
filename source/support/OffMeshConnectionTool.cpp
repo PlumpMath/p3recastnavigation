@@ -78,6 +78,8 @@ void OffMeshConnectionTool::handleClick(const float* /*s*/, const float* p, bool
 	InputGeom* geom = m_sample->getInputGeom();
 	if (!geom) return;
 
+	m_offMeshConnectionIdx = -1;
+
 	if (shift)
 	{
 		// Delete
@@ -100,6 +102,7 @@ void OffMeshConnectionTool::handleClick(const float* /*s*/, const float* p, bool
 			sqrtf(nearestDist) < m_sample->getAgentRadius())
 		{
 			geom->deleteOffMeshConnection(nearestIndex);
+			m_offMeshConnectionIdx = nearestIndex;
 		}
 	}
 	else
@@ -116,6 +119,7 @@ void OffMeshConnectionTool::handleClick(const float* /*s*/, const float* p, bool
 			const unsigned short flags = NAVMESH_POLYFLAGS_JUMP;
 			geom->addOffMeshConnection(m_hitPos, p, m_sample->getAgentRadius(), m_bidir ? 1 : 0, area, flags);
 			m_hitPosSet = false;
+			m_offMeshConnectionIdx = geom->getOffMeshConnectionCount() - 1;
 		}
 	}
 	

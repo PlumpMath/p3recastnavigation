@@ -24,7 +24,7 @@ pvector<string> parseCompoundString(
 	char* pch;
 	char* start = dest;
 	bool stop = false;
-	while (not stop)
+	while (! stop)
 	{
 		string substring("");
 		pch = strchr(start, separator);
@@ -124,7 +124,7 @@ void ThrowEventData::read_datagram(DatagramIterator &scan)
 /**
  *
  */
-RNNavMeshSettings::RNNavMeshSettings()
+RNNavMeshSettings::RNNavMeshSettings(): _navMeshSettings()
 {
 }
 /**
@@ -173,7 +173,8 @@ void RNNavMeshSettings::read_datagram(DatagramIterator &scan)
 /**
  *
  */
-RNNavMeshTileSettings::RNNavMeshTileSettings()
+RNNavMeshTileSettings::RNNavMeshTileSettings() :
+		_navMeshTileSettings()
 {
 }
 /**
@@ -197,11 +198,101 @@ void RNNavMeshTileSettings::read_datagram(DatagramIterator &scan)
 	set_tileSize(scan.get_stdfloat());
 }
 
+///Convex volume settings.
+/**
+ *
+ */
+RNConvexVolumeSettings::RNConvexVolumeSettings() :
+		_area(0), _flags(0), _ref(0)
+{
+}
+/**
+ * Writes the RNConvexVolumeSettings into a datagram.
+ */
+void RNConvexVolumeSettings::write_datagram(Datagram &dg) const
+{
+	dg.add_int32(get_area());
+	dg.add_int32(get_flags());
+	_centroid.write_datagram(dg);
+	dg.add_int32(get_ref());
+}
+/**
+ * Restores the RNConvexVolumeSettings from the datagram.
+ */
+void RNConvexVolumeSettings::read_datagram(DatagramIterator &scan)
+{
+	set_area(scan.get_int32());
+	set_flags(scan.get_int32());
+	_centroid.read_datagram(scan);
+	set_ref(scan.get_int32());
+}
+
+///Off mesh connection settings.
+/**
+ *
+ */
+RNOffMeshConnectionSettings::RNOffMeshConnectionSettings() :
+		_area(0), _bidir(false), _userId(0), _flags(0), _rad(0.0), _ref(0)
+{
+}
+/**
+ * Writes the RNOffMeshConnectionSettings into a datagram.
+ */
+void RNOffMeshConnectionSettings::write_datagram(Datagram &dg) const
+{
+	dg.add_stdfloat(get_rad());
+	dg.add_bool(get_bidir());
+	dg.add_uint32(get_userId());
+	dg.add_int32(get_area());
+	dg.add_int32(get_flags());
+	dg.add_int32(get_ref());
+}
+/**
+ * Restores the RNOffMeshConnectionSettings from the datagram.
+ */
+void RNOffMeshConnectionSettings::read_datagram(DatagramIterator &scan)
+{
+	set_rad(scan.get_stdfloat());
+	set_bidir(scan.get_bool());
+	set_userId(scan.get_uint32());
+	set_area(scan.get_int32());
+	set_flags(scan.get_int32());
+	set_ref(scan.get_int32());
+}
+
+///Obstacle settings.
+/**
+ *
+ */
+RNObstacleSettings::RNObstacleSettings() :
+		_radius(0.0), _dims(LVecBase3f()), _ref(0)
+{
+}
+
+/**
+ * Writes the RNObstacleSettings into a datagram.
+ */
+void RNObstacleSettings::write_datagram(Datagram &dg) const
+{
+	dg.add_stdfloat(get_radius());
+	_dims.write_datagram(dg);
+	dg.add_uint32(get_ref());
+}
+/**
+ * Restores the RNObstacleSettings from the datagram.
+ */
+void RNObstacleSettings::read_datagram(DatagramIterator &scan)
+{
+	set_radius(scan.get_stdfloat());
+	_dims.read_datagram(scan);
+	set_ref(scan.get_uint32());
+}
+
 ///CrowdAgentParams
 /**
  *
  */
-RNCrowdAgentParams::RNCrowdAgentParams()
+RNCrowdAgentParams::RNCrowdAgentParams(): _dtCrowdAgentParams()
 {
 }
 

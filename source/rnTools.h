@@ -24,8 +24,23 @@
 #include "support/NavMeshType.h"
 #endif //CPPPARSER
 
+//continue if condition is true else return a value
+#define CONTINUE_IF_ELSE_R(condition, return_value) \
+  { \
+    if (!(condition)) { \
+      return return_value; \
+    } \
+  }
+//continue if condition is true else return (void)
+#define CONTINUE_IF_ELSE_V(condition) \
+  { \
+    if (!(condition)) { \
+      return; \
+    } \
+  }
+
 /**
- * \brief An automatic Singleton Utility.
+ * An automatic Singleton Utility.
  *
  * \note This Singleton class is based on the article "An automatic
  * Singleton Utility" by Scott Bilas in "Game Programming Gems 1" book.
@@ -62,7 +77,7 @@ public:
 template<typename T> T* Singleton<T>::ms_Singleton = 0;
 
 /**
- * \brief A std::pair wrapper
+ * A std::pair wrapper
  */
 template<typename T1, typename T2> struct Pair
 {
@@ -110,7 +125,7 @@ private:
 };
 
 /**
- * \brief A pair that can be used with PT/CPT (C++ only)
+ * A pair that can be used with PT/CPT (C++ only)
  */
 template<typename T1, typename T2> struct PairRC: public Pair<T1, T2>,
 		public ReferenceCount
@@ -127,7 +142,7 @@ public:
 };
 
 /**
- * \brief Template struct for generic Task Function interface
+ * Template struct for generic Task Function interface
  *
  * The effective Tasks are composed by a Pair of an object and
  * a method (member function) doing the effective task.
@@ -170,7 +185,7 @@ template<typename A> struct TaskInterface
 };
 
 /**
- * \brief Throwing event data.
+ * Throwing event data.
  *
  * Data related to throwing events by components.
  */
@@ -245,7 +260,7 @@ public:
 };
 
 /**
- * \brief Declarations for parameters management.
+ * Declarations for parameters management.
  */
 typedef multimap<string, string> ParameterTable;
 typedef multimap<string, string>::iterator ParameterTableIter;
@@ -262,10 +277,10 @@ template<typename Type> string str(Type value)
 }
 
 /**
- * \brief Parses a string composed by substrings separated by a character
- * separator.\n
+ * Parses a string composed by substrings separated by a character
+ * separator.
  * \note all blanks are erased before parsing.
- * @param compoundString The source string.
+ * @param srcCompoundString The source string.
  * @param separator The character separator.
  * @return The substrings vector.
  */
@@ -276,7 +291,7 @@ pvector<string> parseCompoundString(
  * \brief Into a given string, replaces any occurrence of a character with
  * another character.
  * @param source The source string.
- * @param character To be replaced character.
+ * @param character Character to be replaced .
  * @param replacement Replaced character.
  * @return The result string.
  */
@@ -297,8 +312,8 @@ struct EXPORT_CLASS RNNavMeshSettings
 PUBLISHED:
 	RNNavMeshSettings();
 #ifndef CPPPARSER
-	RNNavMeshSettings(const rnsup::NavMeshSettings& navMeshSettings) :
-			_navMeshSettings(navMeshSettings)
+	RNNavMeshSettings(const rnsup::NavMeshSettings& settings) :
+			_navMeshSettings(settings)
 	{
 	}
 	operator rnsup::NavMeshSettings() const
@@ -348,8 +363,8 @@ struct EXPORT_CLASS RNNavMeshTileSettings
 PUBLISHED:
 	RNNavMeshTileSettings();
 #ifndef CPPPARSER
-	RNNavMeshTileSettings(const rnsup::NavMeshTileSettings& navMeshTileSettings) :
-			_navMeshTileSettings(navMeshTileSettings)
+	RNNavMeshTileSettings(const rnsup::NavMeshTileSettings& settings) :
+			_navMeshTileSettings(settings)
 	{
 	}
 	operator rnsup::NavMeshTileSettings() const
@@ -373,14 +388,97 @@ public:
 	void read_datagram(DatagramIterator &scan);
 };
 
+///Convex volume settings.
+struct EXPORT_CLASS RNConvexVolumeSettings
+{
+PUBLISHED:
+	RNConvexVolumeSettings();
+
+	INLINE bool operator== (const RNConvexVolumeSettings &other) const;
+	INLINE int get_area() const;
+	INLINE void set_area(int value);
+	INLINE int get_flags() const;
+	INLINE void set_flags(int value);
+	INLINE LPoint3f get_centroid() const;
+	INLINE void set_centroid(LPoint3f value);
+	INLINE int get_ref() const;
+	INLINE void set_ref(int value);
+private:
+	int _area;
+	int _flags;
+	LPoint3f _centroid;
+	int _ref;
+
+public:
+	void write_datagram(Datagram &dg) const;
+	void read_datagram(DatagramIterator &scan);
+};
+
+///Off mesh connection settings.
+struct EXPORT_CLASS RNOffMeshConnectionSettings
+{
+PUBLISHED:
+	RNOffMeshConnectionSettings();
+
+	INLINE bool operator==(
+			const RNOffMeshConnectionSettings &other) const;
+	INLINE float get_rad() const;
+	INLINE void set_rad(float value);
+	INLINE bool get_bidir() const;
+	INLINE void set_bidir(bool value);
+	INLINE unsigned int get_userId() const;
+	INLINE void set_userId(unsigned int value);
+	INLINE int get_area() const;
+	INLINE void set_area(int value);
+	INLINE int get_flags() const;
+	INLINE void set_flags(int value);
+	INLINE int get_ref() const;
+	INLINE void set_ref(int value);
+private:
+	float _rad;
+	bool _bidir;
+	unsigned int _userId;
+	int _area;
+	int _flags;
+	int _ref;
+
+public:
+	void write_datagram(Datagram &dg) const;
+	void read_datagram(DatagramIterator &scan);
+};
+
+///Obstacle settings.
+struct EXPORT_CLASS RNObstacleSettings
+{
+PUBLISHED:
+	RNObstacleSettings();
+
+	INLINE bool operator==(
+			const RNObstacleSettings &other) const;
+	INLINE float get_radius() const;
+	INLINE void set_radius(float value);
+	INLINE LVecBase3f get_dims() const;
+	INLINE void set_dims(const LVecBase3f& value);
+	INLINE unsigned int get_ref() const;
+	INLINE void set_ref(unsigned int value);
+private:
+	float _radius;
+	LVecBase3f _dims;
+	unsigned int _ref;
+
+public:
+	void write_datagram(Datagram &dg) const;
+	void read_datagram(DatagramIterator &scan);
+};
+
 ///CrowdAgentParams
 struct EXPORT_CLASS RNCrowdAgentParams
 {
 PUBLISHED:
 	RNCrowdAgentParams();
 #ifndef CPPPARSER
-	RNCrowdAgentParams(const dtCrowdAgentParams& crowdAgentParams) :
-			_dtCrowdAgentParams(crowdAgentParams)
+	RNCrowdAgentParams(const dtCrowdAgentParams& params) :
+			_dtCrowdAgentParams(params)
 	{
 	}
 	operator dtCrowdAgentParams() const
@@ -426,11 +524,9 @@ class ValueList
 PUBLISHED:
 	ValueList(unsigned int size=0);
 	ValueList(const ValueList &copy);
-	ValueList(ValueList&& copy);
 	INLINE ~ValueList();
 
 	INLINE void operator =(const ValueList &copy);
-	INLINE void operator =(ValueList&& copy);
 	INLINE bool operator== (const ValueList &other) const;
 	INLINE void add_value(const Type& value);
 	bool remove_value(const Type& value);
@@ -459,7 +555,6 @@ private:
 ///Result values
 #define RN_SUCCESS 0
 #define RN_ERROR -1
-#define RN_NAVMESH_NULL -2
 
 ///inline
 #include "rnTools.I"

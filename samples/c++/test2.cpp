@@ -16,12 +16,12 @@
 #include <random>
 #include <bamFile.h>
 
-#include "main.h"
+#include "data.h"
 
 ///functions' declarations
 void loadAllScene();
 void restoreAllScene();
-void getOwnerModel();
+NodePath getOwnerModel();
 void getAgentModelAnims();
 bool readFromBamFile(string);
 void writeToBamFileAndExit(const Event*, void*);
@@ -43,7 +43,7 @@ PandaFramework framework;
 WindowFramework *window;
 CollideMask mask = BitMask32(0x10);
 PT(RNNavMesh)navMesh;
-const int NUMAGENTS = 2;//XXX
+const int NUMAGENTS = 2;
 PT(RNCrowdAgent)crowdAgent[2];
 //models and animations
 NodePath sceneNP, agentNP[2];
@@ -97,14 +97,14 @@ int main(int argc, char *argv[])
 			"- press \"d\" to toggle debug drawing\n"
 			"- press \"s\" to toggle setup cleanup\n"
 			"- press \"p\" to place agents randomly\n"
-			"- press \"t\" to set agents' target under mouse cursor\n"
+			"- press \"t\", \"y\" to set agents' targets under mouse cursor\n"
 			"- press \"o\" to add obstacle under mouse cursor\n"
 			"- press \"shift-o\" to remove obstacle under mouse cursor\n");
 	NodePath textNodePath = window->get_aspect_2d().attach_new_node(text);
 	textNodePath.set_pos(-1.25, 0.0, 0.9);
 	textNodePath.set_scale(0.035);
 
-	// create a nav mesh manager
+	// create a nav mesh manager; set root and mask to manage 'kinematic' agents
 	WPT(RNNavMeshManager)navMesMgr = new RNNavMeshManager(window->get_render(), mask);
 
 	// print creation parameters: defult values
@@ -128,6 +128,13 @@ int main(int argc, char *argv[])
 		restoreAllScene();
 	}
 
+	// show the added agents
+	cout << "Agents added to nav mesh:" << endl;
+	for (int i = 0; i < navMesh->get_num_crowd_agents(); ++i)
+	{
+		cout << "\t- " << *((*navMesh)[i]) << endl;
+	}
+
 	/// first option: start the path finding default update task
 ///	navMesMgr->start_default_update();
 
@@ -136,7 +143,11 @@ int main(int argc, char *argv[])
 			(void*) navMesh.p());
 	framework.get_task_mgr().add(updateTask);
 
-	// setup  debug drawing 
+	// DEBUG DRAWING
+	// make the debug reference node path sibling of the reference node
+	navMesMgr->get_reference_node_path_debug().reparent_to(
+			window->get_render());
+	// enable debug drawing
 	navMesh->enable_debug_drawing(window->get_camera_group());
 
 	/// set events' callbacks
@@ -158,8 +169,11 @@ int main(int argc, char *argv[])
 	framework.define_key("p", "placeCrowdAgents", &placeCrowdAgents,
 			nullptr);
 
-	// handle move target on scene surface
-	framework.define_key("t", "setMoveTarget", &setMoveTarget, nullptr);
+	// handle move targets on scene surface
+	framework.define_key("t", "setMoveTarget", &setMoveTarget,
+			(void*) crowdAgent[0].p());
+	framework.define_key("y", "setMoveTarget", &setMoveTarget,
+			(void*) crowdAgent[1].p());
 
 	// handle obstacle addition
 	bool TRUE = true;
@@ -192,10 +206,13 @@ int main(int argc, char *argv[])
 void loadAllScene()
 {
 	RNNavMeshManager* navMesMgr = RNNavMeshManager::get_global_ptr();
-	// get a sceneNP as owner model
-	getOwnerModel();
 
-	// create a nav mesh and attach it to render
+	// get a sceneNP as owner model
+	sceneNP = getOwnerModel();
+	// set name: to ease restoring from bam file
+	sceneNP.set_name("Owner");
+
+	// create a nav mesh; its parent is the reference node
 	NodePath navMeshNP = navMesMgr->create_nav_mesh();
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
 
@@ -205,8 +222,11 @@ void loadAllScene()
 	// setup the nav mesh with scene as its owner object
 	navMesh->setup();
 
-	// reparent navMeshNP to a reference NodePath
-	navMeshNP.reparent_to(window->get_render());
+	// reparent sceneNP to the reference node
+	sceneNP.reparent_to(navMesMgr->get_reference_node_path());
+
+	// reparent the reference node to render
+	navMesMgr->get_reference_node_path().reparent_to(window->get_render());
 
 	// get agentNP[] (and agentAnimNP[]) as models for crowd agents
 	getAgentModelAnims();
@@ -228,25 +248,30 @@ void loadAllScene()
 		crowdAgentNP.set_pos(randPos);
 		// attach some geometry (a model) to crowdAgent
 		agentNP[i].reparent_to(crowdAgentNP);
-		// attach the crowd agent to the sceneNP's nav mesh
+		// attach the crowd agent to the nav mesh
+		// (crowdAgentNP is automatically reparented to navMeshNP)
 		navMesh->add_crowd_agent(crowdAgentNP);
 	}
 }
 
-// restore all scene stuff
+// restore all scene stuff when read from bam file
 void restoreAllScene()
 {
-	// restore nav mesh
-	NodePath navMeshNP = RNNavMeshManager::get_global_ptr()->get_nav_mesh(
-			0);
-	navMeshNP.reparent_to(window->get_render());
+	// restore nav mesh: through nav mesh manager
+	NodePath navMeshNP = RNNavMeshManager::get_global_ptr()->get_nav_mesh(0);
 	navMesh = DCAST(RNNavMesh, navMeshNP.node());
-	sceneNP = navMesh->get_owner_node_path();
+	// restore sceneNP: through panda3d
+	sceneNP =
+			RNNavMeshManager::get_global_ptr()->get_reference_node_path().find(
+					"**/Owner");
+	// reparent the reference node to render
+	RNNavMeshManager::get_global_ptr()->get_reference_node_path().reparent_to(
+			window->get_render());
 
 	// restore crowd agents
 	for (int i = 0; i < NUMAGENTS; ++i)
 	{
-		// create the crowd agent
+		// restore the crowd agent: through nav mesh manager
 		NodePath crowdAgentNP =
 				RNNavMeshManager::get_global_ptr()->get_crowd_agent(i);
 		crowdAgent[i] = DCAST(RNCrowdAgent, crowdAgentNP.node());
@@ -261,14 +286,15 @@ void restoreAllScene()
 }
 
 // load the owner model
-void getOwnerModel()
+NodePath getOwnerModel()
 {
 	// get a model to use as nav mesh' owner object
-	sceneNP = window->load_model(framework.get_models(), sceneFile);
-	sceneNP.set_collide_mask(mask);
-//	sceneNP.set_pos(5.0, 20.0, 5.0);
-//	sceneNP.set_h(30.0);
-//	sceneNP.set_scale(2.0);
+	NodePath modelNP = window->load_model(framework.get_models(), sceneFile);
+	modelNP.set_collide_mask(mask);
+//	modelNP.set_pos(5.0, 20.0, 5.0);
+//	modelNP.set_h(45.0);
+//	modelNP.set_scale(2.0);
+	return modelNP;
 }
 
 // load the agents' models and anims
@@ -305,18 +331,17 @@ void getAgentModelAnims()
 	}
 }
 
-// read nav mesh from a file
+// read scene from a file
 bool readFromBamFile(string fileName)
 {
 	return RNNavMeshManager::get_global_ptr()->read_from_bam_file(fileName);
 }
 
-// write nav mesh to a file
+// write scene to a file (and exit)
 void writeToBamFileAndExit(const Event* e, void* data)
 {
 	string fileName = *reinterpret_cast<string*>(data);
 	RNNavMeshManager::get_global_ptr()->write_to_bam_file(fileName);
-
 	/// second option: remove custom update updateTask
 	framework.get_task_mgr().remove(updateTask);
 	// delete nav mesh manager
@@ -426,19 +451,6 @@ void toggleSetupCleanup(const Event* e, void* data)
 		framework.get_task_mgr().remove(updateTask);
 		// false: cleanup
 		navMesh->cleanup();
-		// now crowd agents and obstacles are detached:
-		// prevent to make them disappear from the scene
-		for (int i = 0; i < navMesh->get_num_crowd_agents(); ++i)
-		{
-			NodePath::any_path(navMesh->get_crowd_agent(i)).reparent_to(
-					window->get_render());
-		}
-		for (int i = 0; i < navMesh->get_num_obstacles(); ++i)
-		{
-			int ref = navMesh->get_obstacle(i);
-			navMesh->get_obstacle_by_ref(ref).reparent_to(
-					window->get_render());
-		}
 	}
 	*setupCleanupFlag = not *setupCleanupFlag;
 }
@@ -454,7 +466,8 @@ void handleCrowdAgentEvent(const Event* e, void* data)
 // place crowd agents randomly
 void placeCrowdAgents(const Event* e, void* data)
 {
-	for (int i = 0; i < NUMAGENTS; ++i)
+	int i;
+	for (i = 0; i < NUMAGENTS; ++i)
 	{
 		// remove agent from nav mesh
 		navMesh->remove_crowd_agent(NodePath::any_path(crowdAgent[i]));
@@ -506,15 +519,13 @@ PT(CollisionEntry)getCollisionEntryFromCamera()
 // handle set move target
 void setMoveTarget(const Event* e, void* data)
 {
+	PT(RNCrowdAgent)agent = reinterpret_cast<RNCrowdAgent*>(data);
 	// get the collision entry, if any
 	PT(CollisionEntry)entry0 = getCollisionEntryFromCamera();
 	if (entry0)
 	{
 		LPoint3f target = entry0->get_surface_point(NodePath());
-		for (int i = 0; i < navMesh->get_num_crowd_agents(); ++i)
-		{
-			(*navMesh)[i]->set_move_target(target);
-		}
+		agent->set_move_target(target);
 	}
 }
 
@@ -537,16 +548,16 @@ void handleObstacles(const Event* e, void* data)
 		{
 			// the hit object is the scene
 			// add an obstacle to the scene
-
 			// get a model as obstacle
-			NodePath obstacleNP = window->load_model(sceneNP, obstacleFile);
+			NodePath obstacleNP = window->load_model(framework.get_models(),
+					obstacleFile);
 			obstacleNP.set_collide_mask(mask);
 			// set random scale (0.01 - 0.02)
 			float scale = 0.01 + 0.01 * ((float) rd() / (float) rd.max());
 			obstacleNP.set_scale(scale);
 			// set obstacle position
 			LPoint3f pos = entry0->get_surface_point(sceneNP);
-			obstacleNP.set_pos(pos);
+			obstacleNP.set_pos(sceneNP, pos);
 			// try to add to nav mesh
 			if (navMesh->add_obstacle(obstacleNP) < 0)
 			{

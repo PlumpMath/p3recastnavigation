@@ -11,16 +11,12 @@
 #include <rnNavMesh.h>
 #include <rnCrowdAgent.h>
 
-#include "main.h"
-
-///functions' declarations
-void changeSpeed(const Event*, void*);
+#include "data.h"
 
 ///global data
 PandaFramework framework;
 WindowFramework *window;
 PT(RNCrowdAgent)crowdAgent;
-bool halfVel = true;
 
 int main(int argc, char *argv[])
 {
@@ -53,22 +49,25 @@ int main(int argc, char *argv[])
 	cout << "create a nav mesh manager" << endl;
 	WPT(RNNavMeshManager)navMesMgr = new RNNavMeshManager(window->get_render());
 
+	cout << "reparent the reference node to render" << endl;
+	navMesMgr->get_reference_node_path().reparent_to(window->get_render());
+
 	cout << "get a sceneNP as owner model" << endl;
 	NodePath sceneNP = window->load_model(framework.get_models(),
 			"nav_test.egg");
 
-	cout << "create a nav mesh and attach it to render" << endl;
+	cout << "create a nav mesh (it is attached to the reference node)" << endl;
 	NodePath navMeshNP = navMesMgr->create_nav_mesh();
 	PT(RNNavMesh)navMesh = DCAST(RNNavMesh, navMeshNP.node());
 
 	cout << "mandatory: set sceneNP as owner of navMesh" << endl;
 	navMesh->set_owner_node_path(sceneNP);
 
-	cout << "setup the nav mesh with scene as its owner object" << endl;
+	cout << "setup the navMesh with sceneNP as its owner object" << endl;
 	navMesh->setup();
 
-	cout << "reparent navMeshNP to a reference NodePath" << endl;
-	navMeshNP.reparent_to(window->get_render());
+	cout << "reparent sceneNP to the reference node" << endl;
+	sceneNP.reparent_to(navMesMgr->get_reference_node_path());
 
 	cout << "get the agent model" << endl;
 	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");
@@ -88,7 +87,10 @@ int main(int argc, char *argv[])
 	cout << "start the path finding default update task" << endl;
 	navMesMgr->start_default_update();
 
-	cout << "enable debug draw" << endl;
+	cout << "DEBUG DRAWING: make the debug reference node path sibling of the reference node" << endl;
+	navMesMgr->get_reference_node_path_debug().reparent_to(
+			window->get_render());
+	cout << "enable debug drawing" << endl;
 	navMesh->enable_debug_drawing(window->get_camera_group());
 
 	cout << "toggle debug draw" << endl;
@@ -96,56 +98,6 @@ int main(int argc, char *argv[])
 
 	cout << "set crowd agent move target on scene surface" << endl;
 	crowdAgent->set_move_target(LPoint3f(-20.5, 5.2, -2.36));
-
-	cout << "get path find to follow" << endl;
-	ValueList<LPoint3f> pointList = navMesh->get_path_find_follow(
-			crowdAgentNP.get_pos(), crowdAgent->get_move_target());
-	for (int i = 0; i < pointList.size(); ++i)
-	{
-		cout << "\t" << pointList[i] << endl;
-	}
-	cout << "get path find to follow straight" << endl;
-	ValueList<Pair<LPoint3f, unsigned char> > pointFlagList =
-			navMesh->get_path_find_straight(crowdAgentNP.get_pos(),
-					crowdAgent->get_move_target(), RNNavMesh::NONE_CROSSINGS);
-	for (int i = 0; i < pointFlagList.size(); ++i)
-	{
-		string pathFlag;
-		switch (pointFlagList[i].get_second())
-		{
-		case RNNavMesh::START:
-			pathFlag = "START";
-			break;
-		case RNNavMesh::END:
-			pathFlag = "END";
-			break;
-		case RNNavMesh::OFFMESH_CONNECTION:
-			pathFlag = "OFFMESH_CONNECTION";
-			break;
-		default:
-			break;
-		}
-		cout << "\t" << pointFlagList[i].get_first() << ", " << pathFlag << endl;
-	}
-
-	cout << "check walkability" << endl;
-	LPoint3f hitPoint = navMesh->check_walkability(
-			crowdAgentNP.get_pos(), crowdAgent->get_move_target());
-	if (hitPoint == crowdAgent->get_move_target())
-	{
-		cout << "\t" << "walkable!" << endl;
-	}
-	else
-	{
-		cout << "\t" << "not walkable!" << endl;
-	}
-
-	cout << "get distance to wall" << endl;
-	float distance = navMesh->get_distance_to_wall(crowdAgentNP.get_pos());
-	cout << "\t" << distance << endl;
-
-	// handle change speed
-	framework.define_key("s", "changeSpeed", &changeSpeed, NULL);
 
 	// place camera trackball (local coordinate)
 	PT(Trackball)trackball = DCAST(Trackball, window->get_mouse().find("**/+Trackball").node());
@@ -156,22 +108,4 @@ int main(int argc, char *argv[])
 	framework.main_loop();
 
 	return (0);
-}
-
-///functions' definitions
-// handle change speed
-void changeSpeed(const Event* e, void* data)
-{
-	RNCrowdAgentParams ap = crowdAgent->get_params();
-	float vel = ap.get_maxSpeed();
-	if (halfVel)
-	{
-		ap.set_maxSpeed(vel / 2.0);
-	}
-	else
-	{
-		ap.set_maxSpeed(vel * 2.0);
-	}
-	crowdAgent->set_params(ap);
-	halfVel = not halfVel;
 }

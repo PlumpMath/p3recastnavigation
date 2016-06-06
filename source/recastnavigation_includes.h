@@ -23,6 +23,7 @@ namespace rnsup
 	struct DebugDrawPanda3d;
 	struct DebugDrawMeshDrawer;
 	struct NavMeshTesterTool;
+	struct rcMeshLoaderObj;
 }
 
 struct dtNavMesh;

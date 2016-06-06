@@ -13,18 +13,6 @@ from direct.showbase.ShowBase import ShowBase
 dataDir = "../data"
 
 crowdAgent = None
-halfVel = True
-
-def changeSpeed():
-    global crowdAgent, halfVel
-    ap = crowdAgent.get_params()
-    vel = ap.get_maxSpeed()
-    if halfVel:
-        ap.set_maxSpeed(vel / 2.0)
-    else:
-        ap.set_maxSpeed(vel * 2.0)
-    crowdAgent.set_params(ap)
-    halfVel = not halfVel
 
 if __name__ == '__main__':
     # Load your application's configuration
@@ -40,21 +28,24 @@ if __name__ == '__main__':
     print("create a nav mesh manager")
     navMesMgr = RNNavMeshManager()
 
+    print("reparent the reference node to render")
+    navMesMgr.get_reference_node_path().reparent_to(app.render)
+
     print("get a sceneNP as owner model")
     sceneNP = app.loader.load_model("nav_test.egg")
     
-    print("create a nav mesh and attach it to render")
+    print("create a nav mesh (it is attached to the reference node)")
     navMeshNP = navMesMgr.create_nav_mesh()
     navMesh = navMeshNP.node()
     
     print("mandatory: set sceneNP as owner of navMesh")
     navMesh.set_owner_node_path(sceneNP)
     
-    print("setup the nav mesh with scene as its owner object")
+    print("setup the navMesh with sceneNP as its owner object")
     navMesh.setup()
-    
-    print("reparent navMeshNP to a reference NodePath")
-    navMeshNP.reparent_to(app.render)
+
+    print("reparent sceneNP to the reference node")
+    sceneNP.reparent_to(navMesMgr.get_reference_node_path())
     
     print("get the agent model")
     agentNP = app.loader.load_model("eve.egg")
@@ -74,7 +65,9 @@ if __name__ == '__main__':
     print("start the path finding default update task")
     navMesMgr.start_default_update()
 
-    print("enable debug draw")
+    print("DEBUG DRAWING: make the debug reference node path sibling of the reference node")
+    navMesMgr.get_reference_node_path_debug().reparent_to(app.render)
+    print("enable debug drawing")
     navMesh.enable_debug_drawing(app.camera)
 
     print("toggle debug draw")
@@ -82,42 +75,7 @@ if __name__ == '__main__':
     
     print("set crowd agent move target on scene surface")
     crowdAgent.set_move_target(LPoint3f(-20.5, 5.2, -2.36))
-
-    print("get path find to follow")
-    pointList = navMesh.get_path_find_follow(
-            crowdAgentNP.get_pos(), crowdAgent.get_move_target());
-    for p in pointList:
-        print("\t" + str(p))
-        
-    print("get path find to follow straight")
-    pointFlagList = navMesh.get_path_find_straight(crowdAgentNP.get_pos(),
-                    crowdAgent.get_move_target(), RNNavMesh.NONE_CROSSINGS);
-    for pF in pointFlagList:
-        pathFlag = None
-        flag = pF.get_second()
-        if flag == RNNavMesh.START:
-            pathFlag = "START"
-        elif flag == RNNavMesh.END:
-            pathFlag = "END";
-        elif flag == RNNavMesh.OFFMESH_CONNECTION:
-            pathFlag = "OFFMESH_CONNECTION";
-        print("\t" + str(pF.get_first()) + ", " + str(pathFlag))
     
-    print("check walkability")
-    hitPoint = navMesh.check_walkability(
-            crowdAgentNP.get_pos(), crowdAgent.get_move_target())
-    if hitPoint == crowdAgent.get_move_target():
-        print("\t" + "walkable!")
-    else:
-        print("\t" + "not walkable!")
-
-    print("get distance to wall")
-    distance = navMesh.get_distance_to_wall(crowdAgentNP.get_pos())
-    print("\t" + str(distance))
-    
-    # handle change speed
-    app.accept("s", changeSpeed)
-
     # place camera
     trackball = app.trackball.node()
     trackball.set_pos(-10.0, 90.0, -2.0);

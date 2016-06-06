@@ -54,8 +54,11 @@ rcMeshLoaderObj::rcMeshLoaderObj() :
 rcMeshLoaderObj::~rcMeshLoaderObj()
 {
 	delete [] m_verts;
+	m_verts = NULL;
 	delete [] m_normals;
+	m_normals = NULL;
 	delete [] m_tris;
+	m_tris = NULL;
 }
 		
 void rcMeshLoaderObj::addVertex(float x, float y, float z, int& cap)
@@ -436,6 +439,104 @@ void rcMeshLoaderObj::processPrimitive(CPT(GeomPrimitive)primitive, unsigned int
 		}
 		addTriangle(vi[0], vi[1], vi[2], tcap);
 	}
+}
+
+rcMeshLoaderObj& rcMeshLoaderObj::operator=(const rcMeshLoaderObj& copy)
+{
+	m_filename = copy.m_filename;
+	m_scale = copy.m_scale;
+	m_translation[0] = copy.m_translation[0];
+	m_translation[1] = copy.m_translation[1];
+	m_translation[2] = copy.m_translation[2];
+	//vertices
+	m_vertCount = copy.m_vertCount;
+	m_verts = new float[m_vertCount * 3];
+	for (int v = 0; v < m_vertCount * 3; ++v)
+	{
+		m_verts[v] = copy.m_verts[v];
+	}
+	//triangles
+	m_triCount = copy.m_triCount;
+	m_tris = new int[m_triCount * 3];
+	for (int t = 0; t < m_triCount * 3; ++t)
+	{
+		m_tris[t] = copy.m_tris[t];
+	}
+	//normals
+	m_normals = new float[m_triCount * 3];
+	for (int n = 0; n < m_triCount * 3; ++n)
+	{
+		m_normals[n] = copy.m_normals[n];
+	}
+	//Model stuff
+	m_geoms = copy.m_geoms;
+	m_vertexData = copy.m_vertexData;
+	m_startIndices = copy.m_startIndices;
+	m_currentTranformMat = copy.m_currentTranformMat;
+	m_currentMaxIndex = copy.m_currentMaxIndex;
+	vcap = copy.vcap;
+	tcap = copy.tcap;
+	//
+	return *this;
+}
+
+void rcMeshLoaderObj::write_datagram(Datagram &dg) const
+{
+	dg.add_string(m_filename);
+	dg.add_stdfloat(m_scale);
+	dg.add_stdfloat(m_translation[0]);
+	dg.add_stdfloat(m_translation[1]);
+	dg.add_stdfloat(m_translation[2]);
+	//vertices
+	dg.add_int32(m_vertCount);
+	for (int v = 0; v < m_vertCount * 3; ++v)
+	{
+		dg.add_stdfloat(m_verts[v]);
+	}
+	//triangles
+	dg.add_int32(m_triCount);
+	for (int t = 0; t < m_triCount * 3; ++t)
+	{
+		dg.add_stdfloat(m_tris[t]);
+	}
+	//normals
+	for (int n = 0; n < m_triCount * 3; ++n)
+	{
+		dg.add_stdfloat(m_normals[n]);
+	}
+
+	///Model stuff not written: not needed for rebuilding
+}
+
+void rcMeshLoaderObj::read_datagram(DatagramIterator &scan)
+{
+	m_filename = scan.get_string();
+	m_scale = scan.get_stdfloat();
+	m_translation[0] = scan.get_stdfloat();
+	m_translation[1] = scan.get_stdfloat();
+	m_translation[2] = scan.get_stdfloat();
+	//vertices
+	m_vertCount = scan.get_int32();
+	m_verts = new float[m_vertCount * 3];
+	for (int v = 0; v < m_vertCount * 3; ++v)
+	{
+		m_verts[v] = scan.get_stdfloat();
+	}
+	//triangles
+	m_triCount = scan.get_int32();
+	m_tris = new int[m_triCount * 3];
+	for (int t = 0; t < m_triCount * 3; ++t)
+	{
+		m_tris[t] = scan.get_stdfloat();
+	}
+	//normals
+	m_normals = new float[m_triCount * 3];
+	for (int n = 0; n < m_triCount * 3; ++n)
+	{
+		m_normals[n] = scan.get_stdfloat();
+	}
+
+	///Model stuff not read: not needed for rebuilding
 }
 
 } // namespace rnsup

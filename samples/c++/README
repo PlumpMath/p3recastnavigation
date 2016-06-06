@@ -10,17 +10,14 @@ built on GNU/Linux using these commands within the "c++" folder:
   
 and executed with:
 
-  ./main
+  ./basic (or ./test1, or ./test2)
   
-or
+However all the code should also compile successfully on other 
+platforms (after suitably creating/modifying the "data.h" file that 
+defines the global string variable "dataDir", i.e. the path to models' 
+data).
 
-  ./test
-  
-However the code (main.cpp) should also compile successfully on other 
-platforms (after suitably creating/modifying the "main.h" file that defines 
-the global string variable "dataDir", i.e. the path to models' data).
-
-Note: it should pointed out that the style and structure of sample programs' 
-code is not really favored by the author, but it is solely intended to test 
-and show functionality exposed by the p3recastnavigation module.
-
+NOTE: it should pointed out that the programming style and structure of 
+the sample programs' code is not really favored by the author, but it 
+is solely intended to test and to show the functionality exposed by the 
+p3recastnavigation module.

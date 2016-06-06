@@ -27,16 +27,6 @@ INLINE ValueList<Type>::ValueList(const ValueList &copy) :
 {
 }
 
-
-/**
- *
- */
-template<typename Type>
-INLINE ValueList<Type>::ValueList(ValueList&& copy)
-{
-	_values = copy._values;
-}
-
 /**
  *
  */
@@ -59,15 +49,6 @@ INLINE void ValueList<Type>::add_value(const Type& value)
  */
 template<typename Type>
 INLINE void ValueList<Type>::operator =(const ValueList &copy)
-{
-	_values = copy._values;
-}
-
-/**
- *
- */
-template<typename Type>
-INLINE void ValueList<Type>::operator =(ValueList&& copy)
 {
 	_values = copy._values;
 }
@@ -105,7 +86,7 @@ INLINE int ValueList<Type>::get_num_values() const
 template<typename Type>
 INLINE Type ValueList<Type>::get_value(int index) const
 {
-	nassertr_always((index >= 0) and (index < (int ) _values.size()), Type())
+	nassertr_always((index >= 0) && (index < (int ) _values.size()), Type())
 
 	return _values[index];
 }
@@ -117,7 +98,7 @@ INLINE Type ValueList<Type>::get_value(int index) const
 template<typename Type>
 INLINE Type ValueList<Type>::operator [](int index) const
 {
-	nassertr_always((index >= 0) and (index < (int ) _values.size()), Type())
+	nassertr_always((index >= 0) && (index < (int ) _values.size()), Type())
 
 	return _values[index];
 }
@@ -162,7 +143,7 @@ bool ValueList<Type>::remove_value(const Type& value)
 {
 	typename pvector<Type>::const_iterator iter = find(_values.begin(),
 			_values.end(), value);
-	nassertr_always(iter != _values.end(), false)
+	CONTINUE_IF_ELSE_R(iter != _values.end(), false)
 
 	_values.erase(iter);
 	return true;
@@ -380,6 +361,135 @@ INLINE float RNNavMeshTileSettings::get_tileSize() const
 INLINE void RNNavMeshTileSettings::set_tileSize(float value)
 {
 	_navMeshTileSettings.m_tileSize = value;
+}
+
+///Convex volume settings.
+INLINE bool RNConvexVolumeSettings::operator==(
+		const RNConvexVolumeSettings &other) const
+{
+	return (_area == other._area) && (_flags == other._flags)
+			&& (_ref == other._ref);
+}
+INLINE int RNConvexVolumeSettings::get_area() const
+{
+	return _area;
+}
+INLINE void RNConvexVolumeSettings::set_area(int value)
+{
+	_area = value;
+}
+INLINE int RNConvexVolumeSettings::get_flags() const
+{
+	return _flags;
+}
+INLINE void RNConvexVolumeSettings::set_flags(int value)
+{
+	_flags = value;
+}
+INLINE LPoint3f RNConvexVolumeSettings::get_centroid() const
+{
+	return _centroid;
+}
+INLINE void RNConvexVolumeSettings::set_centroid(LPoint3f value)
+{
+	_centroid = value;
+}
+INLINE int RNConvexVolumeSettings::get_ref() const
+{
+	return _ref;
+}
+INLINE void RNConvexVolumeSettings::set_ref(int value)
+{
+	_ref = value;
+}
+
+///Off mesh connection settings.
+INLINE bool RNOffMeshConnectionSettings::operator==(
+		const RNOffMeshConnectionSettings &other) const
+{
+	return (_rad == other._rad) && (_bidir == other._bidir)
+			&& (_area == other._area) && (_flags == other._flags)
+			&& (_ref == other._ref);
+}
+INLINE float RNOffMeshConnectionSettings::get_rad() const
+{
+	return _rad;
+}
+INLINE void RNOffMeshConnectionSettings::set_rad(float value)
+{
+	_rad = value;
+}
+INLINE bool RNOffMeshConnectionSettings::get_bidir() const
+{
+	return _bidir;
+}
+INLINE void RNOffMeshConnectionSettings::set_bidir(bool value)
+{
+	_bidir = value;
+}
+INLINE unsigned int RNOffMeshConnectionSettings::get_userId() const
+{
+	return _userId;
+}
+INLINE void RNOffMeshConnectionSettings::set_userId(unsigned int value)
+{
+	_userId = value;
+}
+INLINE int RNOffMeshConnectionSettings::get_area() const
+{
+	return _area;
+}
+INLINE void RNOffMeshConnectionSettings::set_area(int value)
+{
+	_area = value;
+}
+INLINE int RNOffMeshConnectionSettings::get_flags() const
+{
+	return _flags;
+}
+INLINE void RNOffMeshConnectionSettings::set_flags(int value)
+{
+	_flags = value;
+}
+INLINE int RNOffMeshConnectionSettings::get_ref() const
+{
+	return _ref;
+}
+INLINE void RNOffMeshConnectionSettings::set_ref(int value)
+{
+	_ref = value;
+}
+
+///Obstacle settings.
+INLINE bool RNObstacleSettings::operator==(
+		const RNObstacleSettings &other) const
+{
+	return (_radius == other._radius) && (_dims == other._dims)
+			&& (_ref == other._ref);
+}
+INLINE float RNObstacleSettings::get_radius() const
+{
+	return _radius;
+}
+INLINE void RNObstacleSettings::set_radius(float value)
+{
+	_radius = value;
+}
+INLINE LVecBase3f RNObstacleSettings::get_dims() const
+{
+	return _dims;
+}
+INLINE void RNObstacleSettings::set_dims(const LVecBase3f& value)
+{
+	_dims = value;
+}
+INLINE unsigned int RNObstacleSettings::get_ref() const
+{
+	return _ref;
+}
+INLINE void RNObstacleSettings::set_ref(unsigned int value)
+{
+	_ref = value;
 }
 
 ///CrowdAgentParams

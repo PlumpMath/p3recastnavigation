@@ -15,32 +15,30 @@
 #include "nodePath.h"
 
 /**
- * Class implementing dtCrowdAgent from RecastNavigation nav mesh and path finding library.
+ * This class represents a "crowd agent" of the RecastNavigation library.
  *
  * \see
  * 		- https://github.com/recastnavigation/recastnavigation.git
  * 		- http://digestingduck.blogspot.it
  * 		- https://groups.google.com/forum/?fromgroups#!forum/recastnavigation
  *
- * This object must be added to a RNNavMesh to be driven to its own target.\n
- * A model should be associated to this object.\n
- * This object could be of type:
- * - "recast" (the default): its movement/orientation follows strictly the
+ * This PandaNode must be added to a RNNavMesh to be driven to its own target.\n
+ * A model could be reparented to this object.\n
+ * An RNCrowdAgent could be of type:
+ * - **recast** (the default): its movement/orientation follows strictly the
  * path as updated by RecastNavigation library
- * - "kinematic": its movement/orientation is corrected to stand on floor.
- * If specified in "thrown_events", this object can throw events which
- * actually are sent:
- * - on moving (default event name: <OwnerObjectName>_CrowdAgent_Move)
- * - on being steady (default event name: <OwnerObjectName>_CrowdAgent_Steady)
+ * - **kinematic**: its movement/orientation is corrected to stand on floor.\n
+ * If specified in "thrown_events", this object can throw these events:
+ * - on moving (default event name: OWNEROBJECTNAME_CrowdAgent_Move)
+ * - on being steady (default event name: OWNEROBJECTNAME_CrowdAgent_Steady)
  * Events are thrown continuously at a frequency which is the minimum between
  * the fps and the frequency specified (which defaults to 30 times per seconds).\n
  * The argument of each event is a reference to this component.\n
  *
- * \note the node path of this object will be reparented (if necessary)
- * when added to a RNNavMesh, to the same reference node (i.e. parent) of
- * the RNNavMesh object.
+ * \note A RNCrowdAgent will be reparented to the reference node path when added
+ * to a RNNavMesh.
  *
- * > **Manager Creation Parameter(s)**:
+ * > **RNCrowdAgent text parameters**:
  * param | type | default | note
  * ------|------|---------|-----
  * | *thrown_events*				|single| - | specified as "event1@[event_name1]@[frequency1][:...[:eventN@[event_nameN]@[frequencyN]]]" with eventX = move,steady
@@ -89,8 +87,8 @@ PUBLISHED:
 		ANTICIPATE_TURNS = DT_CROWD_ANTICIPATE_TURNS,
 		OBSTACLE_AVOIDANCE = DT_CROWD_OBSTACLE_AVOIDANCE,
 		SEPARATION = DT_CROWD_SEPARATION,
-		OPTIMIZE_VIS = DT_CROWD_OPTIMIZE_VIS, ///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
-		OPTIMIZE_TOPO = DT_CROWD_OPTIMIZE_TOPO, ///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
+		OPTIMIZE_VIS = DT_CROWD_OPTIMIZE_VIS, // Use dtPathCorridor::optimizePathVisibility() to optimize the agent path.
+		OPTIMIZE_TOPO = DT_CROWD_OPTIMIZE_TOPO, // Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
 #else
 		ANTICIPATE_TURNS,OBSTACLE_AVOIDANCE,SEPARATION,
 		OPTIMIZE_VIS,OPTIMIZE_TOPO,
@@ -113,22 +111,49 @@ PUBLISHED:
 
 	virtual ~RNCrowdAgent();
 
+	/**
+	 * \name REFERENCE NODE
+	 */
+	///@{
+	INLINE void set_reference_node_path(const NodePath& reference);
+	///@}
+
+	/**
+	 * \name CONFIGURATION PARAMETERS
+	 */
+	///@{
 	int set_params(const RNCrowdAgentParams& agentParams);
-	INLINE RNCrowdAgentParams get_params();
-	int set_move_target(const LPoint3f& pos);
-	INLINE LPoint3f get_move_target();
-	int set_move_velocity(const LVector3f& vel);
-	INLINE LVector3f get_move_velocity();
+	INLINE RNCrowdAgentParams get_params() const;
 	void set_mov_type(RNCrowdAgentMovType movType);
 	INLINE RNCrowdAgentMovType get_mov_type() const;
-
-	LVector3f get_actual_velocity();
-	RNCrowdAgentState get_traversing_state();
 	INLINE PT(RNNavMesh) get_nav_mesh() const;
+	///@}
 
+	/**
+	 * \name MOTION STATUS AND PARAMETERS
+	 */
+	///@{
+	int set_move_target(const LPoint3f& pos);
+	INLINE LPoint3f get_move_target() const;
+	int set_move_velocity(const LVector3f& vel);
+	INLINE LVector3f get_move_velocity() const;
+	LVector3f get_actual_velocity() const;
+	RNCrowdAgentState get_traversing_state() const;
+	///@}
+
+	/**
+	 * \name CONFIGURATION PARAMETERS
+	 */
+	///@{
 	INLINE void enable_throw_event(RNEventThrown event, ThrowEventData eventData);
+	///@}
 
+	/**
+	 * \name OUTPUT
+	 */
+	///@{
 	void output(ostream &out) const;
+	///@}
 
 protected:
 	friend class RNNavMeshManager;
@@ -174,18 +199,25 @@ private:
 	RNCrowdAgent(const RNCrowdAgent&);
 	RNCrowdAgent& operator=(const RNCrowdAgent&);
 
-	///TypedWritable API
 public:
+	/**
+	 * \name TypedWritable API
+	 */
+	///@{
 	static void register_with_read_factory();
 	virtual void write_datagram(BamWriter *manager, Datagram &dg) override;
 	virtual int complete_pointers(TypedWritable **plist, BamReader *manager) override;
+	///@}
 
 protected:
 	static TypedWritable *make_from_bam(const FactoryParams &params);
 	virtual void fillin(DatagramIterator &scan, BamReader *manager) override;
 
-	///TypedObject semantics: hardcoded
 public:
+	/**
+	 * \name TypedObject API
+	 */
+	///@{
 	static TypeHandle get_class_type()
 	{
 		return _type_handle;
@@ -204,6 +236,7 @@ public:
 		init_type();
 		return get_class_type();
 	}
+	///@}
 
 private:
 	static TypeHandle _type_handle;

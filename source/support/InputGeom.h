@@ -113,8 +113,9 @@ public:
 	InputGeom();
 	~InputGeom();
 	
-	bool loadMesh(class rcContext* ctx, const std::string& filepath, NodePath model =
-			NodePath(), NodePath referenceNP = NodePath(), float scale = 1.0,
+	bool loadMesh(class rcContext* ctx, const std::string& filepath,
+			NodePath model = NodePath(), NodePath referenceNP = NodePath(),
+			rcMeshLoaderObj* mesh = NULL, float scale = 1.0,
 			float* translation = NULL);
 	
 	bool load(class rcContext* ctx, const std::string& filepath);
