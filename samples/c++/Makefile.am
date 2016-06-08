@@ -3,7 +3,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/../../source \
-	-I$(srcdir)/../../source/module \
 	-I$(srcdir)/../../source/library \
 	-I$(srcdir)/../../source/support \
 	-I/usr/include/panda3d -I/usr/include/eigen3 \
