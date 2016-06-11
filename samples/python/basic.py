@@ -51,7 +51,7 @@ if __name__ == '__main__':
     agentNP = app.loader.load_model("eve.egg")
     agentNP.set_scale(0.40)
 
-    print("create the crowd agent and set the position")
+    print("create the crowd agent (it is attached to the reference node) and set its position")
     crowdAgentNP = navMesMgr.create_crowd_agent("crowdAgent")
     crowdAgent = crowdAgentNP.node()
     crowdAgentNP.set_pos(24.0, -20.4, -2.37)
