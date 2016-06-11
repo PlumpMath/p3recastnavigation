@@ -330,6 +330,8 @@ PUBLISHED:
 	///@{
 	ValueList<LPoint3f> path_find_follow(const LPoint3f& startPos,
 		const LPoint3f& endPos);
+	float path_find_follow_cost(const LPoint3f& startPos,
+			const LPoint3f& endPos);
 	PointFlagList path_find_straight(const LPoint3f& startPos,
 		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS);
 	LPoint3f ray_cast(const LPoint3f& startPos, const LPoint3f& endPos);

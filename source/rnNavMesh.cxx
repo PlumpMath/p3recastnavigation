@@ -2558,6 +2558,23 @@ ValueList<LPoint3f> RNNavMesh::path_find_follow(const LPoint3f& startPos,
 }
 
 /**
+ * Finds a path's total cost (>=0.0) from the start point to the end point.
+ * Should be called after RNNavMesh setup.
+ * Returns -1.0 on failure.
+ * \note The return value is directly from the path find algorithm,
+ * and it should only be used to make comparisons.
+ */
+float RNNavMesh::path_find_follow_cost(const LPoint3f& startPos,
+		const LPoint3f& endPos)
+{
+	// continue if nav mesh has been already setup
+	CONTINUE_IF_ELSE_R(path_find_follow(startPos, endPos).size() > 0, RN_ERROR)
+
+	// get the cost of the last found path
+	return mTesterTool.getTotalCost();
+}
+
+/**
  * Finds a straight path from the start point to the end point.
  * Should be called after RNNavMesh setup.
  * Returns a list of points, empty on error.

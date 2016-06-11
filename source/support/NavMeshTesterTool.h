@@ -79,6 +79,8 @@ private:
 	float m_smoothPath[MAX_SMOOTH*3];
 	int m_nsmoothPath;
 	float m_queryPoly[4*3];
+	float m_totalCost;  //total cost of the last path found,
+						//TOOLMODE_PATHFIND_FOLLOW only.
 
 	static const int MAX_RAND_POINTS = 64;
 	float m_randPoints[MAX_RAND_POINTS*3];
@@ -138,6 +140,10 @@ public:
 	int getNumSmoothPath()
 	{
 		return m_nsmoothPath;
+	}
+	float getTotalCost()
+	{
+		return m_totalCost;
 	}
 	//TOOLMODE_PATHFIND_STRAIGHT || TOOLMODE_PATHFIND_SLICED
 	void setStraightOptions(int options)
