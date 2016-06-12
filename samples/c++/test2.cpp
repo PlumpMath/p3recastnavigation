@@ -426,6 +426,10 @@ void setParametersBeforeCreation()
 // toggle debug draw
 void toggleDebugDraw(const Event* e, void* data)
 {
+	if(not navMesh->is_setup())
+	{
+		return;
+	}
 	bool* toggleDebugFlag = reinterpret_cast<bool*>(data);
 	*toggleDebugFlag = not *toggleDebugFlag;
 	navMesh->toggle_debug_drawing(*toggleDebugFlag);
@@ -532,6 +536,10 @@ void setMoveTarget(const Event* e, void* data)
 // handle add/remove obstacles
 void handleObstacles(const Event* e, void* data)
 {
+	if(not navMesh->is_setup())
+	{
+		return;
+	}
 	bool addObstacle = *reinterpret_cast<bool*>(data);
 	// get the collision entry, if any
 	PT(CollisionEntry)entry0 = getCollisionEntryFromCamera();

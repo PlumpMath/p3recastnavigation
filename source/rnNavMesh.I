@@ -179,6 +179,14 @@ INLINE int RNNavMesh::get_num_obstacles() const
 }
 
 /**
+ * Return true if RNNavMesh is currently setup.
+ */
+INLINE bool RNNavMesh::is_setup()
+{
+	return mNavMeshType != NULL;
+}
+
+/**
  * Returns the underlying NavMeshType tile settings (only TILE and OBSTACLE).
  */
 INLINE RNNavMeshTileSettings RNNavMesh::get_nav_mesh_tile_settings() const

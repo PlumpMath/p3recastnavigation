@@ -229,6 +229,9 @@ def toggleDebugDraw():
     """toggle debug draw"""
     
     global toggleDebugFlag, navMesh
+    if not navMesh.is_setup():
+        return
+
     toggleDebugFlag = not toggleDebugFlag
     navMesh.toggle_debug_drawing(toggleDebugFlag)
 
@@ -242,7 +245,7 @@ def toggleSetupCleanup():
         navMesh.setup()
         navMesh.enable_debug_drawing(app.camera)
         #
-        app.taskMgr.add(updateNavMesh, "updateNavMesh", extraArgs=[navMesh])
+        app.taskMgr.add(updateNavMesh, "updateNavMesh", extraArgs=[navMesh], appendTask=True)
     else:
         app.taskMgr.remove("updateNavMesh")
         # false: cleanup
@@ -310,6 +313,8 @@ def handleObstacles(data):
     """handle add/remove obstacles"""
     
     global navMesh, app, mask
+    if not navMesh.is_setup():
+        return
     addObstacle = data
     # get the collision entry, if any
     entry0 = getCollisionEntryFromCamera()

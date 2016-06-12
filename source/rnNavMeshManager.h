@@ -149,6 +149,7 @@ PUBLISHED:
 private:
 	///The reference node path.
 	NodePath mReferenceNP;
+
 	///List of RNNavMeshes handled by this template.
 	typedef pvector<PT(RNNavMesh)> NavMeshList;
 	NavMeshList mNavMeshes;

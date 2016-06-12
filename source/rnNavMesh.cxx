@@ -2010,17 +2010,18 @@ int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP,
 
 /**
  * Returns the NodePathn of the obstacle with the specified unique reference (>0).
- * Return an empty NodePath on error.
+ * Return an empty NodePath with the ET_fail error type set on error.
  */
 NodePath RNNavMesh::get_obstacle_by_ref(int ref) const
 {
-	NodePath obstacleNP;
-	CONTINUE_IF_ELSE_R((mNavMeshTypeEnum == OBSTACLE) && (ref > 0), obstacleNP);
+	CONTINUE_IF_ELSE_R((mNavMeshTypeEnum == OBSTACLE) && (ref > 0),
+			NodePath::fail())
 
+	NodePath obstacleNP;
 	pvector<Obstacle>::const_iterator iter;
 	for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
 	{
-		if ((int)(*iter).get_first().get_ref() == ref)
+		if ((int) (*iter).get_first().get_ref() == ref)
 		{
 			// break: obstacleNP by ref is present
 			obstacleNP = (*iter).get_second();
@@ -2717,7 +2718,7 @@ void RNNavMesh::enable_debug_drawing(NodePath debugCamera)
 			(!debugCamera.find(string("**/+Camera")).is_empty()))
 	{
 		mDebugCamera = debugCamera;
-		//set the recast debug node path as child of mReferenceNP node path
+		//set the recast debug node as child of mReferenceDebugNP node
 		mDebugNodePath = mReferenceDebugNP.attach_new_node(
 				string("RecastDebugNodePath_") + get_name());
 		mDebugNodePath.set_bin(string("fixed"), 10);

@@ -31,14 +31,15 @@ class RNCrowdAgent;
  * 		- https://groups.google.com/forum/?fromgroups#!forum/recastnavigation
  *
  * This PandaNode will create a "navigation mesh" for its "owner object", which
- * is a model specified as NodePath before setting it up.\n
+ * is a model specified as NodePath before setting this RNNavMesh up.\n
  * The owner object is, typically, a stationary/static object.\n
- * An "update" task should call this object's update() method to drive the
- * crowd agents (RNCrowdAgent), which are added to this nav mesh, to their own
+ * An "update" task should call this RNNavMesh update() method to allow the
+ * RNCrowdAgent(s) (crowd agents), which are added to it, to head towards their
  * targets.\n
- * \note a model can "own" many navigation meshes, so the typical pattern is to
- * have a common parent (reference) NodePath to which both model and its
- * navigation meshes are reparented.
+ * \note A model can "own" many RNNavMesh(es), so the typical pattern is to
+ * have a common parent (ie reference) NodePath to which both model and its
+ * RNNavMesh(es) are reparented. A RNNavMesh will be reparented to the default
+ * reference node on creation (see RNNavMeshManager).
  *
  * > **RNNavMesh text parameters**:
  * param | type | default | note
@@ -280,6 +281,7 @@ PUBLISHED:
 	///@{
 	int setup();
 	int cleanup();
+	INLINE bool is_setup();
 	void update(float dt);
 	///@}
 
