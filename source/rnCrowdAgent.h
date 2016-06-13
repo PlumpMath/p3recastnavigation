@@ -143,7 +143,7 @@ PUBLISHED:
 	///@}
 
 	/**
-	 * \name CONFIGURATION PARAMETERS
+	 * \name EVENTS' CONFIGURATION
 	 */
 	///@{
 	INLINE void enable_throw_event(RNEventThrown event, ThrowEventData eventData);

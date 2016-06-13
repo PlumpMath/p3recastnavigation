@@ -254,23 +254,19 @@ void RNCrowdAgent::do_initialize()
 	}
 	//clear all no more needed "Param" variables
 	thrownEventsParam.clear();
-	//1: get the input from xml
-	//2: add settings for RNCrowdAgent
-	//set params: already done
-	//set RNNavMesh object (if any)
-	// set this NodePath
+	// get this NodePath
 	NodePath thisNP = NodePath::any_path(this);
 	// set the collide mask to avoid hit with the nav mesh manager ray
 	thisNP.set_collide_mask(~mTmpl->get_collide_mask() &
 			thisNP.get_collide_mask());
-	//3: add to RNNavMesh update if requested
+	//add to RNNavMesh if requested
 	PT(RNNavMesh) navMesh = NULL;
 	for (int index = 0;
-			index < RNNavMeshManager::get_global_ptr()->get_num_nav_meshes();
+			index < mTmpl->get_num_nav_meshes();
 			++index)
 	{
 		navMesh = DCAST(RNNavMesh,
-				RNNavMeshManager::get_global_ptr()->get_nav_mesh(index).node());
+				mTmpl->get_nav_mesh(index).node());
 		if (navMesh->get_name() == navMeshName)
 		{
 			navMesh->add_crowd_agent(thisNP);

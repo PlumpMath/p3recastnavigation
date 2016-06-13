@@ -370,7 +370,7 @@ public:
 	inline rnsup::NavMeshType& get_nav_mesh_type() const;
 	inline operator rnsup::NavMeshType&();
 	///Unique ref producer.
-	int unique_ref();
+	inline int unique_ref();
 	///@}
 
 protected:
