@@ -24,6 +24,10 @@ RNNavMeshManager::RNNavMeshManager(const NodePath& root,
 	PRINT_DEBUG(
 			"RNNavMeshManager::RNNavMeshManager: creating the singleton manager.");
 
+	mNavMeshes.clear();
+	mNavMeshesParameterTable.clear();
+	mCrowdAgents.clear();
+	mCrowdAgentsParameterTable.clear();
 	set_parameters_defaults(NAVMESH);
 	set_parameters_defaults(CROWDAGENT);
 	//
