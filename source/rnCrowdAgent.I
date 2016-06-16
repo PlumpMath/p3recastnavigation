@@ -53,7 +53,7 @@ INLINE RNCrowdAgent::RNCrowdAgentMovType RNCrowdAgent::get_mov_type() const
 /**
  * Returns the RNNavMesh this RNCrowdAgent is added to.
  */
-INLINE PT(RNNavMesh) RNCrowdAgent::get_nav_mesh() const
+INLINE WPT(RNNavMesh) RNCrowdAgent::get_nav_mesh() const
 {
 	return mNavMesh;
 }

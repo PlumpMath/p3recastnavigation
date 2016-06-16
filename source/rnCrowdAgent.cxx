@@ -286,7 +286,7 @@ void RNCrowdAgent::do_finalize()
 	//Remove from RNNavMesh update (if previously added)
 	//mNavMesh will be cleared during removing, so
 	//remove through a temporary pointer
-	PT(RNNavMesh)navMesh = mNavMesh;
+	WPT(RNNavMesh)navMesh = mNavMesh;
 	if(navMesh)
 	{
 		navMesh->remove_crowd_agent(thisNP);
@@ -326,7 +326,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 		// correct panda's Z: set the collision ray origin wrt collision root
 		LPoint3f pOrig = navMeshMgr->get_collision_root().get_relative_point(
 				mReferenceNP, pos) + mHeigthCorrection;
-		// get the collision height wrt the parent node path: the nav mesh owner
+		// get the collision height wrt the reference node path
 		Pair<bool,float> gotCollisionZ = navMeshMgr->get_collision_height(pOrig,
 				mReferenceNP);
 		if (gotCollisionZ.get_first())
