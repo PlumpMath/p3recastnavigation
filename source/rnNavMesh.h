@@ -155,6 +155,16 @@ PUBLISHED:
 	virtual ~RNNavMesh();
 
 	/**
+	 * \name NAVMESH
+	 */
+	///@{
+	int setup();
+	int cleanup();
+	INLINE bool is_setup();
+	void update(float dt);
+	///@}
+
+	/**
 	 * \name OWNER OBJECT
 	 */
 	///@{
@@ -273,16 +283,6 @@ PUBLISHED:
 	INLINE int get_num_obstacles() const;
 	MAKE_SEQ(get_obstacles, get_num_obstacles, get_obstacle);
 	int remove_all_obstacles();
-	///@}
-
-	/**
-	 * \name NAVMESH
-	 */
-	///@{
-	int setup();
-	int cleanup();
-	INLINE bool is_setup();
-	void update(float dt);
 	///@}
 
 	/**

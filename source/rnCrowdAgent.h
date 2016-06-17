@@ -29,8 +29,8 @@
  * path as updated by RecastNavigation library
  * - **kinematic**: its movement/orientation is corrected to stand on floor.\n
  * If enabled, this object can throw these events:
- * - on moving (default event name: OWNEROBJECTNAME_CrowdAgent_Move)
- * - on being steady (default event name: OWNEROBJECTNAME_CrowdAgent_Steady)
+ * - on moving (default event name: NODENAME_CrowdAgent_Move)
+ * - on being steady (default event name: NODENAME_CrowdAgent_Steady)
  * Events are thrown continuously at a frequency which is the minimum between
  * the fps and the frequency specified (which defaults to 30 times per seconds).
  * \n

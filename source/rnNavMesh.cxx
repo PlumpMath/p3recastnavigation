@@ -2050,7 +2050,7 @@ int RNNavMesh::remove_all_obstacles()
 }
 
 /**
- * Adds a RNCrowdAgent to this RNNavMesh (i.e. to the underlying dtCrowd
+ * Adds a RNCrowdAgent to this RNNavMesh (ie to the underlying dtCrowd
  * management mechanism).
  */
 int RNNavMesh::add_crowd_agent(NodePath crowdAgentNP)
@@ -2183,8 +2183,8 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
 }
 
 /**
- * Removes a RNCrowdAgent from this RNNavMesh (i.e. from the underlying
- * dtCrowd management mechanism).
+ * Removes a RNCrowdAgent from this RNNavMesh (ie from the underlying dtCrowd
+ * management mechanism).
  */
 int RNNavMesh::remove_crowd_agent(NodePath crowdAgentNP)
 {

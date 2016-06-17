@@ -229,7 +229,7 @@ INLINE int RNNavMesh::size() const
 }
 
 /**
- * Resets RNNavMesh.
+ * Resets the RNNavMesh.
  */
 inline void RNNavMesh::do_reset()
 {
