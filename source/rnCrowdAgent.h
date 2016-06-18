@@ -180,7 +180,7 @@ private:
 	///Height correction for kinematic RNCrowdAgent(s).
 	LVector3f mHeigthCorrection;
 
-	void do_reset();
+	inline void do_reset();
 	void do_initialize();
 	void do_finalize();
 

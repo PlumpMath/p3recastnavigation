@@ -183,8 +183,8 @@ PUBLISHED:
 	 * \name GENERAL PARAMETERS
 	 */
 	///@{
-	INLINE LVecBase3f get_recast_bounds_min() const;
-	INLINE LVecBase3f get_recast_bounds_max() const;
+	INLINE LPoint3f get_nav_mesh_bounds_min() const;
+	INLINE LPoint3f get_nav_mesh_bounds_max() const;
 	///@}
 
 	/**
@@ -257,7 +257,6 @@ PUBLISHED:
 	///@{
 	void set_nav_mesh_tile_settings(const RNNavMeshTileSettings& settings);
 	INLINE RNNavMeshTileSettings get_nav_mesh_tile_settings() const;
-	LVecBase2i get_tile_pos(const LPoint3f& pos);
 	///@}
 
 	/**
@@ -431,7 +430,7 @@ private:
 	///Unique ref.
 	int mRef;
 
-	void do_reset();
+	inline void do_reset();
 	void do_initialize();
 	void do_finalize();
 
@@ -453,7 +452,7 @@ private:
 		dtPolyRef* polys, int& npolys, const int MAX_POLYS, float reduceFactor) const;
 
 	int do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint) const;
-	int do_find_off_mesh_connection_poly(int offMeshConnectionID,
+	void do_find_off_mesh_connection_poly(int offMeshConnectionID,
 			dtPolyRef* poly) const;
 
 	int do_add_obstacle_to_recast(NodePath& objectNP, int index,

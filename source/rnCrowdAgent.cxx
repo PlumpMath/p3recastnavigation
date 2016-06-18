@@ -33,6 +33,7 @@ RNCrowdAgent::~RNCrowdAgent()
 /**
  * Sets the RNCrowdAgent's parameters.
  * Should be called after addition to a RNNavMesh.
+ * Returns a negative number on error.
  */
 int RNCrowdAgent::set_params(const RNCrowdAgentParams& agentParams)
 {
@@ -46,12 +47,15 @@ int RNCrowdAgent::set_params(const RNCrowdAgentParams& agentParams)
 /**
  * Sets RNCrowdAgent's move target.
  * Should be called after addition to a RNNavMesh.
+ * Returns a negative number on error.
  */
 int RNCrowdAgent::set_move_target(const LPoint3f& pos)
 {
 	// continue if crowdAgent belongs to a mesh
 	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
+	//save into mMoveTarget
+	mMoveTarget = pos;
 	//request RNNavMesh to update move target for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_target(this, pos);
 }
@@ -59,12 +63,15 @@ int RNCrowdAgent::set_move_target(const LPoint3f& pos)
 /**
  * Sets RNCrowdAgent's move velocity.
  * Should be called after addition to a RNNavMesh.
+ * Returns a negative number on error.
  */
 int RNCrowdAgent::set_move_velocity(const LVector3f& vel)
 {
 	// continue if crowdAgent belongs to a mesh
 	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
+	//save into mMoveVelocity
+	mMoveVelocity = vel;
 	//request RNNavMesh to update move velocity for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_velocity(this, vel);
 }
@@ -82,6 +89,7 @@ void RNCrowdAgent::set_mov_type(RNCrowdAgentMovType movType)
 /**
  * Returns RNCrowdAgent's actual velocity.
  * Should be called after addition to a RNNavMesh.
+ * Returns LVector3f::zero() on error.
  */
 LVector3f RNCrowdAgent::get_actual_velocity() const
 {
@@ -93,8 +101,9 @@ LVector3f RNCrowdAgent::get_actual_velocity() const
 }
 
 /**
- * Gets RNCrowdAgent's traversing state.
+ * Returns the RNCrowdAgent's traversing state.
  * Should be called after addition to a RNNavMesh.
+ * Returns STATE_INVALID on error.
  */
 RNCrowdAgent::RNCrowdAgentState RNCrowdAgent::get_traversing_state() const
 {
@@ -107,6 +116,7 @@ RNCrowdAgent::RNCrowdAgentState RNCrowdAgent::get_traversing_state() const
 
 /**
  * Initializes the RNCrowdAgent with starting settings.
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_initialize()
 {
@@ -278,7 +288,8 @@ void RNCrowdAgent::do_initialize()
 /**
  * On destruction cleanup.
  * Gives an RNCrowdAgent the ability to do any cleaning is necessary when
- * destroyed
+ * destroyed.
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_finalize()
 {
@@ -310,6 +321,7 @@ void RNCrowdAgent::do_finalize()
  *
  * This method is called exclusively by the update() method of the
  * (friend) RNNavMesh object this RNCrowdAgent is added to.
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVector3f& vel)
 {
@@ -373,6 +385,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 
 /**
  * Enables/disables event throwing.
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_enable_crowd_agent_event(RNEventThrown event,
 		ThrowEventData eventData)
@@ -408,6 +421,7 @@ void RNCrowdAgent::do_enable_crowd_agent_event(RNEventThrown event,
 
 /**
  * Throws the event(s).
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_throw_event(ThrowEventData& eventData)
 {

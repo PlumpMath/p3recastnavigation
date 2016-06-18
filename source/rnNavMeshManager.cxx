@@ -104,11 +104,13 @@ RNNavMeshManager::~RNNavMeshManager()
 
 /**
  * Creates a RNNavMesh.
+ * Returns a NodePath to the new RNNavMesh,or an empty NodePath with the ET_fail
+ * error type set on error.
  */
 NodePath RNNavMeshManager::create_nav_mesh()
 {
 	PT(RNNavMesh) newNavMesh = new RNNavMesh();
-	nassertr_always(newNavMesh, NodePath())
+	nassertr_always(newNavMesh, NodePath::fail())
 
 	// set reference nodes
 	newNavMesh->mReferenceNP = mReferenceNP;
@@ -126,6 +128,7 @@ NodePath RNNavMeshManager::create_nav_mesh()
 
 /**
  * Destroys a RNNavMesh.
+ * Returns false on error.
  */
 bool RNNavMeshManager::destroy_nav_mesh(NodePath navMeshNP)
 {
@@ -147,24 +150,28 @@ bool RNNavMeshManager::destroy_nav_mesh(NodePath navMeshNP)
 }
 
 /**
- * Gets a RNNavMesh by index.
+ * Gets a NodePath to RNNavMesh by index.
+ * Return an empty NodePath with the ET_fail error type set on error.
  */
 NodePath RNNavMeshManager::get_nav_mesh(int index) const
 {
-	nassertr_always((index >= 0) && (index < (int ) mNavMeshes.size()), NodePath());
+	nassertr_always((index >= 0) && (index < (int ) mNavMeshes.size()),
+			NodePath::fail());
 
 	return NodePath::any_path(mNavMeshes[index]);
 }
 
 /**
- * Creates a RNCrowdAgent with a given (not empty) name.
+ * Creates a RNCrowdAgent with a given (mandatory and not empty) name.
+ * Returns a NodePath to the new RNCrowdAgent,or an empty NodePath with the
+ * ET_fail error type set on error.
  */
 NodePath RNNavMeshManager::create_crowd_agent(const string& name)
 {
-	nassertr_always(! name.empty(), NodePath())
+	nassertr_always(! name.empty(), NodePath::fail())
 
 	PT(RNCrowdAgent) newCrowdAgent = new RNCrowdAgent(name);
-	nassertr_always(newCrowdAgent, NodePath())
+	nassertr_always(newCrowdAgent, NodePath::fail())
 
 	// set reference node
 	newCrowdAgent->mReferenceNP = mReferenceNP;
@@ -181,6 +188,7 @@ NodePath RNNavMeshManager::create_crowd_agent(const string& name)
 
 /**
  * Destroys a RNCrowdAgent.
+ * Returns false on error.
  */
 bool RNNavMeshManager::destroy_crowd_agent(NodePath crowdAgentNP)
 {
@@ -202,11 +210,13 @@ bool RNNavMeshManager::destroy_crowd_agent(NodePath crowdAgentNP)
 }
 
 /**
- * Gets a RNCrowdAgent by index.
+ * Gets a NodePath to RNCrowdAgent by index.
+ * Return an empty NodePath with the ET_fail error type set on error.
  */
 NodePath RNNavMeshManager::get_crowd_agent(int index) const
 {
-	nassertr_always((index >= 0) && (index < (int ) mCrowdAgents.size()), NodePath());
+	nassertr_always((index >= 0) && (index < (int ) mCrowdAgents.size()),
+			NodePath::fail());
 
 	return NodePath::any_path(mCrowdAgents[index]);
 }
