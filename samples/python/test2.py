@@ -16,6 +16,7 @@ import random, sys
 
 dataDir = "../data"
 # global data
+app = None
 mask = BitMask32(0x10);
 navMesh = None
 NUMAGENTS = 2

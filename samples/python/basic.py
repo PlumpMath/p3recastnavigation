@@ -4,7 +4,6 @@ Created on Mar 24, 2016
 @author: consultit
 '''
 
-# from direct.actor.Actor import Actor
 import panda3d.core
 from p3recastnavigation import RNNavMeshManager, RNNavMesh
 from panda3d.core import load_prc_file_data, LPoint3f

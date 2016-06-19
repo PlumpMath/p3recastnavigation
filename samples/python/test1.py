@@ -4,7 +4,6 @@ Created on Mar 24, 2016
 @author: consultit
 '''
 
-# from direct.actor.Actor import Actor
 import panda3d.core
 from p3recastnavigation import RNNavMeshManager, RNNavMesh, ValueList_LPoint3f
 from panda3d.core import load_prc_file_data, LPoint3f, BitMask32, NodePath, \
@@ -12,10 +11,12 @@ from panda3d.core import load_prc_file_data, LPoint3f, BitMask32, NodePath, \
 from direct.showbase.ShowBase import ShowBase
 
 dataDir = "../data"
-
+# global data
+app = None
 mask = BitMask32(0x10)
 navMesh = None
 crowdAgent = None
+# models and animations
 sceneNP = None
 setupCleanupFlag = True
 toggleDebugFlag = False
@@ -27,6 +28,8 @@ areaRefs = []
 linkPointPair = ValueList_LPoint3f()
 linkRefs = []
 firstSetup = True
+
+# # functions' declarations and definitions
 
 def changeSpeed():
     """ handle change speed"""
