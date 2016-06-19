@@ -257,6 +257,7 @@ PUBLISHED:
 	///@{
 	void set_nav_mesh_tile_settings(const RNNavMeshTileSettings& settings);
 	INLINE RNNavMeshTileSettings get_nav_mesh_tile_settings() const;
+	LVecBase2i get_tile_indexes(const LPoint3f& pos);
 	///@}
 
 	/**

@@ -1728,6 +1728,33 @@ int RNNavMesh::cleanup()
 }
 
 /**
+ * Gets the indexes of a RNNavMesh's tile (TILE and OBSTACLE).
+ * Should be called after RNNavMesh setup.
+ * Returns negative indexes on error.
+ */
+LVecBase2i RNNavMesh::get_tile_indexes(const LPoint3f& pos)
+{
+	// continue if nav mesh has been already setup
+	CONTINUE_IF_ELSE_R(mNavMeshType, LVecBase2i(RN_ERROR, RN_ERROR))
+
+	int tx, ty;
+	float recastPos[3];
+	rnsup::LVecBase3fToRecast(pos, recastPos);
+	if (mNavMeshTypeEnum == TILE)
+	{
+		static_cast<rnsup::NavMeshType_Tile*>(mNavMeshType)->getTilePos(
+				recastPos, tx, ty);
+	}
+	else if (mNavMeshTypeEnum == OBSTACLE)
+	{
+		static_cast<rnsup::NavMeshType_Obstacle*>(mNavMeshType)->getTilePos(
+				recastPos, tx, ty);
+	}
+	//
+	return LVecBase2i(tx, ty);
+}
+
+/**
  * Builds a RNNavMesh's tile (TILE).
  * Should be called after RNNavMesh setup.
  * Returns a negative number on error.
