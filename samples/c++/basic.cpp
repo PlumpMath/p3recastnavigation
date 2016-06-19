@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
 
 	cout << "attach the crowd agent to the nav mesh" << endl;
 	navMesh->add_crowd_agent(crowdAgentNP);
+	cout << *crowdAgent << " added to: " << *crowdAgent->get_nav_mesh() << endl;
 
 	cout << "start the path finding default update task" << endl;
 	navMesMgr->start_default_update();

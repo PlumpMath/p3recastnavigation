@@ -127,7 +127,7 @@ PUBLISHED:
 	INLINE RNCrowdAgentParams get_params() const;
 	void set_mov_type(RNCrowdAgentMovType movType);
 	INLINE RNCrowdAgentMovType get_mov_type() const;
-	INLINE WPT(RNNavMesh) get_nav_mesh() const;
+	INLINE PT(RNNavMesh) get_nav_mesh() const;
 	///@}
 
 	/**
@@ -164,7 +164,7 @@ protected:
 
 private:
 	///The RNNavMesh this RNCrowdAgent is added to.
-	WPT(RNNavMesh) mNavMesh;
+	PT(RNNavMesh) mNavMesh;
 	///The reference node path.
 	NodePath mReferenceNP;
 	///The movement type.

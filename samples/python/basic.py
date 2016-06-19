@@ -60,6 +60,7 @@ if __name__ == '__main__':
     
     print("attach the crowd agent to the nav mesh")
     navMesh.add_crowd_agent(crowdAgentNP)
+    print(str(crowdAgent) + " added to: " + str(crowdAgent.get_nav_mesh()))
 
     print("start the path finding default update task")
     navMesMgr.start_default_update()
