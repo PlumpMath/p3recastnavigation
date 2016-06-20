@@ -28,17 +28,27 @@ INLINE RNCrowdAgentParams RNCrowdAgent::get_params() const
 
 /**
  * Returns RNCrowdAgent's move target.
+ * Should be called after addition to a RNNavMesh.
+ * Returns LPoint3f::zero() on error.
  */
 INLINE LPoint3f RNCrowdAgent::get_move_target() const
 {
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, LPoint3f::zero())
+
 	return mMoveTarget;
 }
 
 /**
  * Returns RNCrowdAgent's move velocity.
+ * Should be called after addition to a RNNavMesh.
+ * Returns LVector3f::zero() on error.
  */
 INLINE LVector3f RNCrowdAgent::get_move_velocity() const
 {
+	// continue if crowdAgent belongs to a mesh
+	CONTINUE_IF_ELSE_R(mNavMesh, LVector3f::zero())
+
 	return mMoveVelocity;
 }
 
@@ -60,6 +70,7 @@ INLINE PT(RNNavMesh) RNCrowdAgent::get_nav_mesh() const
 
 /**
  * Enables/disables the RNCrowdAgent's events to be thrown.
+ * \note Internal use only.
  */
 INLINE void RNCrowdAgent::enable_throw_event(RNEventThrown event,
 		ThrowEventData eventData)
@@ -69,6 +80,7 @@ INLINE void RNCrowdAgent::enable_throw_event(RNEventThrown event,
 
 /**
  * Resets RNCrowdAgent.
+ * \note Internal use only.
  */
 inline void RNCrowdAgent::do_reset()
 {

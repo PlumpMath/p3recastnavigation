@@ -593,7 +593,7 @@ void DebugDrawMeshDrawer::begin(duDebugDrawPrimitives prim, float size)
 	}
 	//setup current MeshDrawer
 	m_generators[m_generatorIdx]->get_root().set_depth_write(m_depthMask);
-//	m_generator[m_meshDrawerIdx]->get_root().set_render_mode_thickness(size);
+//	m_generator[m_generatorIdx]->get_root().set_render_mode_thickness(size);
 	//begin current MeshDrawer
 	m_generators[m_generatorIdx]->begin(m_camera, m_render);
 	m_prim = prim;

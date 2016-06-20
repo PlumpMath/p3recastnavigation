@@ -152,6 +152,7 @@ void RNNavMesh::set_nav_mesh_tile_settings(
 
 /**
  * Initializes the RNNavMesh with starting settings.
+ * \note Internal use only.
  */
 void RNNavMesh::do_initialize()
 {
@@ -523,6 +524,7 @@ void RNNavMesh::do_initialize()
 /**
  * Sets up RNNavMesh to be ready for RNCrowdAgents management.
  * This method can be repeatedly called during program execution.
+ * Returns a negative number on error.
  */
 int RNNavMesh::setup()
 {
@@ -857,6 +859,8 @@ int RNNavMesh::setup()
 
 /**
  * Builds the underlying navigation mesh for the loaded model mesh.
+ * Returns false on error.
+ * \note Internal use only.
  */
 bool RNNavMesh::do_build_navMesh()
 {
@@ -877,8 +881,8 @@ bool RNNavMesh::do_build_navMesh()
  * Returns the convex volume's unique reference (>0), or a negative number on
  * error.
  * \note The added convex volume is temporary: after setup this convex volume
- * can be eliminated, so reference validity should always be verified before
- * use.
+ * can be eliminated, so reference validity should always be verified after
+ * setup and before use.
  */
 int RNNavMesh::add_convex_volume(const ValueList<LPoint3f>& points,
 		int area)
@@ -976,8 +980,9 @@ int RNNavMesh::remove_convex_volume(const LPoint3f& insidePoint)
 }
 
 /**
- * Returns the index of the convex volume with the specified internal point,
- * or a negative number if none is found.
+ * Returns the index of the convex volume with the specified internal point, or
+ * a negative number if none is found.
+ * \note Internal use only.
  */
 int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) const
 {
@@ -1003,6 +1008,8 @@ int RNNavMesh::do_get_convex_volume_from_point(const LPoint3f& insidePoint) cons
 
 /**
  * Finds the underlying nav mesh's polygons around a convex volume.
+ * Returns a negative number on error.
+ * \note Internal use only.
  */
 int RNNavMesh::do_find_convex_volume_polys(int convexVolumeID,
 		dtQueryFilter& filter, dtPolyRef* polys, int& npolys,
@@ -1296,8 +1303,8 @@ int RNNavMesh::add_off_mesh_connection(const ValueList<LPoint3f>& points,
 /**
  * Removes an off mesh connection with the begin or end point specified.
  * Should be called before RNNavMesh setup.
- * Returns the off mesh connection's reference (>0), or a negative number
- * on error.
+ * Returns the off mesh connection's reference (>0), or a negative number on
+ * error.
  */
 int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 {
@@ -1361,8 +1368,9 @@ int RNNavMesh::remove_off_mesh_connection(const LPoint3f& beginOrEndPoint)
 
 /**
  * Gets the off mesh connection with the begin or end point specified.
- * Returns the off mesh connection's index in the list, or a negative number
- * on error.
+ * Returns the off mesh connection's index in the list, or a negative number on
+ * error.
+ * \note Internal use only.
  */
 int RNNavMesh::do_get_off_mesh_connection_from_point(
 		const LPoint3f& startEndPoint) const
@@ -1401,8 +1409,9 @@ int RNNavMesh::do_get_off_mesh_connection_from_point(
 
 /**
  * Finds the underlying nav mesh's polygons of an off mesh connection.
+ * \note Internal use only.
  */
-int RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
+void RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
 		dtPolyRef* poly) const
 {
 	//get the start pos
@@ -1448,7 +1457,6 @@ int RNNavMesh::do_find_off_mesh_connection_poly(int offMeshConnectionID,
 			}
 		}
 	}
-	return RN_SUCCESS;
 }
 
 /**
@@ -1472,11 +1480,7 @@ int RNNavMesh::set_off_mesh_connection_settings(const LPoint3f& beginOrEndPoint,
 	{
 		dtPolyRef poly;
 		dtStatus status, status2;
-
-		CONTINUE_IF_ELSE_R(
-				do_find_off_mesh_connection_poly(offMeshConnectionID, &poly) == RN_SUCCESS,
-				RN_ERROR)
-
+		do_find_off_mesh_connection_poly(offMeshConnectionID, &poly);
 		int area = (
 				settings.get_area() >= 0 ?
 						settings.get_area() : -settings.get_area());
@@ -1614,6 +1618,7 @@ ValueList<LPoint3f> RNNavMesh::get_off_mesh_connection_by_ref(int ref) const
  * On destruction cleanup.
  * Gives an RNNavMesh the ability to do any cleaning is necessary when
  * destroyed
+ * \note Internal use only.
  */
 void RNNavMesh::do_finalize()
 {
@@ -1649,12 +1654,14 @@ void RNNavMesh::do_finalize()
 
 /**
  * Cleans up the RNNavMesh.
+ * Returns a negative number on error.
  * \note crowd agents, and obstacles are detached after this call.
  */
 int RNNavMesh::cleanup()
 {
+	int result = RN_SUCCESS;
 	// continue if nav mesh has been already setup
-	CONTINUE_IF_ELSE_R(mNavMeshType, RN_SUCCESS)
+	CONTINUE_IF_ELSE_R(mNavMeshType, result)
 
 	// remove all obstacles from recast
 	if (mNavMeshTypeEnum == OBSTACLE)
@@ -1662,8 +1669,12 @@ int RNNavMesh::cleanup()
 		PTA(Obstacle)::iterator iterO;
 		for (iterO = mObstacles.begin(); iterO != mObstacles.end(); ++iterO)
 		{
-			do_remove_obstacle_from_recast(iterO->second(),
-					iterO->first().get_ref());
+			//could return an error
+			if (do_remove_obstacle_from_recast(iterO->second(),
+					iterO->first().get_ref()) < 0)
+			{
+				result = RN_ERROR;
+			}
 		}
 	}
 
@@ -1713,17 +1724,18 @@ int RNNavMesh::cleanup()
 #endif //RN_DEBUG
 
 	//
-	return RN_SUCCESS;
+	return result;
 }
 
 /**
- * Gets the position of a RNNavMesh's tile (TILE).
+ * Gets the indexes of a RNNavMesh's tile (TILE and OBSTACLE).
  * Should be called after RNNavMesh setup.
+ * Returns negative indexes on error.
  */
-LVecBase2i RNNavMesh::get_tile_pos(const LPoint3f& pos)
+LVecBase2i RNNavMesh::get_tile_indexes(const LPoint3f& pos)
 {
 	// continue if nav mesh has been already setup
-	CONTINUE_IF_ELSE_R(mNavMeshType, LVecBase2i())
+	CONTINUE_IF_ELSE_R(mNavMeshType, LVecBase2i(RN_ERROR, RN_ERROR))
 
 	int tx, ty;
 	float recastPos[3];
@@ -1745,6 +1757,7 @@ LVecBase2i RNNavMesh::get_tile_pos(const LPoint3f& pos)
 /**
  * Builds a RNNavMesh's tile (TILE).
  * Should be called after RNNavMesh setup.
+ * Returns a negative number on error.
  */
 int RNNavMesh::build_tile(const LPoint3f& pos)
 {
@@ -1772,6 +1785,7 @@ int RNNavMesh::build_tile(const LPoint3f& pos)
 /**
  * Removes a RNNavMesh's tile (TILE).
  * Should be called after RNNavMesh setup.
+ * Returns a negative number on error.
  */
 int RNNavMesh::remove_tile(const LPoint3f& pos)
 {
@@ -1799,6 +1813,7 @@ int RNNavMesh::remove_tile(const LPoint3f& pos)
 /**
  * Builds all RNNavMesh's tiles (TILE).
  * Should be called after RNNavMesh setup.
+ * Returns a negative number on error.
  */
 int RNNavMesh::build_all_tiles()
 {
@@ -1822,6 +1837,7 @@ int RNNavMesh::build_all_tiles()
 /**
  * Removes all RNNavMesh's tiles (TILE).
  * Should be called after RNNavMesh setup.
+ * Returns a negative number on error.
  */
 int RNNavMesh::remove_all_tiles()
 {
@@ -1881,6 +1897,8 @@ int RNNavMesh::add_obstacle(NodePath objectNP)
 
 /**
  * Adds obstacle to the underlying nav mesh.
+ * Returns a negative number on error.
+ * \note Internal use only.
  */
 int RNNavMesh::do_add_obstacle_to_recast(NodePath& objectNP, int index,
 		bool buildFromBam)
@@ -1980,6 +1998,8 @@ int RNNavMesh::remove_obstacle(NodePath objectNP)
 
 /**
  * Removes obstacle from underlying nav mesh.
+ * Returns a negative number on error.
+ * \note Internal use only.
  */
 int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP,
 		int obstacleRef)
@@ -2009,18 +2029,19 @@ int RNNavMesh::do_remove_obstacle_from_recast(NodePath& objectNP,
 }
 
 /**
- * Returns the NodePathn of the obstacle with the specified unique reference (>0).
- * Return an empty NodePath on error.
+ * Returns the NodePath of the obstacle with the specified unique reference (>0).
+ * Return an empty NodePath with the ET_fail error type set on error.
  */
 NodePath RNNavMesh::get_obstacle_by_ref(int ref) const
 {
-	NodePath obstacleNP;
-	CONTINUE_IF_ELSE_R((mNavMeshTypeEnum == OBSTACLE) && (ref > 0), obstacleNP);
+	NodePath obstacleNP = NodePath::fail();
+	CONTINUE_IF_ELSE_R((mNavMeshTypeEnum == OBSTACLE) && (ref > 0),
+			obstacleNP)
 
 	pvector<Obstacle>::const_iterator iter;
 	for (iter = mObstacles.begin(); iter != mObstacles.end(); ++iter)
 	{
-		if ((int)(*iter).get_first().get_ref() == ref)
+		if ((int) (*iter).get_first().get_ref() == ref)
 		{
 			// break: obstacleNP by ref is present
 			obstacleNP = (*iter).get_second();
@@ -2032,6 +2053,7 @@ NodePath RNNavMesh::get_obstacle_by_ref(int ref) const
 
 /**
  * Removes all obstacles (OBSTACLE).
+ * Returns a negative number on error.
  */
 int RNNavMesh::remove_all_obstacles()
 {
@@ -2049,8 +2071,9 @@ int RNNavMesh::remove_all_obstacles()
 }
 
 /**
- * Adds a RNCrowdAgent to this RNNavMesh (i.e. to the underlying dtCrowd
+ * Adds a RNCrowdAgent to this RNNavMesh (ie to the underlying dtCrowd
  * management mechanism).
+ * Returns a negative number on error.
  */
 int RNNavMesh::add_crowd_agent(NodePath crowdAgentNP)
 {
@@ -2086,6 +2109,7 @@ int RNNavMesh::add_crowd_agent(NodePath crowdAgentNP)
 
 /**
  * Adds RNCrowdAgent to update list.
+ * \note Internal use only.
  */
 void RNNavMesh::do_add_crowd_agent_to_update_list(PT(RNCrowdAgent)crowdAgent)
 {
@@ -2105,6 +2129,8 @@ void RNNavMesh::do_add_crowd_agent_to_update_list(PT(RNCrowdAgent)crowdAgent)
 
 /**
  * Adds RNCrowdAgent to the underlying nav mesh update.
+ * Returns false on error.
+ * \note Internal use only.
  */
 bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
 		bool buildFromBam)
@@ -2182,8 +2208,9 @@ bool RNNavMesh::do_add_crowd_agent_to_recast_update(PT(RNCrowdAgent)crowdAgent,
 }
 
 /**
- * Removes a RNCrowdAgent from this RNNavMesh (i.e. from the underlying
- * dtCrowd management mechanism).
+ * Removes a RNCrowdAgent from this RNNavMesh (ie from the underlying dtCrowd
+ * management mechanism).
+ * Returns a negative number on error.
  */
 int RNNavMesh::remove_crowd_agent(NodePath crowdAgentNP)
 {
@@ -2211,6 +2238,7 @@ int RNNavMesh::remove_crowd_agent(NodePath crowdAgentNP)
 
 /**
  * Removes RNCrowdAgent from update list.
+ * \note Internal use only.
  */
 void RNNavMesh::do_remove_crowd_agent_from_update_list(PT(RNCrowdAgent)crowdAgent)
 {
@@ -2229,6 +2257,7 @@ void RNNavMesh::do_remove_crowd_agent_from_update_list(PT(RNCrowdAgent)crowdAgen
 
 /**
  * Removes RNCrowdAgent from the underlying nav mesh update.
+ * \note Internal use only.
  */
 void RNNavMesh::do_remove_crowd_agent_from_recast_update(PT(RNCrowdAgent)crowdAgent)
 {
@@ -2248,6 +2277,8 @@ void RNNavMesh::do_remove_crowd_agent_from_recast_update(PT(RNCrowdAgent)crowdAg
 /**
  * Sets RNCrowdAgentParams for a given added RNCrowdAgent.
  * Should be called after RNNavMesh setup.
+ * Returns a negative number on error.
+ * \note Internal use only.
  */
 int RNNavMesh::do_set_crowd_agent_params(PT(RNCrowdAgent)crowdAgent,
 const RNCrowdAgentParams& params)
@@ -2273,6 +2304,7 @@ const RNCrowdAgentParams& params)
 /**
  * Gets the underlying dtTileCache (OBSTACLE).
  * Should be called after RNNavMesh setup.
+ * Returns NULL on error.
  */
 dtTileCache* RNNavMesh::get_recast_tile_cache() const
 {
@@ -2285,6 +2317,8 @@ dtTileCache* RNNavMesh::get_recast_tile_cache() const
 /**
  * Sets the target for a given added RNCrowdAgent.
  * Should be called after RNNavMesh setup.
+ * Returns a negative number on error.
+ * \note Internal use only.
  */
 int RNNavMesh::do_set_crowd_agent_target(PT(RNCrowdAgent)crowdAgent,
 const LPoint3f& moveTarget)
@@ -2310,6 +2344,8 @@ const LPoint3f& moveTarget)
 /**
  * Sets the target velocity for a given added RNCrowdAgent.
  * Should be called after RNNavMesh setup.
+ * Returns a negative number on error.
+ * \note Internal use only.
  */
 int RNNavMesh::do_set_crowd_agent_velocity(PT(RNCrowdAgent)crowdAgent,
 const LVector3f& moveVelocity)
@@ -2334,6 +2370,7 @@ const LVector3f& moveVelocity)
 
 /**
  * Sets other settings of a RNCrowdAgent.
+ * \note Internal use only.
  */
 void RNNavMesh::do_set_crowd_agent_other_settings(PT(RNCrowdAgent)crowdAgent,
 		rnsup::CrowdTool* crowdTool)
@@ -2354,6 +2391,7 @@ void RNNavMesh::do_set_crowd_agent_other_settings(PT(RNCrowdAgent)crowdAgent,
 #ifdef RN_DEBUG
 /**
  * Renders static geometry on debug.
+ * \note Internal use only.
  */
 void RNNavMesh::do_debug_static_render()
 {
@@ -2366,6 +2404,7 @@ void RNNavMesh::do_debug_static_render()
 }
 /**
  * Renders static geometry on debug with mNavMeshType un-setup.
+ * \note Internal use only.
  */
 void RNNavMesh::do_debug_static_render_unsetup()
 {
@@ -2427,6 +2466,8 @@ void RNNavMesh::do_debug_static_render_unsetup()
 
 /**
  * Loads the mesh from a model NodePath.
+ * Returns false on error.
+ * \note Internal use only.
  */
 bool RNNavMesh::do_load_model_mesh(NodePath model,
 		rnsup::rcMeshLoaderObj* meshLoader)
@@ -2454,6 +2495,7 @@ bool RNNavMesh::do_load_model_mesh(NodePath model,
 
 /**
  * Creates the underlying navigation mesh type for the loaded model mesh.
+ * \note Internal use only.
  */
 void RNNavMesh::do_create_nav_mesh_type(rnsup::NavMeshType* navMeshType)
 {
@@ -2558,6 +2600,23 @@ ValueList<LPoint3f> RNNavMesh::path_find_follow(const LPoint3f& startPos,
 }
 
 /**
+ * Finds a path's total cost (>=0.0) from the start point to the end point.
+ * Should be called after RNNavMesh setup.
+ * Returns a negative number on error.
+ * \note The return value is directly from the path finding algorithm,
+ * and it should only be used to make comparisons.
+ */
+float RNNavMesh::path_find_follow_cost(const LPoint3f& startPos,
+		const LPoint3f& endPos)
+{
+	// continue if nav mesh has been already setup
+	CONTINUE_IF_ELSE_R(path_find_follow(startPos, endPos).size() > 0, RN_ERROR)
+
+	// get the cost of the last found path
+	return mTesterTool.getTotalCost();
+}
+
+/**
  * Finds a straight path from the start point to the end point.
  * Should be called after RNNavMesh setup.
  * Returns a list of points, empty on error.
@@ -2608,7 +2667,8 @@ RNNavMesh::PointFlagList RNNavMesh::path_find_straight(
 /**
  * Casts a walkability/visibility ray from the start point toward the end point.
  * Should be called after RNNavMesh setup.
- * Returns the first hit point if not walkable, or the end point if walkable.
+ * Returns the first hit point if not walkable, or the end point if walkable, or
+ * a point at "infinite".
  * This method is meant only for short distance checks.
  */
 LPoint3f RNNavMesh::ray_cast(const LPoint3f& startPos,
@@ -2648,6 +2708,7 @@ LPoint3f RNNavMesh::ray_cast(const LPoint3f& startPos,
 /**
  * Finds the distance from the specified position to the nearest polygon wall.
  * Should be called after RNNavMesh setup.
+ * Returns an "infinite" number on error.
  */
 float RNNavMesh::distance_to_wall(const LPoint3f& pos)
 {
@@ -2700,7 +2761,7 @@ void RNNavMesh::enable_debug_drawing(NodePath debugCamera)
 			(!debugCamera.find(string("**/+Camera")).is_empty()))
 	{
 		mDebugCamera = debugCamera;
-		//set the recast debug node path as child of mReferenceNP node path
+		//set the recast debug node as child of mReferenceDebugNP node
 		mDebugNodePath = mReferenceDebugNP.attach_new_node(
 				string("RecastDebugNodePath_") + get_name());
 		mDebugNodePath.set_bin(string("fixed"), 10);
@@ -2752,6 +2813,7 @@ void RNNavMesh::disable_debug_drawing()
 
 /**
  * Enables/disables debugging.
+ * Returns a negative number on error.
  */
 int RNNavMesh::toggle_debug_drawing(bool enable)
 {

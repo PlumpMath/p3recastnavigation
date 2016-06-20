@@ -39,25 +39,25 @@ INLINE void RNNavMesh::set_reference_node_path(const NodePath& reference)
 }
 
 /**
- * Returns the owner object's input geometry min bounds.
- * or LVecBase3f::zero() before nav mesh setup.
+ * Returns RNNavMesh minimum bound point, or LVecBase3f::zero() before
+ * RNNavMesh setup.
  */
-INLINE LVecBase3f RNNavMesh::get_recast_bounds_min() const
+INLINE LPoint3f RNNavMesh::get_nav_mesh_bounds_min() const
 {
-	return (mGeom ?
-			rnsup::RecastToLVecBase3f(mGeom->getMeshBoundsMin()) :
-			LVecBase3f::zero());
+	CONTINUE_IF_ELSE_R(mNavMeshType, LPoint3f::zero())
+
+	return rnsup::RecastToLVecBase3f(mGeom->getNavMeshBoundsMin());
 }
 
 /**
- * Returns the owner object's input geometry max bounds.
- * or LVecBase3f::zero() before nav mesh setup.
+ * Returns RNNavMesh maximum bound point, or LVecBase3f::zero() before
+ * RNNavMesh setup.
  */
-INLINE LVecBase3f RNNavMesh::get_recast_bounds_max() const
+INLINE LPoint3f RNNavMesh::get_nav_mesh_bounds_max() const
 {
-	return (mGeom ?
-			rnsup::RecastToLVecBase3f(mGeom->getMeshBoundsMax()) :
-			LVecBase3f::zero());
+	CONTINUE_IF_ELSE_R(mNavMeshType, LPoint3f::zero())
+
+	return rnsup::RecastToLVecBase3f(mGeom->getNavMeshBoundsMin());
 }
 
 /**
@@ -124,11 +124,15 @@ INLINE int RNNavMesh::get_crowd_exclude_flags() const
 }
 
 /**
- * Returns the convex volume's unique reference (>0) given its
- * index into the list of defined convex volumes.
+ * Returns the convex volume's unique reference (>0) given its index into the
+ * list of defined convex volumes, or a negative number on error.
  */
 INLINE int RNNavMesh::get_convex_volume(int index) const
 {
+	CONTINUE_IF_ELSE_R(
+				(index >= 0) && (index < (int) mConvexVolumes.size()),
+				RN_ERROR)
+
 	return mConvexVolumes[index].get_second().get_ref();
 }
 
@@ -141,11 +145,15 @@ INLINE int RNNavMesh::get_num_convex_volumes() const
 }
 
 /**
- * Returns the off mesh connection's unique reference (>0) given its
- * index into the list of defined off mesh connections.
+ * Returns the off mesh connection's unique reference (>0) given its index into
+ * the list of defined off mesh connections, or a negative number on error.
  */
 INLINE int RNNavMesh::get_off_mesh_connection(int index) const
 {
+	CONTINUE_IF_ELSE_R(
+			(index >= 0) && (index < (int) mOffMeshConnections.size()),
+			RN_ERROR)
+
 	return mOffMeshConnections[index].get_second().get_ref();
 }
 
@@ -158,24 +166,36 @@ INLINE int RNNavMesh::get_num_off_mesh_connections() const
 }
 
 /**
- * Gets an obstacle's unique reference (>0) given its index into the
- * list of defined obstacles.
+ * Gets an obstacle's unique reference (>0) given its index into the list of
+ * defined obstacles, or a negative number on error.
  */
 INLINE int RNNavMesh::get_obstacle(int index) const
 {
-	CONTINUE_IF_ELSE_R(mNavMeshTypeEnum == OBSTACLE, RN_ERROR)
+	CONTINUE_IF_ELSE_R(
+			(mNavMeshTypeEnum == OBSTACLE)
+					&& ((index >= 0) && (index < (int) mObstacles.size())),
+			RN_ERROR)
 
 	return (int) mObstacles[index].get_first().get_ref();
 }
 
 /**
- * Returns the number of obstacles added to this RNNavMesh.
+ * Returns the number of obstacles added to this RNNavMesh, or a negative number
+ * on error.
  */
 INLINE int RNNavMesh::get_num_obstacles() const
 {
 	CONTINUE_IF_ELSE_R(mNavMeshTypeEnum == OBSTACLE, RN_ERROR)
 
 	return (int)mObstacles.size();
+}
+
+/**
+ * Return true if RNNavMesh is currently setup.
+ */
+INLINE bool RNNavMesh::is_setup()
+{
+	return mNavMeshType != NULL;
 }
 
 /**
@@ -187,7 +207,7 @@ INLINE RNNavMeshTileSettings RNNavMesh::get_nav_mesh_tile_settings() const
 }
 
 /**
- * Returns the RNCrowdAgent given its index.
+ * Returns the RNCrowdAgent given its index, or NULL on error.
  */
 INLINE PT(RNCrowdAgent) RNNavMesh::get_crowd_agent(int index) const
 {
@@ -221,7 +241,7 @@ INLINE int RNNavMesh::size() const
 }
 
 /**
- * Resets RNNavMesh.
+ * Resets the RNNavMesh.
  */
 inline void RNNavMesh::do_reset()
 {

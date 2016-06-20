@@ -33,6 +33,7 @@ RNCrowdAgent::~RNCrowdAgent()
 /**
  * Sets the RNCrowdAgent's parameters.
  * Should be called after addition to a RNNavMesh.
+ * Returns a negative number on error.
  */
 int RNCrowdAgent::set_params(const RNCrowdAgentParams& agentParams)
 {
@@ -46,12 +47,15 @@ int RNCrowdAgent::set_params(const RNCrowdAgentParams& agentParams)
 /**
  * Sets RNCrowdAgent's move target.
  * Should be called after addition to a RNNavMesh.
+ * Returns a negative number on error.
  */
 int RNCrowdAgent::set_move_target(const LPoint3f& pos)
 {
 	// continue if crowdAgent belongs to a mesh
 	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
+	//save into mMoveTarget
+	mMoveTarget = pos;
 	//request RNNavMesh to update move target for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_target(this, pos);
 }
@@ -59,12 +63,15 @@ int RNCrowdAgent::set_move_target(const LPoint3f& pos)
 /**
  * Sets RNCrowdAgent's move velocity.
  * Should be called after addition to a RNNavMesh.
+ * Returns a negative number on error.
  */
 int RNCrowdAgent::set_move_velocity(const LVector3f& vel)
 {
 	// continue if crowdAgent belongs to a mesh
 	CONTINUE_IF_ELSE_R(mNavMesh, RN_ERROR)
 
+	//save into mMoveVelocity
+	mMoveVelocity = vel;
 	//request RNNavMesh to update move velocity for this RNCrowdAgent
 	return mNavMesh->do_set_crowd_agent_velocity(this, vel);
 }
@@ -82,6 +89,7 @@ void RNCrowdAgent::set_mov_type(RNCrowdAgentMovType movType)
 /**
  * Returns RNCrowdAgent's actual velocity.
  * Should be called after addition to a RNNavMesh.
+ * Returns LVector3f::zero() on error.
  */
 LVector3f RNCrowdAgent::get_actual_velocity() const
 {
@@ -93,8 +101,9 @@ LVector3f RNCrowdAgent::get_actual_velocity() const
 }
 
 /**
- * Gets RNCrowdAgent's traversing state.
+ * Returns the RNCrowdAgent's traversing state.
  * Should be called after addition to a RNNavMesh.
+ * Returns STATE_INVALID on error.
  */
 RNCrowdAgent::RNCrowdAgentState RNCrowdAgent::get_traversing_state() const
 {
@@ -107,6 +116,7 @@ RNCrowdAgent::RNCrowdAgentState RNCrowdAgent::get_traversing_state() const
 
 /**
  * Initializes the RNCrowdAgent with starting settings.
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_initialize()
 {
@@ -254,23 +264,19 @@ void RNCrowdAgent::do_initialize()
 	}
 	//clear all no more needed "Param" variables
 	thrownEventsParam.clear();
-	//1: get the input from xml
-	//2: add settings for RNCrowdAgent
-	//set params: already done
-	//set RNNavMesh object (if any)
-	// set this NodePath
+	// get this NodePath
 	NodePath thisNP = NodePath::any_path(this);
 	// set the collide mask to avoid hit with the nav mesh manager ray
 	thisNP.set_collide_mask(~mTmpl->get_collide_mask() &
 			thisNP.get_collide_mask());
-	//3: add to RNNavMesh update if requested
+	//add to RNNavMesh if requested
 	PT(RNNavMesh) navMesh = NULL;
 	for (int index = 0;
-			index < RNNavMeshManager::get_global_ptr()->get_num_nav_meshes();
+			index < mTmpl->get_num_nav_meshes();
 			++index)
 	{
 		navMesh = DCAST(RNNavMesh,
-				RNNavMeshManager::get_global_ptr()->get_nav_mesh(index).node());
+				mTmpl->get_nav_mesh(index).node());
 		if (navMesh->get_name() == navMeshName)
 		{
 			navMesh->add_crowd_agent(thisNP);
@@ -282,7 +288,8 @@ void RNCrowdAgent::do_initialize()
 /**
  * On destruction cleanup.
  * Gives an RNCrowdAgent the ability to do any cleaning is necessary when
- * destroyed
+ * destroyed.
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_finalize()
 {
@@ -290,7 +297,7 @@ void RNCrowdAgent::do_finalize()
 	//Remove from RNNavMesh update (if previously added)
 	//mNavMesh will be cleared during removing, so
 	//remove through a temporary pointer
-	PT(RNNavMesh)navMesh = mNavMesh;
+	WPT(RNNavMesh)navMesh = mNavMesh;
 	if(navMesh)
 	{
 		navMesh->remove_crowd_agent(thisNP);
@@ -314,6 +321,7 @@ void RNCrowdAgent::do_finalize()
  *
  * This method is called exclusively by the update() method of the
  * (friend) RNNavMesh object this RNCrowdAgent is added to.
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVector3f& vel)
 {
@@ -330,7 +338,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 		// correct panda's Z: set the collision ray origin wrt collision root
 		LPoint3f pOrig = navMeshMgr->get_collision_root().get_relative_point(
 				mReferenceNP, pos) + mHeigthCorrection;
-		// get the collision height wrt the parent node path: the nav mesh owner
+		// get the collision height wrt the reference node path
 		Pair<bool,float> gotCollisionZ = navMeshMgr->get_collision_height(pOrig,
 				mReferenceNP);
 		if (gotCollisionZ.get_first())
@@ -377,6 +385,7 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 
 /**
  * Enables/disables event throwing.
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_enable_crowd_agent_event(RNEventThrown event,
 		ThrowEventData eventData)
@@ -412,6 +421,7 @@ void RNCrowdAgent::do_enable_crowd_agent_event(RNEventThrown event,
 
 /**
  * Throws the event(s).
+ * \note Internal use only.
  */
 void RNCrowdAgent::do_throw_event(ThrowEventData& eventData)
 {

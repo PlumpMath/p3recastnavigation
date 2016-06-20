@@ -4,7 +4,6 @@ Created on Mar 24, 2016
 @author: consultit
 '''
 
-# from direct.actor.Actor import Actor
 import panda3d.core
 from p3recastnavigation import RNNavMeshManager, RNNavMesh
 from panda3d.core import load_prc_file_data, LPoint3f
@@ -51,7 +50,7 @@ if __name__ == '__main__':
     agentNP = app.loader.load_model("eve.egg")
     agentNP.set_scale(0.40)
 
-    print("create the crowd agent and set the position")
+    print("create the crowd agent (it is attached to the reference node) and set its position")
     crowdAgentNP = navMesMgr.create_crowd_agent("crowdAgent")
     crowdAgent = crowdAgentNP.node()
     crowdAgentNP.set_pos(24.0, -20.4, -2.37)
@@ -61,6 +60,7 @@ if __name__ == '__main__':
     
     print("attach the crowd agent to the nav mesh")
     navMesh.add_crowd_agent(crowdAgentNP)
+    print(str(crowdAgent) + " added to: " + str(crowdAgent.get_nav_mesh()))
 
     print("start the path finding default update task")
     navMesMgr.start_default_update()

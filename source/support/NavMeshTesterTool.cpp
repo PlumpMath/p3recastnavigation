@@ -29,6 +29,7 @@
 #include <DetourNavMeshBuilder.h>
 #include <DetourDebugDraw.h>
 #include <DetourCommon.h>
+#include <DetourNode.h>
 
 #ifdef WIN32
 #	define snprintf _snprintf
@@ -726,7 +727,40 @@ void NavMeshTesterTool::recalc()
 				   m_filter->getIncludeFlags(), m_filter->getExcludeFlags());
 #endif
 
-			m_navQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter, m_polys, &m_npolys, MAX_POLYS);
+			dtStatus status =
+					m_navQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter, m_polys, &m_npolys, MAX_POLYS);
+			if (status & DT_SUCCESS)
+			{
+				// get total cost
+				if (m_startRef == m_endRef)
+				{
+					// start and end pos in the same poly
+					const float H_SCALE = 0.999f;
+					m_totalCost = dtVdist(m_spos, m_epos) * H_SCALE;
+				}
+				else
+				{
+					// reset m_totalCost to infinite
+					m_totalCost = FLT_MAX;
+					// find the nodes for the last poly
+					dtPolyRef lastPoly = m_polys[m_npolys - 1];
+					dtNode* nodes[DT_MAX_STATES_PER_NODE];
+					int n = m_navQuery->getNodePool()->findNodes(lastPoly,
+							nodes, DT_MAX_STATES_PER_NODE);
+					// get the lowest total cost among the nodes
+					for (int k = 0; k < n; ++k)
+					{
+						if (nodes[k]->total < m_totalCost)
+						{
+							m_totalCost = nodes[k]->total;
+						}
+					}
+				}
+			}
+			else
+			{
+				m_totalCost = -1.0;
+			}
 
 			m_nsmoothPath = 0;
 

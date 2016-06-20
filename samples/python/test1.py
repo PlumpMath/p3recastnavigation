@@ -4,7 +4,6 @@ Created on Mar 24, 2016
 @author: consultit
 '''
 
-# from direct.actor.Actor import Actor
 import panda3d.core
 from p3recastnavigation import RNNavMeshManager, RNNavMesh, ValueList_LPoint3f
 from panda3d.core import load_prc_file_data, LPoint3f, BitMask32, NodePath, \
@@ -12,10 +11,12 @@ from panda3d.core import load_prc_file_data, LPoint3f, BitMask32, NodePath, \
 from direct.showbase.ShowBase import ShowBase
 
 dataDir = "../data"
-
+# global data
+app = None
 mask = BitMask32(0x10)
 navMesh = None
 crowdAgent = None
+# models and animations
 sceneNP = None
 setupCleanupFlag = True
 toggleDebugFlag = False
@@ -27,6 +28,8 @@ areaRefs = []
 linkPointPair = ValueList_LPoint3f()
 linkRefs = []
 firstSetup = True
+
+# # functions' declarations and definitions
 
 def changeSpeed():
     """ handle change speed"""
@@ -51,16 +54,19 @@ def cycleQueries():
         return
     
     crowdAgentNP = NodePath.any_path(crowdAgent)
+    startPos, endPos = (crowdAgentNP.get_pos(), crowdAgent.get_move_target())
     if query == 0:
-        print("get path find to follow")
-        areaPointList = navMesh.path_find_follow(
-                crowdAgentNP.get_pos(), crowdAgent.get_move_target());
+        print("get path find to follow and its cost:")
+        print("\tfrom " + str(startPos) + " to " + str(endPos))
+        areaPointList = navMesh.path_find_follow(startPos, endPos);
         for p in areaPointList:
             print("\t" + str(p))
+        print("\tcost: " + str(navMesh.path_find_follow_cost(startPos, endPos)))
     elif query == 1: 
-        print("get path find to follow straight")
-        pointFlagList = navMesh.path_find_straight(crowdAgentNP.get_pos(),
-                        crowdAgent.get_move_target(), RNNavMesh.NONE_CROSSINGS);
+        print("get path find to follow straight:")
+        print("\tfrom " + str(startPos) + " to " + str(endPos))
+        pointFlagList = navMesh.path_find_straight(startPos,
+                        endPos, RNNavMesh.NONE_CROSSINGS);
         for pF in pointFlagList:
             pathFlag = None
             flag = pF.get_second()
@@ -72,16 +78,17 @@ def cycleQueries():
                 pathFlag = "OFFMESH_CONNECTION";
             print("\t" + str(pF.get_first()) + ", " + str(pathFlag))
     elif query == 2:
-        print("check walkability")
-        hitPoint = navMesh.ray_cast(
-                crowdAgentNP.get_pos(), crowdAgent.get_move_target())
-        if hitPoint == crowdAgent.get_move_target():
-            print("\t" + "walkable!")
-        else:
-            print("\t" + "not walkable!")
+        print("check visibility:")
+        print("\tfrom " + str(startPos) + " to " + str(endPos))
+        hitPoint = navMesh.ray_cast(startPos, endPos)
+        RES = ""
+        if hitPoint != endPos:
+            RES = "not "
+        print("\thit " + str(hitPoint) + " : " + RES + "visible!")
     elif query == 3:
-        print("get distance to wall")
-        distance = navMesh.distance_to_wall(crowdAgentNP.get_pos())
+        print("get distance to wall:")
+        print("\tfrom " + str(startPos))
+        distance = navMesh.distance_to_wall(startPos)
         print("\t" + str(distance))    
     else:
         pass
@@ -309,7 +316,7 @@ def toggleSetupCleanup():
                 print("Area's invalid ref: " + str(ref) + " ...removing")
                 areaRefs.remove(ref)
                 continue
-            centroid = LPoint3f(0,0,0)
+            centroid = LPoint3f(0, 0, 0)
             for p in points:
                 centroid += p
             centroid /= points.get_num_values()

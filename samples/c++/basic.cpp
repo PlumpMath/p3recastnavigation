@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	NodePath agentNP = window->load_model(framework.get_models(), "eve.egg");
 	agentNP.set_scale(0.40);
 
-	cout << "create the crowd agent and set the position" << endl;
+	cout << "create the crowd agent (it is attached to the reference node) and set its position" << endl;
 	NodePath crowdAgentNP = navMesMgr->create_crowd_agent("crowdAgent");
 	crowdAgent = DCAST(RNCrowdAgent, crowdAgentNP.node());
 	crowdAgentNP.set_pos(24.0, -20.4, -2.37);
@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
 
 	cout << "attach the crowd agent to the nav mesh" << endl;
 	navMesh->add_crowd_agent(crowdAgentNP);
+	cout << *crowdAgent << " added to: " << *crowdAgent->get_nav_mesh() << endl;
 
 	cout << "start the path finding default update task" << endl;
 	navMesMgr->start_default_update();

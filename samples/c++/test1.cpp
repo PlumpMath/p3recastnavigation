@@ -214,25 +214,30 @@ void cycleQueries(const Event*, void*)
 	nassertv_always(crowdAgent and navMesh)
 
 	NodePath crowdAgentNP = NodePath::any_path(crowdAgent);
+	LPoint3f startPos = crowdAgentNP.get_pos(), endPos =
+			crowdAgent->get_move_target();
 	switch (query)
 	{
 	case 0:
 	{
-		cout << "get path find to follow" << endl;
-		ValueList<LPoint3f> areaPointList = navMesh->path_find_follow(
-				crowdAgentNP.get_pos(), crowdAgent->get_move_target());
+		cout << "get path find to follow and its cost:" << endl;
+		cout << "\tfrom " << startPos << " to " << endPos << endl;
+		ValueList<LPoint3f> areaPointList = navMesh->path_find_follow(startPos,
+				endPos);
 		for (int i = 0; i < areaPointList.size(); ++i)
 		{
 			cout << "\t" << areaPointList[i] << endl;
 		}
+		cout << "\tcost: " << navMesh->path_find_follow_cost(startPos, endPos)
+				<< endl;
 	}
 		break;
 	case 1:
 	{
-		cout << "get path find to follow straight" << endl;
+		cout << "get path find to follow straight:" << endl;
+		cout << "\tfrom " << startPos << " to " << endPos << endl;
 		ValueList<Pair<LPoint3f, unsigned char> > pointFlagList =
-				navMesh->path_find_straight(crowdAgentNP.get_pos(),
-						crowdAgent->get_move_target(),
+				navMesh->path_find_straight(startPos, endPos,
 						RNNavMesh::NONE_CROSSINGS);
 		for (int i = 0; i < pointFlagList.size(); ++i)
 		{
@@ -258,23 +263,22 @@ void cycleQueries(const Event*, void*)
 		break;
 	case 2:
 	{
-		cout << "check walkability" << endl;
-		LPoint3f hitPoint = navMesh->ray_cast(crowdAgentNP.get_pos(),
-				crowdAgent->get_move_target());
-		if (hitPoint == crowdAgent->get_move_target())
+		cout << "check visibility:" << endl;
+		cout << "\tfrom " << startPos << " to " << endPos << endl;
+		LPoint3f hitPoint = navMesh->ray_cast(startPos, endPos);
+		string RES = "";
+		if (hitPoint != endPos)
 		{
-			cout << "\t" << "walkable!" << endl;
+			RES = "not ";
 		}
-		else
-		{
-			cout << "\t" << "not walkable!" << endl;
-		}
+		cout << "\thit " << hitPoint << " : " << RES << "visible!" << endl;
 	}
 		break;
 	case 3:
 	{
-		cout << "get distance to wall" << endl;
-		float distance = navMesh->distance_to_wall(crowdAgentNP.get_pos());
+		cout << "get distance to wall:" << endl;
+		cout << "\tfrom " << startPos << endl;
+		float distance = navMesh->distance_to_wall(startPos);
 		cout << "\t" << distance << endl;
 	}
 		break;

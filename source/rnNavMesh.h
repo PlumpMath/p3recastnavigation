@@ -31,14 +31,15 @@ class RNCrowdAgent;
  * 		- https://groups.google.com/forum/?fromgroups#!forum/recastnavigation
  *
  * This PandaNode will create a "navigation mesh" for its "owner object", which
- * is a model specified as NodePath before setting it up.\n
+ * is a model specified as NodePath before setting this RNNavMesh up.\n
  * The owner object is, typically, a stationary/static object.\n
- * An "update" task should call this object's update() method to drive the
- * crowd agents (RNCrowdAgent), which are added to this nav mesh, to their own
+ * An "update" task should call this RNNavMesh update() method to allow the
+ * RNCrowdAgent(s) (crowd agents), which are added to it, to head towards their
  * targets.\n
- * \note a model can "own" many navigation meshes, so the typical pattern is to
- * have a common parent (reference) NodePath to which both model and its
- * navigation meshes are reparented.
+ * \note A model can "own" many RNNavMesh(es), so the typical pattern is to
+ * have a common parent (ie reference) NodePath to which both model and its
+ * RNNavMesh(es) are reparented. A RNNavMesh will be reparented to the default
+ * reference node on creation (see RNNavMeshManager).
  *
  * > **RNNavMesh text parameters**:
  * param | type | default | note
@@ -154,6 +155,16 @@ PUBLISHED:
 	virtual ~RNNavMesh();
 
 	/**
+	 * \name NAVMESH
+	 */
+	///@{
+	int setup();
+	int cleanup();
+	INLINE bool is_setup();
+	void update(float dt);
+	///@}
+
+	/**
 	 * \name OWNER OBJECT
 	 */
 	///@{
@@ -172,8 +183,8 @@ PUBLISHED:
 	 * \name GENERAL PARAMETERS
 	 */
 	///@{
-	INLINE LVecBase3f get_recast_bounds_min() const;
-	INLINE LVecBase3f get_recast_bounds_max() const;
+	INLINE LPoint3f get_nav_mesh_bounds_min() const;
+	INLINE LPoint3f get_nav_mesh_bounds_max() const;
 	///@}
 
 	/**
@@ -246,7 +257,7 @@ PUBLISHED:
 	///@{
 	void set_nav_mesh_tile_settings(const RNNavMeshTileSettings& settings);
 	INLINE RNNavMeshTileSettings get_nav_mesh_tile_settings() const;
-	LVecBase2i get_tile_pos(const LPoint3f& pos);
+	LVecBase2i get_tile_indexes(const LPoint3f& pos);
 	///@}
 
 	/**
@@ -272,15 +283,6 @@ PUBLISHED:
 	INLINE int get_num_obstacles() const;
 	MAKE_SEQ(get_obstacles, get_num_obstacles, get_obstacle);
 	int remove_all_obstacles();
-	///@}
-
-	/**
-	 * \name NAVMESH
-	 */
-	///@{
-	int setup();
-	int cleanup();
-	void update(float dt);
 	///@}
 
 	/**
@@ -330,6 +332,8 @@ PUBLISHED:
 	///@{
 	ValueList<LPoint3f> path_find_follow(const LPoint3f& startPos,
 		const LPoint3f& endPos);
+	float path_find_follow_cost(const LPoint3f& startPos,
+			const LPoint3f& endPos);
 	PointFlagList path_find_straight(const LPoint3f& startPos,
 		const LPoint3f& endPos, RNStraightPathOptions crossingOptions = NONE_CROSSINGS);
 	LPoint3f ray_cast(const LPoint3f& startPos, const LPoint3f& endPos);
@@ -366,7 +370,7 @@ public:
 	inline rnsup::NavMeshType& get_nav_mesh_type() const;
 	inline operator rnsup::NavMeshType&();
 	///Unique ref producer.
-	int unique_ref();
+	inline int unique_ref();
 	///@}
 
 protected:
@@ -427,7 +431,7 @@ private:
 	///Unique ref.
 	int mRef;
 
-	void do_reset();
+	inline void do_reset();
 	void do_initialize();
 	void do_finalize();
 
@@ -449,7 +453,7 @@ private:
 		dtPolyRef* polys, int& npolys, const int MAX_POLYS, float reduceFactor) const;
 
 	int do_get_off_mesh_connection_from_point(const LPoint3f& insidePoint) const;
-	int do_find_off_mesh_connection_poly(int offMeshConnectionID,
+	void do_find_off_mesh_connection_poly(int offMeshConnectionID,
 			dtPolyRef* poly) const;
 
 	int do_add_obstacle_to_recast(NodePath& objectNP, int index,
