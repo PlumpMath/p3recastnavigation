@@ -79,15 +79,15 @@ model of placement of the various elements in the scene:
   reference node too, especially to allow you to manage various transformations: 
   translation, rotation (along the axis z - heading), (uniform) scaling.
 
-Once attached objects to the reference NodePath, just reparent this to the scene
-(usually under the "render" node).
+Once objects are attached to the reference NodePath, just reparent it to the 
+scene (usually under the "render" node).
 
 NOTE: Except for the owner object, no transform should be applied to the other 
 objects (except the identity one of course).
 
 Other positioning schemes may work but they have not been tested. 
 NOTE: if you change the reference NodePath don't forget to set RNNavMeshes' and
-RNCrowdAgents' internal reference and to reparent them to it. 
+RNCrowdAgents' internal references to it and to reparent them to it. 
 
 RNNavMeshManager
 ----------------
