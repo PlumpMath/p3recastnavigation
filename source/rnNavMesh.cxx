@@ -3107,6 +3107,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	mNavMeshTileSettings.read_datagram(scan);
 
 	///Area types with ability flags settings (see support/NavMeshType.h).
+	mPolyAreaFlags.clear();
 	unsigned int size = scan.get_uint32();
 	for (unsigned int i = 0; i < size; ++i)
 	{
@@ -3117,6 +3118,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	}
 
 	///Area types with cost settings (see support/NavMeshType.h).
+	mPolyAreaCost.clear();
 	size = scan.get_uint32();
 	for (unsigned int i = 0; i < size; ++i)
 	{
@@ -3131,6 +3133,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	mCrowdExcludeFlags = scan.get_int32();
 
 	///Convex volumes (see support/ConvexVolumeTool.h).
+	mConvexVolumes.clear();
 	size = scan.get_uint32();
 	for (unsigned int i = 0; i < size; ++i)
 	{
@@ -3151,6 +3154,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 	}
 
 	///Off mesh connections (see support/OffMeshConnectionTool.h).
+	mOffMeshConnections.clear();
 	size = scan.get_uint32();
 	for (unsigned int i = 0; i < size; ++i)
 	{
@@ -3190,6 +3194,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 
 	///Crowd agents.
 	//resize mCrowdAgents: will be restored in complete_pointers()
+	mCrowdAgents.clear();
 	size = scan.get_uint32();
 	mCrowdAgents.resize(size);
 	{
@@ -3201,6 +3206,7 @@ void RNNavMesh::fillin(DatagramIterator &scan, BamReader *manager)
 
 	/// Obstacles list.
 	//resize mObstacles: will be restored in complete_pointers()
+	mObstacles.clear();
 	size = scan.get_uint32();
 	mObstacles.resize(size);
 	{
