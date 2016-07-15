@@ -348,6 +348,9 @@ ValueList<string> RNNavMeshManager::get_parameter_name_list(RNType type) const
 
 /**
  * Sets all parameters to their default values (if any).
+ * \note: After reading objects from bam files, the objects' creation parameters
+ * which reside in the manager, are reset to their default values.
+ *
  */
 void RNNavMeshManager::set_parameters_defaults(RNType type)
 {
