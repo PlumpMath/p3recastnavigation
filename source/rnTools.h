@@ -193,6 +193,19 @@ class ThrowEventData
 {
 	struct Period
 	{
+		Period() :
+				mPeriod(1.0 / 30.0)
+		{
+		}
+		Period(float period) :
+				mPeriod(period)
+		{
+		}
+		Period& operator =(const Period& other)
+		{
+			mPeriod = other.mPeriod;
+			return *this;
+		}
 		Period& operator =(float value)
 		{
 			mPeriod = value;
@@ -207,12 +220,22 @@ class ThrowEventData
 	};
 	struct Frequency
 	{
+		Frequency() :
+				mFrequency(30.0), mPeriod(1.0 / 30.0), mEventData(NULL)
+		{
+		}
 		Frequency(float value) :
-				mFrequency(value >= 0 ? value: -value)
+				mFrequency(value >= 0 ? value : -value)
 		{
 			mFrequency <= FLT_MIN ?
 					mPeriod = FLT_MAX : mPeriod = 1.0 / mFrequency;
 			mEventData = NULL;
+		}
+		Frequency& operator =(const Frequency& other)
+		{
+			mFrequency = other.mFrequency;
+			mPeriod = other.mPeriod;
+			return *this;
 		}
 		Frequency& operator =(float value)
 		{
