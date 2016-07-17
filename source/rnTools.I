@@ -141,7 +141,7 @@ INLINE ValueList<Type> ValueList<Type>::operator +(const ValueList &other) const
 template<typename Type>
 bool ValueList<Type>::remove_value(const Type& value)
 {
-	typename pvector<Type>::const_iterator iter = find(_values.begin(),
+	typename pvector<Type>::iterator iter = find(_values.begin(),
 			_values.end(), value);
 	CONTINUE_IF_ELSE_R(iter != _values.end(), false)
 
