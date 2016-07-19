@@ -260,3 +260,10 @@ samples (both in python and c++) in the 'samples' folder:
 - "test2" shows the use of features: setting of creation parameters, 
   integration with Panda3d objects, custom update, management of obstacles, 
   event throwing, serialization (that is read/write to/from BAM files).
+
+NOTE: test2 example saves the scene on exit, by writing the reference node 
+and, recursively, all the hierarchy of nodes below it, on the 'plug_in.boo' 
+file; this may be read by executing the example by putting the file name as a 
+parameter.
+ 
+

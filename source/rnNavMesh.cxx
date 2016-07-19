@@ -1635,7 +1635,7 @@ void RNNavMesh::do_finalize()
 
 	//detach any old child node path: owner, crowd agents, obstacles
 	NodePathCollection children = NodePath::any_path(this).get_children();
-	for (int i; i < children.size(); ++i)
+	for (int i = 0; i < children.size(); ++i)
 	{
 		children[i].detach_node();
 	}
