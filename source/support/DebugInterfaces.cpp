@@ -562,6 +562,7 @@ void DebugDrawMeshDrawer::clear()
 {
 	//reset to initial values
 	m_generatorIdx = 0;
+	m_generatorsSizeLast = 0;
 	m_generatorsSize = 0;
 	m_prim = static_cast<duDebugDrawPrimitives>(DU_NULL_PRIM);
 	//clear internal storage
