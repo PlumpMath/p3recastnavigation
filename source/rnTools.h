@@ -582,10 +582,4 @@ private:
 ///inline
 #include "rnTools.I"
 
-#if !defined(CPPPARSER) && !defined(_WIN32)
-extern template class ValueList<string>;
-extern template class ValueList<LPoint3f>;
-extern template struct Pair<bool,float>;
-#endif //CPPPARSER
-
 #endif /* RNTOOLS_H_ */
