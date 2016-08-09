@@ -73,7 +73,7 @@ RNNavMeshManager::~RNNavMeshManager()
 		//give a chance to RNCrowdAgent to cleanup itself before being destroyed.
 		(*iterC)->do_finalize();
 		//remove the RNCrowdAgents from the inner list (and from the update task)
-		mCrowdAgents.erase(iterC);
+		iterC = mCrowdAgents.erase(iterC);
 	}
 
 	//destroy all RNNavMeshes
@@ -84,7 +84,7 @@ RNNavMeshManager::~RNNavMeshManager()
 		//give a chance to RNCrowdAgent to cleanup itself before being destroyed.
 		(*iterN)->do_finalize();
 		//remove the RNCrowdAgents from the inner list (and from the update task)
-		mNavMeshes.erase(iterN);
+		iterN = mNavMeshes.erase(iterN);
 	}
 
 	//clear parameters' tables

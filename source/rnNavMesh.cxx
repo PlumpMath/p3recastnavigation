@@ -1629,8 +1629,8 @@ void RNNavMesh::do_finalize()
 	PTA(PT(RNCrowdAgent))::iterator iter = mCrowdAgents.begin();
 	while (iter != mCrowdAgents.end())
 	{
-		//\see http://stackoverflow.com/questions/596162/can-you-remove-elements-from-a-stdlist-while-iterating-through-it
 		do_remove_crowd_agent_from_update_list(*iter);
+		iter = mCrowdAgents.begin();
 	}
 
 	//detach any old child node path: owner, crowd agents, obstacles
@@ -2062,8 +2062,8 @@ int RNNavMesh::remove_all_obstacles()
 	PTA(Obstacle)::iterator iter = mObstacles.begin();
 	while (iter != mObstacles.end())
 	{
-		//\see http://stackoverflow.com/questions/596162/can-you-remove-elements-from-a-stdlist-while-iterating-through-it
 		remove_obstacle(iter->second());
+		iter = mObstacles.begin();
 	}
 
 	//
