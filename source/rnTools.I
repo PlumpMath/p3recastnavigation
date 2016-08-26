@@ -328,6 +328,11 @@ INLINE void RNNavMeshSettings::set_partitionType(int value)
 {
 	_navMeshSettings.m_partitionType = value;
 }
+INLINE ostream &operator << (ostream &out, const RNNavMeshSettings & settings)
+{
+	settings.output(out);
+	return out;
+}
 
 ///NavMeshTileSettings
 INLINE bool RNNavMeshTileSettings::get_buildAllTiles() const
@@ -361,6 +366,11 @@ INLINE float RNNavMeshTileSettings::get_tileSize() const
 INLINE void RNNavMeshTileSettings::set_tileSize(float value)
 {
 	_navMeshTileSettings.m_tileSize = value;
+}
+INLINE ostream &operator << (ostream &out, const RNNavMeshTileSettings & settings)
+{
+	settings.output(out);
+	return out;
 }
 
 ///Convex volume settings.
@@ -401,6 +411,11 @@ INLINE int RNConvexVolumeSettings::get_ref() const
 INLINE void RNConvexVolumeSettings::set_ref(int value)
 {
 	_ref = value;
+}
+INLINE ostream &operator << (ostream &out, const RNConvexVolumeSettings & settings)
+{
+	settings.output(out);
+	return out;
 }
 
 ///Off mesh connection settings.
@@ -459,6 +474,11 @@ INLINE void RNOffMeshConnectionSettings::set_ref(int value)
 {
 	_ref = value;
 }
+INLINE ostream &operator << (ostream &out, const RNOffMeshConnectionSettings & settings)
+{
+	settings.output(out);
+	return out;
+}
 
 ///Obstacle settings.
 INLINE bool RNObstacleSettings::operator==(
@@ -490,6 +510,11 @@ INLINE unsigned int RNObstacleSettings::get_ref() const
 INLINE void RNObstacleSettings::set_ref(unsigned int value)
 {
 	_ref = value;
+}
+INLINE ostream &operator << (ostream &out, const RNObstacleSettings & settings)
+{
+	settings.output(out);
+	return out;
 }
 
 ///CrowdAgentParams
@@ -580,6 +605,11 @@ INLINE void* RNCrowdAgentParams::get_userData() const
 INLINE void RNCrowdAgentParams::set_userData(void* value)
 {
 	_dtCrowdAgentParams.userData = value;
+}
+INLINE ostream &operator << (ostream &out, const RNCrowdAgentParams & params)
+{
+	params.output(out);
+	return out;
 }
 
 #endif /* RNTOOLS_I_ */

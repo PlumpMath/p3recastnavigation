@@ -169,6 +169,28 @@ void RNNavMeshSettings::read_datagram(DatagramIterator &scan)
 	set_partitionType(scan.get_int32());
 }
 
+/**
+ * Writes a sensible description of the RNNavMeshSettings to the indicated
+ * output stream.
+ */
+void RNNavMeshSettings::output(ostream &out) const
+{
+	out << "cellSize: " << get_cellSize() << endl;
+	out << "cellHeight: " << get_cellHeight() << endl;
+	out << "agentHeight: " << get_agentHeight() << endl;
+	out << "agentRadius: " << get_agentRadius() << endl;
+	out << "agentMaxClimb: " << get_agentMaxClimb() << endl;
+	out << "agentMaxSlope: " << get_agentMaxSlope() << endl;
+	out << "regionMinSize: " << get_regionMinSize() << endl;
+	out << "regionMergeSize: " << get_regionMergeSize() << endl;
+	out << "edgeMaxLen: " << get_edgeMaxLen() << endl;
+	out << "edgeMaxError: " << get_edgeMaxError() << endl;
+	out << "vertsPerPoly: " << get_vertsPerPoly() << endl;
+	out << "detailSampleDist: " << get_detailSampleDist() << endl;
+	out << "detailSampleMaxError: " << get_detailSampleMaxError() << endl;
+	out << "partitionType: " << get_partitionType() << endl;
+}
+
 ///NavMeshTileSettings
 /**
  *
@@ -198,6 +220,18 @@ void RNNavMeshTileSettings::read_datagram(DatagramIterator &scan)
 	set_tileSize(scan.get_stdfloat());
 }
 
+/**
+ * Writes a sensible description of the RNNavMeshTileSettings to the indicated
+ * output stream.
+ */
+void RNNavMeshTileSettings::output(ostream &out) const
+{
+	out << "buildAllTiles: " << get_buildAllTiles() << endl;
+	out << "maxTiles: " << get_maxTiles() << endl;
+	out << "maxPolysPerTile: " << get_maxPolysPerTile() << endl;
+	out << "tileSize: " << get_tileSize() << endl;
+}
+
 ///Convex volume settings.
 /**
  *
@@ -225,6 +259,18 @@ void RNConvexVolumeSettings::read_datagram(DatagramIterator &scan)
 	set_flags(scan.get_int32());
 	_centroid.read_datagram(scan);
 	set_ref(scan.get_int32());
+}
+
+/**
+ * Writes a sensible description of the RNConvexVolumeSettings to the indicated
+ * output stream.
+ */
+void RNConvexVolumeSettings::output(ostream &out) const
+{
+	out << "area: " << get_area() << endl;
+	out << "flags: " << get_flags() << endl;
+	out << "centroid: " << get_centroid() << endl;
+	out << "ref: " << get_ref() << endl;
 }
 
 ///Off mesh connection settings.
@@ -260,6 +306,20 @@ void RNOffMeshConnectionSettings::read_datagram(DatagramIterator &scan)
 	set_ref(scan.get_int32());
 }
 
+/**
+ * Writes a sensible description of the RNOffMeshConnectionSettings to the
+ * indicated output stream.
+ */
+void RNOffMeshConnectionSettings::output(ostream &out) const
+{
+	out << "rad: " << get_rad() << endl;
+	out << "bidir: " << get_bidir() << endl;
+	out << "userId: " << get_userId() << endl;
+	out << "area: " << get_area() << endl;
+	out << "flags: " << get_flags() << endl;
+	out << "ref: " << get_ref() << endl;
+}
+
 ///Obstacle settings.
 /**
  *
@@ -286,6 +346,17 @@ void RNObstacleSettings::read_datagram(DatagramIterator &scan)
 	set_radius(scan.get_stdfloat());
 	_dims.read_datagram(scan);
 	set_ref(scan.get_uint32());
+}
+
+/**
+ * Writes a sensible description of the RNObstacleSettings to the indicated
+ * output stream.
+ */
+void RNObstacleSettings::output(ostream &out) const
+{
+	out << "radius: " << get_radius() << endl;
+	out << "dims: " << get_dims() << endl;
+	out << "ref: " << get_ref() << endl;
 }
 
 ///CrowdAgentParams
@@ -329,6 +400,25 @@ void RNCrowdAgentParams::read_datagram(DatagramIterator &scan)
 	set_obstacleAvoidanceType(scan.get_uint8());
 	set_queryFilterType(scan.get_uint8());
 	//Note: void *dtCrowdAgentParams::userData is not used
+}
+
+/**
+ * Writes a sensible description of the RNCrowdAgentParams to the indicated
+ * output stream.
+ */
+void RNCrowdAgentParams::output(ostream &out) const
+{
+	out << "radius: " << get_radius() << endl;
+	out << "height: " << get_height() << endl;
+	out << "maxAcceleration: " << get_maxAcceleration() << endl;
+	out << "maxSpeed: " << get_maxSpeed() << endl;
+	out << "collisionQueryRange: " << get_collisionQueryRange() << endl;
+	out << "pathOptimizationRange: " << get_pathOptimizationRange() << endl;
+	out << "separationWeight: " << get_separationWeight() << endl;
+	out << "updateFlags: " << get_updateFlags() << endl;
+	out << "obstacleAvoidanceType: " << get_obstacleAvoidanceType() << endl;
+	out << "queryFilterType: " << get_queryFilterType() << endl;
+	out << "userData: " << get_userData() << endl;
 }
 
 ///ValueList template

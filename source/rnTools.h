@@ -372,6 +372,7 @@ PUBLISHED:
 	INLINE void set_detailSampleMaxError(float value);
 	INLINE int get_partitionType() const;
 	INLINE void set_partitionType(int value);
+	void output(ostream &out) const;
 private:
 	rnsup::NavMeshSettings _navMeshSettings;
 
@@ -379,6 +380,7 @@ public:
 	void write_datagram(Datagram &dg) const;
 	void read_datagram(DatagramIterator &scan);
 };
+INLINE ostream &operator << (ostream &out, const RNNavMeshSettings & settings);
 
 ///NavMesh tile settings.
 struct EXPORT_CLASS RNNavMeshTileSettings
@@ -403,6 +405,7 @@ PUBLISHED:
 	INLINE void set_maxPolysPerTile(int value);
 	INLINE float get_tileSize() const;
 	INLINE void set_tileSize(float value);
+	void output(ostream &out) const;
 private:
 	rnsup::NavMeshTileSettings _navMeshTileSettings;
 
@@ -410,6 +413,7 @@ public:
 	void write_datagram(Datagram &dg) const;
 	void read_datagram(DatagramIterator &scan);
 };
+INLINE ostream &operator << (ostream &out, const RNNavMeshTileSettings & settings);
 
 ///Convex volume settings.
 struct EXPORT_CLASS RNConvexVolumeSettings
@@ -426,6 +430,7 @@ PUBLISHED:
 	INLINE void set_centroid(LPoint3f value);
 	INLINE int get_ref() const;
 	INLINE void set_ref(int value);
+	void output(ostream &out) const;
 private:
 	int _area;
 	int _flags;
@@ -436,6 +441,7 @@ public:
 	void write_datagram(Datagram &dg) const;
 	void read_datagram(DatagramIterator &scan);
 };
+INLINE ostream &operator << (ostream &out, const RNConvexVolumeSettings & settings);
 
 ///Off mesh connection settings.
 struct EXPORT_CLASS RNOffMeshConnectionSettings
@@ -457,6 +463,7 @@ PUBLISHED:
 	INLINE void set_flags(int value);
 	INLINE int get_ref() const;
 	INLINE void set_ref(int value);
+	void output(ostream &out) const;
 private:
 	float _rad;
 	bool _bidir;
@@ -469,6 +476,7 @@ public:
 	void write_datagram(Datagram &dg) const;
 	void read_datagram(DatagramIterator &scan);
 };
+INLINE ostream &operator << (ostream &out, const RNOffMeshConnectionSettings & settings);
 
 ///Obstacle settings.
 struct EXPORT_CLASS RNObstacleSettings
@@ -484,6 +492,7 @@ PUBLISHED:
 	INLINE void set_dims(const LVecBase3f& value);
 	INLINE unsigned int get_ref() const;
 	INLINE void set_ref(unsigned int value);
+	void output(ostream &out) const;
 private:
 	float _radius;
 	LVecBase3f _dims;
@@ -493,6 +502,7 @@ public:
 	void write_datagram(Datagram &dg) const;
 	void read_datagram(DatagramIterator &scan);
 };
+INLINE ostream &operator << (ostream &out, const RNObstacleSettings & settings);
 
 ///CrowdAgentParams
 struct EXPORT_CLASS RNCrowdAgentParams
@@ -531,7 +541,7 @@ PUBLISHED:
 	INLINE void set_queryFilterType(unsigned char value);
 	INLINE void* get_userData() const;
 	INLINE void set_userData(void* value);
-
+	void output(ostream &out) const;
 private:
 	dtCrowdAgentParams _dtCrowdAgentParams;
 
@@ -539,6 +549,7 @@ public:
 	void write_datagram(Datagram &dg) const;
 	void read_datagram(DatagramIterator &scan);
 };
+INLINE ostream &operator << (ostream &out, const RNCrowdAgentParams & params);
 
 ///ValueList template
 template<typename Type>
