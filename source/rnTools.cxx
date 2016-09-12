@@ -415,8 +415,10 @@ void RNCrowdAgentParams::output(ostream &out) const
 	out << "collisionQueryRange: " << get_collisionQueryRange() << endl;
 	out << "pathOptimizationRange: " << get_pathOptimizationRange() << endl;
 	out << "separationWeight: " << get_separationWeight() << endl;
-	out << "updateFlags: " << get_updateFlags() << endl;
-	out << "obstacleAvoidanceType: " << get_obstacleAvoidanceType() << endl;
+	out << "updateFlags: " << static_cast<unsigned int>(get_updateFlags())
+			<< endl;
+	out << "obstacleAvoidanceType: "
+			<< static_cast<unsigned int>(get_obstacleAvoidanceType()) << endl;
 	out << "queryFilterType: " << get_queryFilterType() << endl;
 	out << "userData: " << get_userData() << endl;
 }

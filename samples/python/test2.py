@@ -92,8 +92,7 @@ def restoreAllScene():
     
     global navMesh, crowdAgent, sceneNP, agentAnimCtls
     # restore nav mesh: through nav mesh manager
-    navMeshNP = RNNavMeshManager.get_global_ptr().get_nav_mesh(0)
-    navMesh = navMeshNP.node()
+    navMesh = RNNavMeshManager.get_global_ptr().get_nav_mesh(0)
     # restore sceneNP: through panda3d
     sceneNP = RNNavMeshManager.get_global_ptr().get_reference_node_path().find("**/Owner")
     # reparent the reference node to render
@@ -102,8 +101,7 @@ def restoreAllScene():
     # restore crowd agents
     for i in range(NUMAGENTS):
         # restore the crowd agent: through nav mesh manager
-        crowdAgentNP = RNNavMeshManager.get_global_ptr().get_crowd_agent(i)
-        crowdAgent[i] = crowdAgentNP.node()
+        crowdAgent[i] = RNNavMeshManager.get_global_ptr().get_crowd_agent(i)
         # restore animations
         tmpAnims = AnimControlCollection()
         auto_bind(crowdAgent[i], tmpAnims)

@@ -93,6 +93,13 @@ inline void RNCrowdAgent::do_reset()
 	mHeigthCorrection = LVector3f::zero();
 	mMove = mSteady = ThrowEventData();
 	mReferenceNP.clear();
+#ifdef PYTHON_BUILD
+	mSelf = NULL;
+	mUpdateCallback = NULL;
+	mUpdateArgList = NULL;
+#else
+	mUpdateCallback = NULL;
+#endif //PYTHON_BUILD
 }
 
 INLINE ostream &operator <<(ostream &out, const RNCrowdAgent& crowdAgent)

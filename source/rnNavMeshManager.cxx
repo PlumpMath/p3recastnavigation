@@ -150,15 +150,14 @@ bool RNNavMeshManager::destroy_nav_mesh(NodePath navMeshNP)
 }
 
 /**
- * Gets a NodePath to RNNavMesh by index.
- * Return an empty NodePath with the ET_fail error type set on error.
+ * Gets an RNNavMesh by index, or NULL on error.
  */
-NodePath RNNavMeshManager::get_nav_mesh(int index) const
+PT(RNNavMesh) RNNavMeshManager::get_nav_mesh(int index) const
 {
 	nassertr_always((index >= 0) && (index < (int ) mNavMeshes.size()),
-			NodePath::fail());
+			NULL);
 
-	return NodePath::any_path(mNavMeshes[index]);
+	return mNavMeshes[index];
 }
 
 /**
@@ -210,15 +209,14 @@ bool RNNavMeshManager::destroy_crowd_agent(NodePath crowdAgentNP)
 }
 
 /**
- * Gets a NodePath to RNCrowdAgent by index.
- * Return an empty NodePath with the ET_fail error type set on error.
+ * Gets an RNCrowdAgent by index, or NULL on error.
  */
-NodePath RNNavMeshManager::get_crowd_agent(int index) const
+PT(RNCrowdAgent) RNNavMeshManager::get_crowd_agent(int index) const
 {
 	nassertr_always((index >= 0) && (index < (int ) mCrowdAgents.size()),
-			NodePath::fail());
+			NULL);
 
-	return NodePath::any_path(mCrowdAgents[index]);
+	return mCrowdAgents[index];
 }
 
 /**

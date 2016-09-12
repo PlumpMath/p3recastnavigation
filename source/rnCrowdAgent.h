@@ -110,7 +110,10 @@ PUBLISHED:
 #endif //CPPPARSER
 	};
 
+	// To avoid interrogatedb warning.
+#ifdef CPPPARSER
 	virtual ~RNCrowdAgent();
+#endif //CPPPARSER
 
 	/**
 	 * \name REFERENCE NODE
@@ -156,11 +159,30 @@ PUBLISHED:
 	void output(ostream &out) const;
 	///@}
 
+#if defined(PYTHON_BUILD) || defined(CPPPARSER)
+	/**
+	 * \name PYTHON UPDATE CALLBACK
+	 */
+	///@{
+	void set_update_callback(PyObject *value);
+	///@}
+#else
+	/**
+	 * \name C++ UPDATE CALLBACK
+	 */
+	///@{
+	typedef void (*UPDATECALLBACKFUNC)(PT(RNCrowdAgent));
+	void set_update_callback(UPDATECALLBACKFUNC value);
+	///@}
+#endif //PYTHON_BUILD
+
 protected:
+	friend void unref_delete<RNCrowdAgent>(RNCrowdAgent*);
 	friend class RNNavMeshManager;
 	friend class RNNavMesh;
 
 	RNCrowdAgent(const string& name);
+	virtual ~RNCrowdAgent();
 
 private:
 	///The RNNavMesh this RNCrowdAgent is added to.
@@ -195,6 +217,24 @@ private:
 	void do_enable_crowd_agent_event(RNEventThrown event, ThrowEventData eventData);
 	void do_throw_event(ThrowEventData& eventData);
 	///@}
+
+#if defined(PYTHON_BUILD) || defined(CPPPARSER)
+	/**
+	 * \name Python callback.
+	 */
+	///@{
+	PyObject *mSelf;
+	PyObject *mUpdateCallback;
+	PyObject *mUpdateArgList;
+	///@}
+#else
+	/**
+	 * \name C++ callback.
+	 */
+	///@{
+	UPDATECALLBACKFUNC mUpdateCallback;
+	///@}
+#endif //PYTHON_BUILD
 
 	// Explicitly disabled copy constructor and copy assignment operator.
 	RNCrowdAgent(const RNCrowdAgent&);

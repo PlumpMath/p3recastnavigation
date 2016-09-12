@@ -14,7 +14,7 @@ AM_LDFLAGS = -L/usr/lib/x86_64-linux-gnu/panda3d
 LDADD = -lp3framework -lpanda -lpandaexpress -lp3dtool -lp3dtoolconfig \
 		-lp3pystub -lXxf86dga -lpython2.7 -lpandaphysics -lpthread
 
-noinst_PROGRAMS = basic test1 test2
+noinst_PROGRAMS = basic callback_test test1 test2
 
 BUILT_SOURCES = data.h
 
@@ -78,6 +78,12 @@ basic_SOURCES = \
 	basic.cpp
 
 nodist_basic_SOURCES = $(common_sources)
+
+#callback_test
+callback_test_SOURCES = \
+	callback_test.cpp
+
+nodist_callback_test_SOURCES = $(common_sources)
 
 #test1
 test1_SOURCES = \

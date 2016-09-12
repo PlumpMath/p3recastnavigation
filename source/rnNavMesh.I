@@ -272,6 +272,13 @@ inline void RNNavMesh::do_reset()
 	mEnableDrawUpdate = false;
 	mDDUnsetup = NULL;
 #endif //RN_DEBUG
+#ifdef PYTHON_BUILD
+	mSelf = NULL;
+	mUpdateCallback = NULL;
+	mUpdateArgList = NULL;
+#else
+	mUpdateCallback = NULL;
+#endif //PYTHON_BUILD
 }
 
 /**

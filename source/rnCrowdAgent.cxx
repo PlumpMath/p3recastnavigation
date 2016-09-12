@@ -13,6 +13,10 @@
 
 #include "rnNavMesh.h"
 #include "throw_event.h"
+#ifdef PYTHON_BUILD
+#include <py_panda.h>
+extern Dtool_PyTypedObject Dtool_RNCrowdAgent;
+#endif //PYTHON_BUILD
 
 /**
  *
@@ -275,14 +279,19 @@ void RNCrowdAgent::do_initialize()
 			index < mTmpl->get_num_nav_meshes();
 			++index)
 	{
-		navMesh = DCAST(RNNavMesh,
-				mTmpl->get_nav_mesh(index).node());
+		navMesh = mTmpl->get_nav_mesh(index);
 		if (navMesh->get_name() == navMeshName)
 		{
 			navMesh->add_crowd_agent(thisNP);
 			break;
 		}
 	}
+#ifdef PYTHON_BUILD
+	//Python callback
+	this->ref();
+	mSelf = DTool_CreatePyInstanceTyped(this, Dtool_RNCrowdAgent, true, false,
+			get_type_index());
+#endif //PYTHON_BUILD
 }
 
 /**
@@ -313,6 +322,12 @@ void RNCrowdAgent::do_finalize()
 	//remove this NodePath
 	thisNP.remove_node();
 	//
+#ifdef PYTHON_BUILD
+	//Python callback
+	Py_DECREF(mSelf);
+	Py_XDECREF(mUpdateCallback);
+	Py_XDECREF(mUpdateArgList);
+#endif //PYTHON_BUILD
 	do_reset();
 }
 
@@ -381,6 +396,29 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 			do_throw_event(mSteady);
 		}
 	}
+
+#ifdef PYTHON_BUILD
+	// execute python callback (if any)
+	if (mUpdateCallback && (mUpdateCallback != Py_None))
+	{
+		PyObject *result;
+		result = PyObject_CallObject(mUpdateCallback, mUpdateArgList);
+		if (result == NULL)
+		{
+			string errStr = get_name() +
+					string(": Error calling callback function");
+			PyErr_SetString(PyExc_TypeError, errStr.c_str());
+			return;
+		}
+		Py_DECREF(result);
+	}
+#else
+	// execute c++ callback (if any)
+	if (mUpdateCallback)
+	{
+		mUpdateCallback(this);
+	}
+#endif //PYTHON_BUILD
 }
 
 /**
@@ -452,6 +490,47 @@ void RNCrowdAgent::output(ostream &out) const
 {
 	out << get_type() << " " << get_name();
 }
+
+#ifdef PYTHON_BUILD
+/**
+ * Sets the update callback as a python function taking this RNCrowdAgent as
+ * an argument, or None. On error raises an python exception.
+ * \note Python only.
+ */
+void RNCrowdAgent::set_update_callback(PyObject *value)
+{
+	if ((!PyCallable_Check(value)) && (value != Py_None))
+	{
+		PyErr_SetString(PyExc_TypeError,
+				"Error: the argument must be callable or None");
+		return;
+	}
+
+	if (mUpdateArgList == NULL)
+	{
+		mUpdateArgList = Py_BuildValue("(O)", mSelf);
+		if (mUpdateArgList == NULL)
+		{
+			return;
+		}
+	}
+	Py_DECREF(mSelf);
+
+	Py_XDECREF(mUpdateCallback);
+	Py_INCREF(value);
+	mUpdateCallback = value;
+}
+#else
+/**
+ * Sets the update callback as a c++ function taking this RNCrowdAgent as
+ * an argument, or NULL.
+ * \note C++ only.
+ */
+void RNCrowdAgent::set_update_callback(UPDATECALLBACKFUNC value)
+{
+	mUpdateCallback = value;
+}
+#endif //PYTHON_BUILD
 
 //TypedWritable API
 /**

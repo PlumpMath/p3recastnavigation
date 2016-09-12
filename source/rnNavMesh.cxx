@@ -21,6 +21,10 @@
 #include "support/NavMeshType_Solo.h"
 #include "support/OffMeshConnectionTool.h"
 #endif //CPPPARSER
+#ifdef PYTHON_BUILD
+#include <py_panda.h>
+extern Dtool_PyTypedObject Dtool_RNNavMesh;
+#endif //PYTHON_BUILD
 
 /**
  *
@@ -519,6 +523,12 @@ void RNNavMesh::do_initialize()
 	mDDUnsetup = new rnsup::DebugDrawPanda3d(debugNodePathUnsetup);
 	do_debug_static_render_unsetup();
 #endif //RN_DEBUG
+#ifdef PYTHON_BUILD
+	//Python callback
+	this->ref();
+	mSelf = DTool_CreatePyInstanceTyped(this, Dtool_RNNavMesh, true, false,
+			get_type_index());
+#endif //PYTHON_BUILD
 }
 
 /**
@@ -1649,6 +1659,12 @@ void RNNavMesh::do_finalize()
 	delete mDDUnsetup;
 #endif //RN_DEBUG
 	//
+#ifdef PYTHON_BUILD
+	//Python callback
+	Py_DECREF(mSelf);
+	Py_XDECREF(mUpdateCallback);
+	Py_XDECREF(mUpdateArgList);
+#endif //PYTHON_BUILD
 	do_reset();
 }
 
@@ -2556,6 +2572,28 @@ void RNNavMesh::update(float dt)
 		}
 	}
 #endif //RN_DEBUG
+#ifdef PYTHON_BUILD
+	// execute python callback (if any)
+	if (mUpdateCallback && (mUpdateCallback != Py_None))
+	{
+		PyObject *result;
+		result = PyObject_CallObject(mUpdateCallback, mUpdateArgList);
+		if (result == NULL)
+		{
+			string errStr = get_name() +
+					string(": Error calling callback function");
+			PyErr_SetString(PyExc_TypeError, errStr.c_str());
+			return;
+		}
+		Py_DECREF(result);
+	}
+#else
+	// execute c++ callback (if any)
+	if (mUpdateCallback)
+	{
+		mUpdateCallback(this);
+	}
+#endif //PYTHON_BUILD
 }
 
 /**
@@ -2746,6 +2784,47 @@ void RNNavMesh::output(ostream &out) const
 {
 	out << get_type() << " " << get_name();
 }
+
+#ifdef PYTHON_BUILD
+/**
+ * Sets the update callback as a python function taking this RNNavMesh as
+ * an argument, or None. On error raises an python exception.
+ * \note Python only.
+ */
+void RNNavMesh::set_update_callback(PyObject *value)
+{
+	if ((!PyCallable_Check(value)) && (value != Py_None))
+	{
+		PyErr_SetString(PyExc_TypeError,
+				"Error: the argument must be callable or None");
+		return;
+	}
+
+	if (mUpdateArgList == NULL)
+	{
+		mUpdateArgList = Py_BuildValue("(O)", mSelf);
+		if (mUpdateArgList == NULL)
+		{
+			return;
+		}
+	}
+	Py_DECREF(mSelf);
+
+	Py_XDECREF(mUpdateCallback);
+	Py_INCREF(value);
+	mUpdateCallback = value;
+}
+#else
+/**
+ * Sets the update callback as a c++ function taking this RNNavMesh as
+ * an argument, or NULL.
+ * \note C++ only.
+ */
+void RNNavMesh::set_update_callback(UPDATECALLBACKFUNC value)
+{
+	mUpdateCallback = value;
+}
+#endif //PYTHON_BUILD
 
 /**
  * Enables the debug drawing, only if nav mesh has been already setup.

@@ -112,10 +112,9 @@ In addition, the manager is provided with some other utilities:
 - to manage the collisions with the models (get_collision_traverser(), 
   get_collision_ray() etc...); these are used internally, for example for 
   kinematic RNCrowdAgents, but can be used for general purposes toot(see 
-  samples).
+  samples)
 - to perform a default update (start/stop_default_update()), that is a task 
-  which calls all of the RNNavMeshes' update methods, with no possibility of 
-  interaction (usually it is used for test purposes).
+  which calls all of the RNNavMeshes' update methods
 - to write/read to/from "bam" files the objects of (part of) a scene having its 
   root as the default reference NodePath (write_to/read_from_bam_file()).
   
@@ -149,6 +148,9 @@ To allow RNCrowdAgent(s) to find the paths and go to their targets, you must
 create a task that at every tick of the game loop (frame), calls the update() 
 method of the RNNavMesh.
 
+For each RNNavMesh can be defined a custom "update callback", taking the same 
+RNNavMesh as parameter and which is called at (the end) of every update. 
+
 For a complete overview of the methods (ie member functions) that can be used 
 with a RNNavMesh, see the API documentation generated from doxygen, where these 
 have been grouped by similar functionality.
@@ -177,6 +179,9 @@ agent.
 An RNCrowdAgent can live alone doing nothing, or be "added" to an RNNavMesh in 
 order to accomplish his goal of reaching its target following the path found 
 thanks to that RNNavMesh.
+
+For each RNCrowdAgent can be defined a custom "update callback", taking the 
+same RNCrowdAgent as parameter and which is called after every state update. 
 
 An RNCrowdAgent can be of two types:
 - "recast" its position closely follows the path defined on the underlying 

@@ -152,7 +152,10 @@ PUBLISHED:
 #endif //CPPPARSER
 	};
 
+	// To avoid interrogatedb warning.
+#ifdef CPPPARSER
 	virtual ~RNNavMesh();
+#endif //CPPPARSER
 
 	/**
 	 * \name NAVMESH
@@ -355,6 +358,22 @@ PUBLISHED:
 	void disable_debug_drawing();
 	int toggle_debug_drawing(bool enable);
 	///@}
+#if defined(PYTHON_BUILD) || defined(CPPPARSER)
+	/**
+	 * \name PYTHON UPDATE CALLBACK
+	 */
+	///@{
+	void set_update_callback(PyObject *value);
+	///@}
+#else
+	/**
+	 * \name C++ UPDATE CALLBACK
+	 */
+	///@{
+	typedef void (*UPDATECALLBACKFUNC)(PT(RNNavMesh));
+	void set_update_callback(UPDATECALLBACKFUNC value);
+	///@}
+#endif //PYTHON_BUILD
 
 public:
 	/**
@@ -374,10 +393,12 @@ public:
 	///@}
 
 protected:
+	friend void unref_delete<RNNavMesh>(RNNavMesh*);
 	friend class RNNavMeshManager;
 	friend class RNCrowdAgent;
 
 	RNNavMesh(const string& name = "NavMesh");
+	virtual ~RNNavMesh();
 
 private:
 	///The owner object NodePath this RNNavMesh is associated to.
@@ -477,6 +498,24 @@ private:
 	///Debug render when mNavMeshType is un-setup.
 	void do_debug_static_render_unsetup();
 #endif //RN_DEBUG
+
+#if defined(PYTHON_BUILD) || defined(CPPPARSER)
+	/**
+	 * \name Python callback.
+	 */
+	///@{
+	PyObject *mSelf;
+	PyObject *mUpdateCallback;
+	PyObject *mUpdateArgList;
+	///@}
+#else
+	/**
+	 * \name C++ callback.
+	 */
+	///@{
+	UPDATECALLBACKFUNC mUpdateCallback;
+	///@}
+#endif //PYTHON_BUILD
 
 	// Explicitly disabled copy constructor and copy assignment operator.
 	RNNavMesh(const RNNavMesh&);

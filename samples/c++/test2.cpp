@@ -258,8 +258,7 @@ void loadAllScene()
 void restoreAllScene()
 {
 	// restore nav mesh: through nav mesh manager
-	NodePath navMeshNP = RNNavMeshManager::get_global_ptr()->get_nav_mesh(0);
-	navMesh = DCAST(RNNavMesh, navMeshNP.node());
+	navMesh = RNNavMeshManager::get_global_ptr()->get_nav_mesh(0);
 	// restore sceneNP: through panda3d
 	sceneNP =
 			RNNavMeshManager::get_global_ptr()->get_reference_node_path().find(
@@ -272,9 +271,8 @@ void restoreAllScene()
 	for (int i = 0; i < NUMAGENTS; ++i)
 	{
 		// restore the crowd agent: through nav mesh manager
-		NodePath crowdAgentNP =
+		crowdAgent[i] =
 				RNNavMeshManager::get_global_ptr()->get_crowd_agent(i);
-		crowdAgent[i] = DCAST(RNCrowdAgent, crowdAgentNP.node());
 		// restore animations
 		AnimControlCollection tmpAnims;
 		auto_bind(crowdAgent[i], tmpAnims);

@@ -45,7 +45,7 @@ PUBLISHED:
 	///@{
 	NodePath create_nav_mesh();
 	bool destroy_nav_mesh(NodePath navMeshNP);
-	NodePath get_nav_mesh(int index) const;
+	PT(RNNavMesh) get_nav_mesh(int index) const;
 	INLINE int get_num_nav_meshes() const;
 	MAKE_SEQ(get_nav_meshes, get_num_nav_meshes, get_nav_mesh);
 	///@}
@@ -56,7 +56,7 @@ PUBLISHED:
 	///@{
 	NodePath create_crowd_agent(const string& name);
 	bool destroy_crowd_agent(NodePath crowdAgentNP);
-	NodePath get_crowd_agent(int index) const;
+	PT(RNCrowdAgent) get_crowd_agent(int index) const;
 	INLINE int get_num_crowd_agents() const;
 	MAKE_SEQ(get_crowd_agents, get_num_crowd_agents, get_crowd_agent);
 	///@}
