@@ -185,6 +185,8 @@ protected:
 	virtual ~RNCrowdAgent();
 
 private:
+	///This NodePath.
+	NodePath mThisNP;
 	///The RNNavMesh this RNCrowdAgent is added to.
 	PT(RNNavMesh) mNavMesh;
 	///The reference node path.

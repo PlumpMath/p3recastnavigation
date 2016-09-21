@@ -179,10 +179,10 @@ NodePath RNNavMeshManager::create_crowd_agent(const string& name)
 
 	//add the new CrowdAgent to the inner list
 	mCrowdAgents.push_back(newCrowdAgent);
-	// reparent to reference node
-	NodePath np = mReferenceNP.attach_new_node(newCrowdAgent);
+	// reparent to reference node and set "this" NodePath
+	newCrowdAgent->mThisNP = mReferenceNP.attach_new_node(newCrowdAgent);
 	//
-	return np;
+	return newCrowdAgent->mThisNP;
 }
 
 /**

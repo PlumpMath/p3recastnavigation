@@ -268,11 +268,9 @@ void RNCrowdAgent::do_initialize()
 	}
 	//clear all no more needed "Param" variables
 	thrownEventsParam.clear();
-	// get this NodePath
-	NodePath thisNP = NodePath::any_path(this);
 	// set the collide mask to avoid hit with the nav mesh manager ray
-	thisNP.set_collide_mask(~mTmpl->get_collide_mask() &
-			thisNP.get_collide_mask());
+	mThisNP.set_collide_mask(~mTmpl->get_collide_mask() &
+			mThisNP.get_collide_mask());
 	//add to RNNavMesh if requested
 	PT(RNNavMesh) navMesh = NULL;
 	for (int index = 0;
@@ -282,7 +280,7 @@ void RNCrowdAgent::do_initialize()
 		navMesh = mTmpl->get_nav_mesh(index);
 		if (navMesh->get_name() == navMeshName)
 		{
-			navMesh->add_crowd_agent(thisNP);
+			navMesh->add_crowd_agent(mThisNP);
 			break;
 		}
 	}
@@ -302,14 +300,13 @@ void RNCrowdAgent::do_initialize()
  */
 void RNCrowdAgent::do_finalize()
 {
-	NodePath thisNP = NodePath::any_path(this);
 	//Remove from RNNavMesh update (if previously added)
 	//mNavMesh will be cleared during removing, so
 	//remove through a temporary pointer
 	WPT(RNNavMesh)navMesh = mNavMesh;
 	if(navMesh)
 	{
-		navMesh->remove_crowd_agent(thisNP);
+		navMesh->remove_crowd_agent(mThisNP);
 	}
 	//
 	mNavMesh.clear();
@@ -320,7 +317,7 @@ void RNCrowdAgent::do_finalize()
 		children[i].detach_node();
 	}
 	//remove this NodePath
-	thisNP.remove_node();
+	mThisNP.remove_node();
 	//
 #ifdef PYTHON_BUILD
 	//Python callback
@@ -342,7 +339,6 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 {
 	// get the squared velocity module
 	float velSquared = vel.length_squared();
-	NodePath thisNP = NodePath::any_path(this);
 
 	//update node path position
 	LPoint3f updatedPos = pos;
@@ -362,13 +358,13 @@ void RNCrowdAgent::do_update_pos_dir(float dt, const LPoint3f& pos, const LVecto
 			updatedPos.set_z(gotCollisionZ.get_second());
 		}
 	}
-	thisNP.set_pos(updatedPos);
+	mThisNP.set_pos(updatedPos);
 
 	//update node path direction & throw events
 	if (velSquared > 0.0)
 	{
 		//update node path direction
-		thisNP.heads_up(updatedPos - vel);
+		mThisNP.heads_up(updatedPos - vel);
 
 		//throw Move event (if enabled)
 		if (mMove.mEnable)
@@ -598,7 +594,7 @@ int RNCrowdAgent::complete_pointers(TypedWritable **p_list, BamReader *manager)
 TypedWritable *RNCrowdAgent::make_from_bam(const FactoryParams &params)
 {
 	// return NULL if RNNavMeshManager if doesn't exist
-	nassertr_always(RNNavMeshManager::get_global_ptr(), NULL)
+	CONTINUE_IF_ELSE_R(RNNavMeshManager::get_global_ptr(), NULL)
 
 	// create a RNCrowdAgent with default parameters' values: they'll be restored later
 	RNNavMeshManager::get_global_ptr()->set_parameters_defaults(
