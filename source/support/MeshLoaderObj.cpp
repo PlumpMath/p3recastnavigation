@@ -497,7 +497,7 @@ void rcMeshLoaderObj::write_datagram(Datagram &dg) const
 	dg.add_int32(m_triCount);
 	for (int t = 0; t < m_triCount * 3; ++t)
 	{
-		dg.add_stdfloat(m_tris[t]);
+		dg.add_int32(m_tris[t]);
 	}
 	//normals
 	for (int n = 0; n < m_triCount * 3; ++n)
@@ -527,7 +527,7 @@ void rcMeshLoaderObj::read_datagram(DatagramIterator &scan)
 	m_tris = new int[m_triCount * 3];
 	for (int t = 0; t < m_triCount * 3; ++t)
 	{
-		m_tris[t] = scan.get_stdfloat();
+		m_tris[t] = scan.get_int32();
 	}
 	//normals
 	m_normals = new float[m_triCount * 3];
