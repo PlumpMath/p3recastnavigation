@@ -103,6 +103,8 @@ private:
 	// Explicitly disabled copy constructor and copy assignment operator.
 	NavMeshType_Obstacle(const NavMeshType_Obstacle&);
 	NavMeshType_Obstacle& operator=(const NavMeshType_Obstacle&);
+
+	int rasterizeTileLayers(const int tx, const int ty, const rcConfig& cfg, struct TileCacheData* tiles, const int maxTiles);
 };
 
 } // namespace rnsup

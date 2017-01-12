@@ -162,6 +162,10 @@ protected:
 	float m_detailSampleDist;
 	float m_detailSampleMaxError;
 	int m_partitionType;
+
+	bool m_filterLowHangingObstacles;
+	bool m_filterLedgeSpans;
+	bool m_filterWalkableLowHeightSpans;
 	
 	NavMeshTypeTool* m_tool;
 	NavMeshTypeToolState* m_toolStates[MAX_TOOLS];
