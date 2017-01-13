@@ -1453,6 +1453,13 @@ void NavMeshType_Obstacle::saveAll(const char* path)
 	
 	// Store header.
 	TileCacheSetHeader header;
+	size_t headerReadReturnCode = fread(&header, sizeof(TileCacheSetHeader), 1, fp);
+	if( headerReadReturnCode != 1)
+	{
+		// Error or early EOF
+		fclose(fp);
+		return;
+	}
 	header.magic = TILECACHESET_MAGIC;
 	header.version = TILECACHESET_VERSION;
 	header.numTiles = 0;
