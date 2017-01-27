@@ -1075,10 +1075,17 @@ int RNNavMesh::do_find_convex_volume_polys(int convexVolumeID,
 		return RN_ERROR;
 	}
 
+#ifdef _WIN32
+	dtPolyRef* parent = (dtPolyRef *) malloc(MAX_POLYS * sizeof(dtPolyRef));
+#else
 	dtPolyRef parent[MAX_POLYS];
+#endif
 	status = mNavMeshType->getNavMeshQuery()->findPolysAroundShape(startRef,
 			queryPoly, nverts, &filter, polys, parent, 0, &npolys,
 			MAX_POLYS);
+#ifdef _WIN32
+	free(parent);
+#endif
 
 	delete[] queryPoly;
 

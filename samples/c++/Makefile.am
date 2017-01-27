@@ -32,6 +32,7 @@ common_sources = \
 	$(srcdir)/../../source/rnTools.cxx \
 	$(srcdir)/../../source/library/DebugDraw.cpp \
 	$(srcdir)/../../source/library/DetourAlloc.cpp \
+	$(srcdir)/../../source/library/DetourAssert.cpp \
 	$(srcdir)/../../source/library/DetourCommon.cpp \
 	$(srcdir)/../../source/library/DetourCrowd.cpp \
 	$(srcdir)/../../source/library/DetourDebugDraw.cpp \
@@ -47,6 +48,7 @@ common_sources = \
 	$(srcdir)/../../source/library/DetourTileCacheBuilder.cpp \
 	$(srcdir)/../../source/library/DetourTileCache.cpp \
 	$(srcdir)/../../source/library/RecastAlloc.cpp \
+	$(srcdir)/../../source/library/RecastAssert.cpp \
 	$(srcdir)/../../source/library/RecastArea.cpp \
 	$(srcdir)/../../source/library/RecastContour.cpp \
 	$(srcdir)/../../source/library/Recast.cpp \

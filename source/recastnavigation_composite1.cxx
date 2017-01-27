@@ -8,6 +8,7 @@
 ///library
 #include "library/DebugDraw.cpp"
 #include "library/DetourAlloc.cpp"
+#include "library/DetourAssert.cpp"
 #include "library/DetourCommon.cpp"
 #include "library/DetourCrowd.cpp"
 #include "library/DetourDebugDraw.cpp"
@@ -21,6 +22,7 @@
 #include "library/DetourProximityGrid.cpp"
 #include "library/DetourTileCache.cpp"
 #include "library/RecastAlloc.cpp"
+#include "library/RecastAssert.cpp"
 #include "library/RecastArea.cpp"
 #include "library/Recast.cpp"
 #include "library/RecastDebugDraw.cpp"

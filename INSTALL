@@ -5,26 +5,26 @@ Clone the source:
 
  git clone https://github.com/consultit/p3recastnavigation.git
 
-Enter the source folder and tweak config.ini as desired; in particular, 
-you can change the optimization level, as by putting optimize=1 or 2
-would compile the support for the debug drawing.
+Enter the source folder and tweak config.ini as desired; in particular, you can 
+change the optimization level, as by putting optimize=1 or 2 would compile the 
+support for the debug drawing.
 Then executes:
  
  python build.py 
  
-Everytime you update the library or change configuration (config.ini)
-issue this command
+Everytime you update the library or change configuration (config.ini) issue this
+command
  
- pyhton build.py --clean
+ python build.py --clean
  
 In doubt issue always this last command.
  
-Note: p3recastnavigation uses a slightly modified version of "Panda 
-Module Builder" by tobspr (https://github.com/tobspr/P3DModuleBuilder)
-as build system, so refer to that for more informations.
+Note: p3recastnavigation uses a slightly modified version of "Panda Module 
+Builder" by tobspr (https://github.com/tobspr/P3DModuleBuilder) as build system,
+so refer to that for more informations.
 
-To install copy the generated p3recastnavigation module into the folder 
-of your code, and into into your code put imports similar to these:
+To install copy (or link) the generated p3recastnavigation module into the 
+folder containing  your code, and into your code put imports similar to these:
 
  import panda3d.core
  from p3recastnavigation import *
