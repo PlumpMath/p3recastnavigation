@@ -1038,39 +1038,37 @@ NavMeshType_Obstacle::~NavMeshType_Obstacle()
 //	}
 //}
 
-void NavMeshType_Obstacle::handleRender(duDebugDraw& dd)
+void NavMeshType_Obstacle::handleRender(duDebugDraw& m_dd)
 {
 	if (!m_geom || !m_geom->getMesh())
 		return;
 	
-//	DebugDrawGL dd;
-
 //	const float texScale = 1.0f / (m_cellSize * 10.0f);
 //
 //	// Draw mesh
 //	if (m_drawMode != DRAWMODE_NAVMESH_TRANS)
 //	{
 //		// Draw mesh
-//		duDebugDrawTriMeshSlope(&dd, m_geom->getMesh()->getVerts(), m_geom->getMesh()->getVertCount(),
+//		duDebugDrawTriMeshSlope(&m_dd, m_geom->getMesh()->getVerts(), m_geom->getMesh()->getVertCount(),
 //								m_geom->getMesh()->getTris(), m_geom->getMesh()->getNormals(), m_geom->getMesh()->getTriCount(),
 //								m_agentMaxSlope, texScale);
-//		m_geom->drawOffMeshConnections(&dd);
+//		m_geom->drawOffMeshConnections(&m_dd);
 //	}
 	
 	if (m_tileCache && m_drawMode == DRAWMODE_CACHE_BOUNDS)
-		drawTiles(&dd, m_tileCache);
+		drawTiles(&m_dd, m_tileCache);
 	
 	if (m_tileCache)
-		drawObstacles(&dd, m_tileCache);
+		drawObstacles(&m_dd, m_tileCache);
 	
 	
 //	glDepthMask(GL_FALSE);
-	dd.depthMask(false);
+	m_dd.depthMask(false);
 	
 	// Draw bounds
 	const float* bmin = m_geom->getNavMeshBoundsMin();
 	const float* bmax = m_geom->getNavMeshBoundsMax();
-	duDebugDrawBoxWire(&dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], duRGBA(255,255,255,128), 1.0f);
+	duDebugDrawBoxWire(&m_dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], duRGBA(255,255,255,128), 1.0f);
 	
 	// Tiling grid.
 	int gw = 0, gh = 0;
@@ -1078,7 +1076,7 @@ void NavMeshType_Obstacle::handleRender(duDebugDraw& dd)
 	const int tw = (gw + (int)m_tileSize-1) / (int)m_tileSize;
 	const int th = (gh + (int)m_tileSize-1) / (int)m_tileSize;
 	const float s = m_tileSize*m_cellSize;
-	duDebugDrawGridXZ(&dd, bmin[0],bmin[1],bmin[2], tw,th, s, duRGBA(0,0,0,64), 1.0f);
+	duDebugDrawGridXZ(&m_dd, bmin[0],bmin[1],bmin[2], tw,th, s, duRGBA(0,0,0,64), 1.0f);
 
 //	if (m_navMesh && m_navQuery &&
 //		(m_drawMode == DRAWMODE_NAVMESH ||
@@ -1089,21 +1087,21 @@ void NavMeshType_Obstacle::handleRender(duDebugDraw& dd)
 //		 m_drawMode == DRAWMODE_NAVMESH_INVIS))
 //	{
 //		if (m_drawMode != DRAWMODE_NAVMESH_INVIS)
-			duDebugDrawNavMeshWithClosedList(&dd, *m_navMesh, *m_navQuery, m_navMeshDrawFlags/*|DU_DRAWNAVMESH_COLOR_TILES*/);
+			duDebugDrawNavMeshWithClosedList(&m_dd, *m_navMesh, *m_navQuery, m_navMeshDrawFlags/*|DU_DRAWNAVMESH_COLOR_TILES*/);
 //		if (m_drawMode == DRAWMODE_NAVMESH_BVTREE)
-//			duDebugDrawNavMeshBVTree(&dd, *m_navMesh);
+//			duDebugDrawNavMeshBVTree(&m_dd, *m_navMesh);
 //		if (m_drawMode == DRAWMODE_NAVMESH_PORTALS)
-//			duDebugDrawNavMeshPortals(&dd, *m_navMesh);
+//			duDebugDrawNavMeshPortals(&m_dd, *m_navMesh);
 //		if (m_drawMode == DRAWMODE_NAVMESH_NODES)
-//			duDebugDrawNavMeshNodes(&dd, *m_navQuery);
-		duDebugDrawNavMeshPolysWithFlags(&dd, *m_navMesh, NAVMESH_POLYFLAGS_DISABLED, duRGBA(0,0,0,128));
+//			duDebugDrawNavMeshNodes(&m_dd, *m_navQuery);
+		duDebugDrawNavMeshPolysWithFlags(&m_dd, *m_navMesh, NAVMESH_POLYFLAGS_DISABLED, duRGBA(0,0,0,128));
 //	}
 	
 	
 //	glDepthMask(GL_TRUE);
-	dd.depthMask(true);
+	m_dd.depthMask(true);
 		
-//	m_geom->drawConvexVolumes(&dd);
+//	m_geom->drawConvexVolumes(&m_dd);
 //	
 //	if (m_tool)
 //		m_tool->handleRender();
@@ -1113,11 +1111,10 @@ void NavMeshType_Obstacle::handleRender(duDebugDraw& dd)
 //	dd.depthMask(true);
 }
 
-void NavMeshType_Obstacle::renderCachedTile(duDebugDraw& dd, const int tx, const int ty, const int type)
+void NavMeshType_Obstacle::renderCachedTile(duDebugDraw& m_dd, const int tx, const int ty, const int type)
 {
-//	DebugDrawGL dd;
 	if (m_tileCache)
-		drawDetail(&dd,m_tileCache,tx,ty,type);
+		drawDetail(&m_dd,m_tileCache,tx,ty,type);
 }
 
 //void NavMeshType_Obstacle::renderCachedTileOverlay(const int tx, const int ty, double* proj, double* model, int* view)

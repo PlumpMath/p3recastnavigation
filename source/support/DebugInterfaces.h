@@ -158,6 +158,7 @@ public:
 	virtual void vertex(const float* pos, unsigned int color, const float* uv);
 	virtual void vertex(const float x, const float y, const float z, unsigned int color, const float u, const float v);
 	virtual void end();
+	virtual unsigned int areaToCol(unsigned int area);
 
 	NodePath getGeomNode(int i);
 	int getGeomNodesNum();
@@ -229,6 +230,7 @@ public:
 	virtual void vertex(const float* pos, unsigned int color, const float* uv);
 	virtual void vertex(const float x, const float y, const float z, unsigned int color, const float u, const float v);
 	virtual void end();
+	virtual unsigned int areaToCol(unsigned int area);
 
 };
 

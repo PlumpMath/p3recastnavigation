@@ -36,6 +36,28 @@
 
 namespace rnsup
 {
+///see DebugInterface::DebugDrawPanda3d and DebugInterface::DebugDrawMeshDrawer
+//unsigned int SampleDebugDraw::areaToCol(unsigned int area)
+//{
+//	switch(area)
+//	{
+//	// Ground (0) : brown
+//	case NAVMESH_POLYAREA_GROUND: return duRGBA(125, 125, 0, 255);
+//	// Water : blue
+//	case NAVMESH_POLYAREA_WATER: return duRGBA(0, 0, 255, 255);
+//	// Road : dark grey
+//	case NAVMESH_POLYAREA_ROAD: return duRGBA(80, 80, 80, 255);
+//	// Door : cyan
+//	case NAVMESH_POLYAREA_DOOR: return duRGBA(0, 255, 255, 255);
+//	// Grass : green
+//	case NAVMESH_POLYAREA_GRASS: return duRGBA(0, 255, 0, 255);
+//	// Jump : yellow
+//	case NAVMESH_POLYAREA_JUMP: return duRGBA(255, 255, 0, 255);
+//	// Unexpected : red
+//	default: return duRGBA(255, 0, 0, 255);
+//	}
+//}
+
 NavMeshType::NavMeshType() :
 	m_geom(0),
 	m_navMesh(0),
@@ -91,20 +113,18 @@ void NavMeshType::setTool(NavMeshTypeTool* tool)
 //{
 //}
 
-void NavMeshType::handleRender(duDebugDraw& dd)
+void NavMeshType::handleRender(duDebugDraw& m_dd)
 {
 	if (!m_geom)
 		return;
 	
-//	DebugDrawGL dd;
-		
 	// Draw mesh
-	duDebugDrawTriMesh(&dd, m_geom->getMesh()->getVerts(), m_geom->getMesh()->getVertCount(),
+	duDebugDrawTriMesh(&m_dd, m_geom->getMesh()->getVerts(), m_geom->getMesh()->getVertCount(),
 					   m_geom->getMesh()->getTris(), m_geom->getMesh()->getNormals(), m_geom->getMesh()->getTriCount(), 0, 1.0f);
 	// Draw bounds
 	const float* bmin = m_geom->getMeshBoundsMin();
 	const float* bmax = m_geom->getMeshBoundsMax();
-	duDebugDrawBoxWire(&dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], duRGBA(255,255,255,128), 1.0f);
+	duDebugDrawBoxWire(&m_dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], duRGBA(255,255,255,128), 1.0f);
 }
 
 //void NavMeshType::handleRenderOverlay(double* /*proj*/, double* /*model*/, int* /*view*/)

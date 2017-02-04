@@ -1099,7 +1099,7 @@ namespace rnsup
 
 void NavMeshTesterTool::handleRender(duDebugDraw& dd)
 {
-//	DebugDrawGL dd;
+//	duDebugDraw& dd = m_sample->getDebugDraw();
 	
 	static const unsigned int startCol = duRGBA(128,25,0,192);
 	static const unsigned int endCol = duRGBA(51,102,0,129);
@@ -1461,7 +1461,7 @@ void NavMeshTesterTool::handleRender(duDebugDraw& dd)
 
 void NavMeshTesterTool::drawAgent(const float* pos, float r, float h, float c, const unsigned int col)
 {
-	DebugDrawGL dd;
+	/*duDebugDraw& dd = m_sample->getDebugDraw();*/DebugDrawGL dd;
 	
 	dd.depthMask(false);
 	

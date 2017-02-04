@@ -38,6 +38,8 @@ def find_sources(base_dir):
     for f in files:
         fpath = join(base_dir, f)
         if isfile(fpath) and check_ignore(f) and f.endswith(".h"):
+            if f.endswith(".pb.h"):
+                continue # Skip protobuf
             sources.append(fpath)
 #        elif isdir(fpath):
 #            sources += find_sources(fpath)
@@ -103,7 +105,7 @@ def interrogate():
         cmd += ["-D" + define]
 
     cmd += all_sources
-    try_execute(*cmd, verbose=VERBOSE_LVL != 0)
+    try_execute(*cmd)
 
 
 def interrogate_module():
@@ -122,7 +124,7 @@ def interrogate_module():
     cmd += ["-oc", "interrogate_module.cpp"]
     cmd += ["interrogate.in"]
 
-    try_execute(*cmd, verbose=VERBOSE_LVL != 0)
+    try_execute(*cmd)
 
 if __name__ == "__main__":
 

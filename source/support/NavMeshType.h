@@ -75,6 +75,13 @@ enum NavMeshPolyFlagsEnum
 	NAVMESH_POLYFLAGS_ALL		= 0xffff	// All abilities.
 };
 
+///see DebugInterface::DebugDrawPanda3d and DebugInterface::DebugDrawMeshDrawer
+//class SampleDebugDraw : public DebugDrawGL
+//{
+//public:
+//	virtual unsigned int areaToCol(unsigned int area);
+//};
+
 enum NavMeshPartitionType
 {
 	NAVMESH_PARTITION_WATERSHED,
@@ -172,6 +179,8 @@ protected:
 	NavMeshPolyAreaFlags m_flagsAreaTable;
 	
 	BuildContext* m_ctx;
+
+//	SampleDebugDraw m_dd;
 	
 public:
 	NavMeshType();
@@ -183,6 +192,8 @@ public:
 	void setTool(NavMeshTypeTool* tool);
 	NavMeshTypeToolState* getToolState(int type) { return m_toolStates[type]; }
 	void setToolState(int type, NavMeshTypeToolState* s) { m_toolStates[type] = s; }
+
+//	SampleDebugDraw& getDebugDraw() { return m_dd; }
 	
 //	virtual void handleSettings();
 //	virtual void handleTools();

@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cfloat>
 #include "DebugInterfaces.h"
+#include "NavMeshType.h"
 #include <RecastDebugDraw.h>
 #include <DetourDebugDraw.h>
 #include <geomNode.h>
@@ -493,6 +494,27 @@ void DebugDrawPanda3d::end()
 	m_geomNodeNPCollection.push_back(m_geomNodeNP);
 }
 
+unsigned int DebugDrawPanda3d::areaToCol(unsigned int area)
+{
+	switch(area)
+	{
+	// Ground (0) : brown
+	case NAVMESH_POLYAREA_GROUND: return duRGBA(125, 125, 0, 255);
+	// Water : blue
+	case NAVMESH_POLYAREA_WATER: return duRGBA(0, 0, 255, 255);
+	// Road : dark grey
+	case NAVMESH_POLYAREA_ROAD: return duRGBA(80, 80, 80, 255);
+	// Door : cyan
+	case NAVMESH_POLYAREA_DOOR: return duRGBA(0, 255, 255, 255);
+	// Grass : green
+	case NAVMESH_POLYAREA_GRASS: return duRGBA(0, 255, 0, 255);
+	// Jump : yellow
+	case NAVMESH_POLYAREA_JUMP: return duRGBA(255, 255, 0, 255);
+	// Unexpected : red
+	default: return duRGBA(255, 0, 0, 255);
+	}
+}
+
 NodePath DebugDrawPanda3d::getGeomNode(int i)
 {
 	return m_geomNodeNPCollection[i];
@@ -616,6 +638,27 @@ void DebugDrawMeshDrawer::end()
 		++m_generatorIdx;
 	}
 	m_prim = static_cast<duDebugDrawPrimitives>(DU_NULL_PRIM);
+}
+
+unsigned int DebugDrawMeshDrawer::areaToCol(unsigned int area)
+{
+	switch(area)
+	{
+	// Ground (0) : brown
+	case NAVMESH_POLYAREA_GROUND: return duRGBA(125, 125, 0, 255);
+	// Water : blue
+	case NAVMESH_POLYAREA_WATER: return duRGBA(0, 0, 255, 255);
+	// Road : dark grey
+	case NAVMESH_POLYAREA_ROAD: return duRGBA(80, 80, 80, 255);
+	// Door : cyan
+	case NAVMESH_POLYAREA_DOOR: return duRGBA(0, 255, 255, 255);
+	// Grass : green
+	case NAVMESH_POLYAREA_GRASS: return duRGBA(0, 255, 0, 255);
+	// Jump : yellow
+	case NAVMESH_POLYAREA_JUMP: return duRGBA(255, 255, 0, 255);
+	// Unexpected : red
+	default: return duRGBA(255, 0, 0, 255);
+	}
 }
 
 void DebugDrawMeshDrawer::doVertex(const LVector3f& vertex,
