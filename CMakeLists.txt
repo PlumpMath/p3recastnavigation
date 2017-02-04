@@ -8,9 +8,9 @@ project (${PROJECT_NAME})
 set(CMAKE_BUILD_TYPE "Release")
 
 # Libraries and options set by the module builder
-set(USE_LIB_EIGEN CACHE BOOL TRUE)
-set(USE_LIB_BULLET CACHE BOOL FALSE)
-set(USE_LIB_FREETYPE CACHE BOOL FALSE)
+set(HAVE_LIB_EIGEN CACHE BOOL TRUE)
+set(HAVE_LIB_BULLET CACHE BOOL FALSE)
+set(HAVE_LIB_FREETYPE CACHE BOOL FALSE)
 set(OPTIMIZE CACHE STRING "3")
 set(IGATE_VERBOSE CACHE STRING "0")
 set(INTERROGATE_LIB CACHE STRING "p3interrogatedb")
@@ -33,6 +33,16 @@ set(CMAKE_CXX_FLAGS_RELEASE "")
 set(CMAKE_CXX_FLAGS_MINSIZEREL "")
 
 
+if (CMAKE_CL_64 STREQUAL "1")
+  message(STATUS "Bitness: 64 bit ('${CMAKE_CL_64}')")
+  set(IS_64_BIT TRUE)
+  set(IS_32_BIT FALSE)
+else()
+  message(STATUS "Bitness: 32 bit ('${CMAKE_CL_64}')")
+  set(IS_64_BIT TRUE)
+  set(IS_32_BIT FALSE)
+endif()
+
 set(LIBRARIES "")
 
 # Windows - 32 and 64 bit
@@ -45,46 +55,78 @@ if (WIN32)
     COMMAND "${PYTHON_EXECUTABLE}" "-B" "scripts/common.py" "--print-sdk-path"
     OUTPUT_VARIABLE WIN_PANDA_PATH
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+  message(STATUS "Detected panda3d installation: ${WIN_PANDA_PATH}")
 
-  # Find thirdparty directory
-  if (CMAKE_CL_32)
-    set(THIRDPARTY_DIR "${WIN_PANDA_PATH}/../thirdparty/win-libs-vc10")
-    if (NOT (EXISTS "${THIRDPARTY_DIR}"))
-      set(THIRDPARTY_DIR "${WIN_PANDA_PATH}/thirdparty/win-libs-vc10")
-    endif()
-  else()
-    set (THIRDPARTY_DIR "${WIN_PANDA_PATH}/../thirdparty/win-libs-vc10-x64")
-    if (NOT (EXISTS "${THIRDPARTY_DIR}"))
-      set (THIRDPARTY_DIR "${WIN_PANDA_PATH}/thirdparty/win-libs-vc10-x64")
-    endif()
+
+  # Determine bitness
+  set(THIRDPARTY_SUFFIX "-x64")
+  if (IS_32_BIT)
+    set(THIRDPARTY_SUFFIX "")
   endif()
 
-  # These vars are based on the WIN_PANDA_PATH and usually are correct
-  set(PANDA_LIBRARY_DIRS "${WIN_PANDA_PATH}/lib/")
+
+
+  # Find visual studio version
+  if (MSVC10)
+    set(MSVC_VERSION_SHORT "vc10")
+  elseif (MSVC12)
+    set(MSVC_VERSION_SHORT "vc12")
+  elseif(MSVC14)
+    set(MSVC_VERSION_SHORT "vc14")
+  else()
+    message(WARMING "Unable to determine visual studio version, assuming Visual Studio 2010")
+    set(MSVC_VERSION_SHORT "vc10")
+  endif()
+  message(STATUS "Detected visual studio version: ${MSVC_VERSION_SHORT}")
+
+
+  # Find thirdparty directory
+  set(THIRDPARTY_DIR "${WIN_PANDA_PATH}/../thirdparty/win-libs-${MSVC_VERSION_SHORT}${THIRDPARTY_SUFFIX}")
+  if (NOT (EXISTS "${THIRDPARTY_DIR}"))
+    set(THIRDPARTY_DIR "${WIN_PANDA_PATH}/thirdparty/win-libs-${MSVC_VERSION_SHORT}${THIRDPARTY_SUFFIX}")
+  endif()
+
+  if (NOT (EXISTS "${THIRDPARTY_DIR}"))
+    message(WARNING "Unable to find thirdparty directory! Expected it at: ${THIRDPARTY_DIR}")
+  else()
+    message(STATUS "Detected thirdparty directory: ${THIRDPARTY_DIR}")
+  endif()
+
+
+  # Find lib and include directory
+  set(PANDA_LIBRARY_DIRS "${WIN_PANDA_PATH}/lib")
   set(PANDA_INCLUDE_DIR "${WIN_PANDA_PATH}/include")
+
+  if (NOT (EXISTS "${PANDA_LIBRARY_DIRS}"))
+    message(WARNING "Panda3D library directory does not exist! Expected it at: ${PANDA_LIBRARY_DIRS}")
+  endif()
 
   set(PYTHON_LIBRARIES "${WIN_PANDA_PATH}/python/libs/python${PYTHONVER}.lib")
   set(PYTHON_INCLUDE_DIRS "${WIN_PANDA_PATH}/python/include")
 
   # [LIB] Bullet
-  if(USE_LIB_BULLET)
+  if(HAVE_LIB_BULLET)
+
+    if (NOT (EXISTS "${PANDA_INCLUDE_DIR}/bullet_includes.h"))
+      message(FATAL_ERROR "This module requires the bullet library, but your Panda3D Build was copmiled without bullet support! Use --use-bullet when compiling.")
+    endif()
+
     include_directories("${THIRDPARTY_DIR}/bullet/include/")
     link_directories("${THIRDPARTY_DIR}/bullet/lib/")
 
-    # TODO: Might need more libs
-    if(CMAKE_CL_32)
-      set(${LIBRARIES} "${LIBRARIES};LinearMath;BulletCollision;BulletDynamics;BulletSoftBody")
+    if(EXISTS "${THIRDPARTY_DIR}/bullet/lib/LinearMath_x64.lib")
+      set(LIBRARIES "${LIBRARIES};LinearMath_x64;BulletCollision_x64;BulletDynamics_x64;BulletSoftBody_x64")
     else()
-      set(${LIBRARIES} "${LIBRARIES};LinearMath_x64;BulletCollision_x64;BulletDynamics_x64;BulletSoftBody_x64")
+      set(LIBRARIES "${LIBRARIES};LinearMath;BulletCollision;BulletDynamics;BulletSoftBody")
     endif()
   endif()
 
   # [LIB] Eigen 3
-  if (USE_LIB_EIGEN)
+  if (HAVE_LIB_EIGEN)
     include_directories("${THIRDPARTY_DIR}/eigen/include")
 
     # Eigen build flags (sync with Panda)
-    if (USE_LIB_EIGEN)
+    if (HAVE_LIB_EIGEN)
       add_definitions("/DEIGEN_MPL2_ONLY=")
       if ((OPTIMIZE STREQUAL "3") OR (OPTIMIZE STREQUAL "4"))
         add_definitions("/DEIGEN_NO_DEBUG=")
@@ -99,10 +141,11 @@ if (WIN32)
   endif()
 
   # [LIB] Freetype
-  if (USE_LIB_FREETYPE)
+  if (HAVE_LIB_FREETYPE)
     include_directories("${THIRDPARTY_DIR}/freetype/include")
+    include_directories("${THIRDPARTY_DIR}/freetype/include/freetype2")
     link_directories("${THIRDPARTY_DIR}/freetype/lib")
-    set(${LIBRARIES} "${LIBRARIES};freetype")
+    set(LIBRARIES "${LIBRARIES};freetype")
   endif()
 
   # Check if all supplied files exist
@@ -115,6 +158,9 @@ if (WIN32)
 
   # Link panda libraries
   set(PANDA_LIBRARIES "libp3framework;libpanda;libpandaexpress;libp3dtool;libp3dtoolconfig;libp3direct;${INTERROGATE_LIB}")
+  if(HAVE_LIB_BULLET)
+    set(PANDA_LIBRARIES "libpandabullet;${PANDA_LIBRARIES}")
+  endif()
   link_directories("${PANDA_LIBRARY_DIRS}")
 
 else()
@@ -123,18 +169,18 @@ else()
   find_package(PythonLibs REQUIRED)
 
   # [LIB] Bullet
-  if (USE_LIB_BULLET)
+  if (HAVE_LIB_BULLET)
     find_package(Bullet REQUIRED)
     include_directories(${BULLET_INCLUDE_DIRS})
-    set(${LIBRARIES} "${LIBRARIES};${BULLET_LIBRARIES}")
+    set(LIBRARIES "${LIBRARIES};${BULLET_LIBRARIES}")
   endif()
 
   # [LIB] Eigen 3
-  if (USE_LIB_EIGEN)
+  if (HAVE_LIB_EIGEN)
     include_directories(BEFORE "/usr/include/eigen3/")
 
     # Eigen build flags (sync with Panda)
-    if (USE_LIB_EIGEN)
+    if (HAVE_LIB_EIGEN)
       add_definitions("/DEIGEN_MPL2_ONLY=")
       if ((OPTIMIZE STREQUAL "3") OR (OPTIMIZE STREQUAL "4"))
         add_definitions("/DEIGEN_NO_DEBUG=")
@@ -143,18 +189,20 @@ else()
   endif()
 
   # [LIB] Freetype
-  if(USE_LIB_FREETYPE)
+  if(HAVE_LIB_FREETYPE)
     find_package(Freetype REQUIRED)
     include_directories(${FREETYPE_INCLUDE_DIRS})
-    set(${LIBRARIES} "${LIBRARIES};${FREETYPE_LIBRARIES}")
+    set(LIBRARIES "${LIBRARIES};${FREETYPE_LIBRARIES}")
   endif()
 
   # Locate the Panda3D headers
   find_path(PANDA_INCLUDE_DIR dtoolbase.h PATH_SUFFIXES panda3d)
 
   # Locate the Panda3D libraries
-
   set(REQ_LIBRARIES p3framework panda pandaexpress p3dtool p3dtoolconfig p3direct ${INTERROGATE_LIB})
+  if(HAVE_LIB_BULLET)
+    set(REQ_LIBRARIES pandabullet ${REQ_LIBRARIES})
+  endif()
 
   set(PANDA_LIBRARIES "")
   foreach (lib ${REQ_LIBRARIES})
@@ -185,7 +233,6 @@ else()
       find_library(PANDA_LIBRARY_${lib} ${lib} PATHS "${LOCAL_PANDA_PATH}/lib/")
       set(PANDA_LIBRARIES "${PANDA_LIBRARIES};${PANDA_LIBRARY_${lib}}")
     endforeach()
-
 
   endif()
 
@@ -224,7 +271,7 @@ if (MSVC)
 
   # This matches the makepanda options
 
-  if (CMAKE_CL_64)
+  if (IS_64_BIT)
     add_definitions("/favor:blend /DWIN64_VC /DWIN64 /bigobj")
   endif()
 
@@ -238,7 +285,7 @@ if (MSVC)
     # add_definitions("/DWINVER=0x501")
   endif()
 
-  if(CMAKE_CL_32 AND ENABLE_SSE2)
+  if(IS_32_BIT AND ENABLE_SSE2)
     # If SSE is enabled
     add_definitions("/arch:SSE2")
   endif()
@@ -269,13 +316,14 @@ if (MSVC)
   add_definitions("/W3")
 
   # Special case for 32 bit
-  if(CMAKE_CL_32)
+  if(IS_32_BIT)
     add_definitions("/machine:x86")
   endif()
 
   # Use multi-core compilation
-  add_definitions("/GM- /MP")
-  
+  add_definitions("/MP")
+  # add_definitions("/GM-")
+
   #Python build
   add_definitions("/DPYTHON_BUILD")
 
@@ -323,8 +371,8 @@ add_definitions("/DPB_MODULE=${PROJECT_NAME}")
 add_definitions("/DPB_CFG_MODULE=${PROJECT_NAME}")
 
 # Collect sources for compiling
-#file(GLOB_RECURSE SOURCES source/*.cpp source/*.cxx)
-file(GLOB SOURCES source/*.cpp source/*.cxx)
+#file(GLOB_RECURSE SOURCES source/*.cpp source/*.cxx source/*.I source/*.hpp source/*.h source/*.cc source/*.c)
+file(GLOB SOURCES source/*.cpp source/*.cxx source/*.I source/*.hpp source/*.h source/*.cc source/*.c)
 include_directories("source/")
 set(SOURCES ${SOURCES_H} ${SOURCES})
 
@@ -333,8 +381,20 @@ file(GLOB POSSIBLE_DIRS RELATIVE ${CMAKE_CURRENT_LIST_DIR} source/*)
 foreach(PDIR ${POSSIBLE_DIRS})
   if (IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${PDIR})
     include_directories("${PDIR}")
+    file(GLOB POSSIBLE_SUB_DIRS RELATIVE ${CMAKE_CURRENT_LIST_DIR}/${PDIR} ${PDIR}/*)
+    foreach(PSUBDIR ${POSSIBLE_SUB_DIRS})
+      if (IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${PDIR}/${PSUBDIR})
+        include_directories("${PDIR}/${PSUBDIR}")
+      endif()
+    endforeach()
   endif()
 endforeach()
+
+
+if ((EXISTS "${CMAKE_CURRENT_LIST_DIR}/additional_libs.cmake"))
+  include("${CMAKE_CURRENT_LIST_DIR}/additional_libs.cmake")
+endif()
+
 
 # Build library
 add_library(${PROJECT_NAME} MODULE ${SOURCES})
