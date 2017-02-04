@@ -41,12 +41,12 @@ namespace rnsup
 //{
 //	switch(area)
 //	{
-//	// Ground (0) : brown
-//	case NAVMESH_POLYAREA_GROUND: return duRGBA(125, 125, 0, 255);
+//	// Ground (0) : light blue
+//	case NAVMESH_POLYAREA_GROUND: return duRGBA(0, 192, 255, 255);
 //	// Water : blue
 //	case NAVMESH_POLYAREA_WATER: return duRGBA(0, 0, 255, 255);
-//	// Road : dark grey
-//	case NAVMESH_POLYAREA_ROAD: return duRGBA(80, 80, 80, 255);
+//	// Road : brown
+//	case NAVMESH_POLYAREA_ROAD: return duRGBA(50, 20, 12, 255);
 //	// Door : cyan
 //	case NAVMESH_POLYAREA_DOOR: return duRGBA(0, 255, 255, 255);
 //	// Grass : green
