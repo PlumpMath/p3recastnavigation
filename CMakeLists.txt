@@ -349,9 +349,9 @@ else()
 
   # Differnt optimization settings
   if (OPTIMIZE STREQUAL "1")
-    add_definitions("-ggdb -D_DEBUG -DRN_DEBUG")
+    add_definitions("-ggdb -DRN_DEBUG")
   elseif(OPTIMIZE STREQUAL "2")
-    add_definitions("-O1 -D_DEBUG -DRN_DEBUG")
+    add_definitions("-O1 -DRN_DEBUG")
   elseif(OPTIMIZE STREQUAL "3")
     add_definitions("-O2")
     add_definitions("-fno-finite-math-only -ffast-math")
