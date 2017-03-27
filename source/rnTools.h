@@ -343,7 +343,7 @@ PUBLISHED:
 	{
 		return _navMeshSettings;
 	}
-#endif
+#endif //CPPPARSER
 	INLINE float get_cellSize() const;
 	INLINE void set_cellSize(float value);
 	INLINE float get_cellHeight() const;
@@ -374,7 +374,9 @@ PUBLISHED:
 	INLINE void set_partitionType(int value);
 	void output(ostream &out) const;
 private:
+#ifndef CPPPARSER
 	rnsup::NavMeshSettings _navMeshSettings;
+#endif //CPPPARSER
 
 public:
 	void write_datagram(Datagram &dg) const;
@@ -407,7 +409,9 @@ PUBLISHED:
 	INLINE void set_tileSize(float value);
 	void output(ostream &out) const;
 private:
+#ifndef CPPPARSER
 	rnsup::NavMeshTileSettings _navMeshTileSettings;
+#endif //CPPPARSER
 
 public:
 	void write_datagram(Datagram &dg) const;
@@ -543,7 +547,9 @@ PUBLISHED:
 	INLINE void set_userData(void* value);
 	void output(ostream &out) const;
 private:
+#ifndef CPPPARSER
 	dtCrowdAgentParams _dtCrowdAgentParams;
+#endif //CPPPARSER
 
 public:
 	void write_datagram(Datagram &dg) const;
@@ -583,7 +589,9 @@ public:
 #endif //CPPPARSER
 
 private:
+#ifndef CPPPARSER
 	pvector<Type> _values;
+#endif //CPPPARSER
 };
 
 ///Result values
