@@ -40,7 +40,7 @@
 //#define DUMP_REQS
 #endif
 
-// Returns a random number [0..1)
+// Returns a random number [0..1]
 static float frand()
 {
 //	return ((float)(rand() & 0xffff)/(float)0xffff);
